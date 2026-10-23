@@ -9,6 +9,11 @@
     'Brasil': '🇧🇷', 'Portugal': '🇵🇹', 'Espanha': '🇪🇸'
   };
   const flag = (pais) => FLAGS[pais] || '🌍';
+  const SETOR_NOME = {
+    A:'ACESSÓRIOS', B:'BIJOUX', BEB:'BEBIDAS', 'BEB NAC':'BEBIDAS NACIONAL',
+    BOL:'BOLSAS, MALAS', C:'COSMETIC', 'C&D':'CASA & DECORAÇÃO', O:'ÓCULOS',
+    P:'PERFUMARIA', PUB:'PUBLICIDADE', R:'RELÓGIOS'
+  };
   const curTag = (m) => `<span class="currency-tag cur-${(m||'usd').toLowerCase()}">${m||'—'}</span>`;
   const initials = (nome) => (nome || '??').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
   const GRADIENTS = ['#0099CC,#0EA5E9','#00A878,#10B981','#C4880A,#F5A623','#6D4FC2,#9B7AFF','#B03060,#FF4D6D'];
@@ -140,7 +145,7 @@
             <div><div class="person-name">${c.nome}</div><div class="person-role">${c.cargo}</div></div>
           </div>
           <div class="person-tags">
-            ${c.setor ? `<span class="tag tag-cyan">${c.setor}</span>` : ''}
+            ${c.setor ? `<span class="tag tag-cyan">${c.setor}: ${SETOR_NOME[c.setor] || c.setor}</span>` : ''}
             ${c.localizacao ? `<span class="tag">${c.localizacao}</span>` : ''}
           </div>
           ${rowActions('colaboradores', c.id)}

@@ -349,7 +349,7 @@
     const dataPedido = val('f-data-pedido');
 
     if (!numeroPedido || !fornecedorId || !colaboradorId || !setor || !dataPedido) {
-      alert('Preencha os campos obrigatórios da aba Pedido: Nº Pedido, Categoria Código, Fornecedor, Responsável e Data de Envio.');
+      alert('Preencha os campos obrigatórios da aba Pedido: Nº Pedido, Setor - Categoria, Fornecedor, Responsável e Data de Envio.');
       return;
     }
 
@@ -565,7 +565,7 @@
             <td class="code" style="font-weight:700;color:var(--cyan);">${(p.numero_pedido||'').slice(-4)}</td>
             <td><span class="mono" style="font-size:11.5px;">${p.numero_pedido}</span>${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI" style="margin-left:6px;">📎</a>` : ''}${p.numero_pi ? `<div style="font-size:10px;color:var(--ink-3);">📁 ${p.numero_pi}</div>` : ''}</td>
             <td>${forn}</td>
-            <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}</span>` : '—'}</td>
+            <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
             <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
             <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
             <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
