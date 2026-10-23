@@ -19,20 +19,38 @@
   /* Um access token (JWT) do Stack Auth dura só algumas horas. Em vez de
      deslogar a pessoa no meio do uso (o que acontecia antes depois de um
      período de sessão ativa), toda requisição que volta com erro de
-     autenticação (401/403) tenta renovar o token silenciosamente com o
-     refresh_token guardado no login (ver Auth.refreshAccessToken em
-     js/auth.js) e repete a chamada uma única vez — sem a pessoa perceber.
-     Só se essa renovação falhar (refresh_token também inválido/revogado)
-     é que a sessão é considerada de fato expirada, aí sim levamos a pessoa
-     de volta pra tela de login com um aviso claro, em vez de deixar a
-     mensagem crua do banco ("JWT token has expired...") vazar nas tabelas
-     e partes do app (como a aba "Usuários") ficarem com visibilidade
-     indefinida por causa de uma checagem que falhou sem avisar. */
+     autenticação tenta renovar o token silenciosamente com o refresh_token
+     guardado no login (ver Auth.refreshAccessToken em js/auth.js) e repete
+     a chamada uma única vez — sem a pessoa perceber. Só se essa renovação
+     falhar (refresh_token também inválido/revogado) é que a sessão é
+     considerada de fato expirada, aí sim levamos a pessoa de volta pra
+     tela de login com um aviso claro, em vez de deixar a mensagem crua do
+     banco ("JWT token has expired...") vazar nas tabelas e partes do app
+     (como a aba "Usuários") ficarem com visibilidade indefinida por causa
+     de uma checagem que falhou sem avisar.
+
+     Importante: o JWT expirado NÃO vem sempre com HTTP 401/403 — a RLS
+     deste app valida o token dentro de funções SQL (app_is_authorized() /
+     auth.user_id()), e um RAISE lá dentro pode virar outro status HTTP
+     (ex. 400) no PostgREST, mantendo só a mensagem como pista. Por isso a
+     detecção olha a mensagem do corpo da resposta, não só o status. */
+  function pareceJwtExpirado(msg) {
+    return /jwt/i.test(msg || '') && /(expired|expirado|invalid)/i.test(msg || '');
+  }
+
+  async function mensagemDeErro(res) {
+    try { const j = await res.clone().json(); return j.message || j.error || ''; }
+    catch (e) { return ''; }
+  }
+
   async function fetchComAuth(url, options) {
     let res = await fetch(url, { ...options, headers: authHeaders() });
-    if ((res.status === 401 || res.status === 403) && window.Auth && window.Auth.refreshAccessToken) {
-      const novoToken = await window.Auth.refreshAccessToken().catch(() => null);
-      if (novoToken) res = await fetch(url, { ...options, headers: authHeaders() });
+    if (!res.ok) {
+      const precisaRenovar = res.status === 401 || res.status === 403 || pareceJwtExpirado(await mensagemDeErro(res));
+      if (precisaRenovar && window.Auth && window.Auth.refreshAccessToken) {
+        const novoToken = await window.Auth.refreshAccessToken().catch(() => null);
+        if (novoToken) res = await fetch(url, { ...options, headers: authHeaders() });
+      }
     }
     return res;
   }
@@ -54,7 +72,7 @@
     if (!res.ok) {
       let msg = 'Erro ao comunicar com o banco de dados';
       try { const j = await res.json(); msg = j.message || j.error || msg; } catch (e) {}
-      if (res.status === 401 || res.status === 403) {
+      if (res.status === 401 || res.status === 403 || pareceJwtExpirado(msg)) {
         tratarSessaoExpirada();
         throw new Error('Sessão expirada. Faça login novamente.');
       }
