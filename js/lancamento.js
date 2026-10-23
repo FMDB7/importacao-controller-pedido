@@ -187,7 +187,11 @@
         let condVal = tipo === 'À Vista' ? '0' : (tipo.match(/^(\d+)\s*dias$/) || [])[1];
         if (!condVal) {
           condVal = 'custom';
-          setVal('pay-custom-dias', (tipo.match(/\d+/) || [])[0]);
+          // tipo "Outro" não carrega o número — o prazo digitado fica guardado
+          // nas observações ("Prazo personalizado: N dias"); cai pro valor cru
+          // de `tipo` só pra compatibilidade com lançamentos antigos.
+          const diasObs = (pagamento.observacoes || '').match(/(\d+)\s*dias/);
+          setVal('pay-custom-dias', diasObs ? diasObs[1] : (tipo.match(/\d+/) || [])[0]);
         }
         const existe = Array.from(selCond.options).some(o => o.value === condVal);
         selCond.value = existe ? condVal : 'custom';
@@ -452,13 +456,20 @@
 
       // 4) PAGAMENTO (se houver taxa de câmbio informada)
       if (taxa != null) {
+        // `pagamentos.tipo` tem um CHECK no banco que só aceita um conjunto fixo
+        // de valores (30/45/60/90/120/150/180/270/360 dias, "À Vista", "Carta de
+        // Crédito" ou "Outro") — um prazo digitado à mão (ex.: "20 dias") NUNCA
+        // bate com esse conjunto, então vira sempre "Outro" e o nº de dias digitado
+        // é preservado nas observações do pagamento.
         let tipoPagamento = '90 dias';
+        let prazoCustomObs = null;
         const condVal = document.getElementById('pay-condicao')?.value;
         if (condVal === '0') tipoPagamento = 'À Vista';
         else if (condVal && condVal !== 'custom') tipoPagamento = condVal + ' dias';
         else if (condVal === 'custom') {
           const dias = val('pay-custom-dias');
-          tipoPagamento = dias ? dias + ' dias' : '90 dias';
+          tipoPagamento = 'Outro';
+          if (dias) prazoCustomObs = `Prazo personalizado: ${dias} dias`;
         }
 
         const vencPagIso = (() => {
@@ -480,6 +491,7 @@
           data_pagamento: val('pay-data-pgto') || null,
           banco: val('f-pag-banco') || null,
           numero_contrato_cambio: val('f-pag-contrato') || null,
+          observacoes: prazoCustomObs,
           arquivo_cambio_url: anexos.cambio
         };
         if (editingPagamentoId) {
