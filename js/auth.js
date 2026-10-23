@@ -53,9 +53,9 @@
     return data;
   }
 
-  function signOut() {
+  function signOut(reload) {
     clearSession();
-    location.reload();
+    if (reload !== false) location.reload();
   }
 
   function getToken() {

@@ -516,4 +516,66 @@ logados com opção de encerrar.
 
 ---
 
+## Fase 16 — Login somente Microsoft, restrito a domínios corporativos (concluída)
+
+Pedido do usuário: *"implemente o login ao entrar seja somente pela microsoft...
+para entrar o usuário terá que estar cadastrado no app, usando o e-mail cadastrado
+na conta corporativa e usando a senha do próprio e-mail"* — e-mail do administrador
+oficial `adm.financeiro@topinternacional.com.br`; usuários devem entrar com conta
+`@topinternacional.com.br` ou `@tfs.com.br`.
+
+### O que mudou
+- **Login por e-mail/senha removido da tela** (`index.html` — `#login-overlay` não
+  tem mais os campos de e-mail/senha nem o link "Criar conta"; sobrou só o botão
+  "Entrar com a Microsoft" e um texto indicando os domínios aceitos).
+- **`js/cadastros.js`**: toda a lógica de `doAuth()`/modo signin-signup foi removida.
+  Após qualquer login Microsoft bem-sucedido, `aposLoginOk()` chama a nova RPC
+  `app_whoami()` para descobrir o e-mail autenticado e confere se o domínio é
+  `topinternacional.com.br` ou `tfs.com.br`; se não for, a sessão é encerrada
+  (`Auth.signOut(false)`, sem recarregar a página) e aparece uma mensagem de erro
+  clara em vez da pessoa cair numa tela vazia por falta de permissão.
+- **`js/auth.js`**: `signOut(reload = true)` ganhou um parâmetro opcional para poder
+  limpar a sessão sem recarregar a página (usado no caso acima, pra pessoa conseguir
+  ler a mensagem de erro antes do reload).
+- **Banco (Neon)**: nova função `public.app_whoami()` (RPC, `SELECT email FROM
+  neon_auth.users_sync WHERE id = auth.user_id()`) — diferente de `app_me()`, não
+  depende de o e-mail já estar em `usuarios_permitidos`; serve só para o front
+  descobrir "qual e-mail a Microsoft acabou de autenticar", mesmo que a pessoa
+  ainda não tenha sido liberada no app.
+- `adm.financeiro@topinternacional.com.br` já estava marcado como `Administrador`
+  em `usuarios_permitidos` desde a Fase 15 — nenhuma mudança necessária aqui.
+- As funções `Auth.signIn`/`Auth.signUp` (e-mail/senha) continuam existindo em
+  `js/auth.js` por segurança/compatibilidade, mas não são mais chamadas por
+  nenhuma tela do app — o único caminho de entrada é o botão da Microsoft.
+
+### Importante — o que isso NÃO cobre (fora do alcance das ferramentas desta sessão)
+- A restrição de domínio acima é feita **no app** (depois que a Microsoft já
+  autenticou a pessoa). Ela não impede, por si só, que alguém com qualquer conta
+  Microsoft pessoal complete o login OAuth — só impede que, depois de logada, essa
+  conta use o sistema (é deslogada na hora com a mensagem de domínio não autorizado).
+  Pra bloquear isso já na tela de login da própria Microsoft (antes mesmo de voltar
+  pro app), é preciso configurar no **Azure AD / Entra ID** (painel do Azure, fora
+  do alcance das ferramentas Neon disponíveis aqui): em **App registrations → Importação
+  Controller Pedido → Authentication**, confirmar que o tipo de conta suportado é
+  "Accounts in this organizational directory only" (single-tenant) — isso por si só
+  já restringe ao tenant da TOP INTERNACIONAL.
+- **Ponto a confirmar com o usuário**: para que contas `@tfs.com.br` também
+  funcionem, esse domínio precisa estar registrado como um **domínio verificado no
+  mesmo tenant do Azure AD** usado pelo app (`client_id
+  5959256f-3cd1-4f8e-bd98-897fd64abf35`) — ou seja, `tfs.com.br` e
+  `topinternacional.com.br` precisam ser domínios da mesma organização/tenant no
+  Microsoft 365 / Entra ID. Se `tfs.com.br` for um tenant diferente (empresa
+  separada), o app precisaria ser registrado como **multi-tenant** no Azure, o que
+  não foi configurado nesta fase — a checagem de domínio implementada aqui só cobre
+  o lado do app; a capacidade de login de fato (se a Microsoft deixa um usuário
+  `@tfs.com.br` autenticar nesse app registration) depende dessa configuração no
+  Azure, que precisa ser verificada/ajustada por quem tem acesso ao painel do Azure
+  AD da empresa.
+- Continua valendo a regra da Fase 12/15: mesmo com e-mail de domínio certo e login
+  Microsoft bem-sucedido, a pessoa só vê dados se o e-mail dela estiver cadastrado
+  (e ativo) em `usuarios_permitidos` — isso é feito manualmente por um Administrador
+  na aba **Usuários** do app (Fase 15).
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*

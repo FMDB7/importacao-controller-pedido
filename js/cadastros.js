@@ -35,78 +35,56 @@
     return msg || 'Erro ao processar a solicitação.';
   }
 
-  /* ---------- LOGIN ---------- */
+  /* ---------- LOGIN (somente Microsoft, domínios corporativos) ---------- */
   const overlay = document.getElementById('login-overlay');
-  const emailEl = document.getElementById('login-email');
-  const passEl = document.getElementById('login-password');
   const errEl = document.getElementById('login-error');
-  const submitBtn = document.getElementById('login-submit');
-  const toggleLink = document.getElementById('login-toggle-link');
-  const modeLabel = document.getElementById('login-mode-label');
-  let mode = 'signin';
 
-  function setMode(m) {
-    mode = m;
-    errEl.textContent = '';
-    if (m === 'signin') {
-      submitBtn.textContent = 'Entrar';
-      modeLabel.textContent = 'Ainda não tem conta?';
-      toggleLink.textContent = 'Criar conta';
-    } else {
-      submitBtn.textContent = 'Criar conta';
-      modeLabel.textContent = 'Já tem conta?';
-      toggleLink.textContent = 'Entrar';
-    }
+  // Login é feito só com a conta Microsoft corporativa (e-mail + senha do
+  // próprio e-mail, validados pela Microsoft/Azure AD — este app nunca vê a
+  // senha). Mesmo assim, checamos aqui o domínio do e-mail autenticado como
+  // uma segunda camada: se por algum motivo a conta Microsoft não for
+  // @topinternacional.com.br nem @tfs.com.br, a pessoa é deslogada com um
+  // aviso claro em vez de só cair numa tela vazia por falta de permissão.
+  const DOMINIOS_PERMITIDOS = ['topinternacional.com.br', 'tfs.com.br'];
+  function dominioPermitido(email) {
+    const dominio = (email || '').split('@')[1]?.toLowerCase();
+    return !!dominio && DOMINIOS_PERMITIDOS.includes(dominio);
   }
-
-  toggleLink && toggleLink.addEventListener('click', (e) => {
-    e.preventDefault();
-    setMode(mode === 'signin' ? 'signup' : 'signin');
-  });
-
-  async function doAuth() {
-    const email = emailEl.value.trim();
-    const password = passEl.value;
-    if (!email || !password) { errEl.textContent = 'Informe e-mail e senha.'; return; }
-    submitBtn.disabled = true;
-    errEl.textContent = '';
-    try {
-      if (mode === 'signin') await Auth.signIn(email, password);
-      else await Auth.signUp(email, password);
-      overlay.classList.add('hidden');
-      if (window.Usuarios) window.Usuarios.registrarLogin('senha');
-      loadAll();
-    } catch (err) {
-      errEl.textContent = err.message || 'Falha na autenticação.';
-    } finally {
-      submitBtn.disabled = false;
-    }
-  }
-
-  submitBtn && submitBtn.addEventListener('click', doAuth);
-  passEl && passEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') doAuth(); });
 
   const msBtn = document.getElementById('login-microsoft');
   msBtn && msBtn.addEventListener('click', async () => {
-    errEl.textContent = '';
+    if (errEl) errEl.textContent = '';
     msBtn.disabled = true;
     try {
       await Auth.signInWithMicrosoft(); // navega para fora da página em caso de sucesso
     } catch (err) {
-      errEl.textContent = err.message || 'Falha ao iniciar login com a Microsoft.';
+      if (errEl) errEl.textContent = err.message || 'Falha ao iniciar login com a Microsoft.';
       msBtn.disabled = false;
     }
   });
 
+  async function aposLoginOk(metodo) {
+    let email = '';
+    try {
+      const who = await DB.rpc('app_whoami', {});
+      email = (Array.isArray(who) && who[0] && who[0].email) || '';
+    } catch (e) { console.warn('Não foi possível confirmar o e-mail autenticado:', e.message); }
+
+    if (email && !dominioPermitido(email)) {
+      if (errEl) errEl.textContent = `O e-mail ${email} não é uma conta corporativa autorizada (use @topinternacional.com.br ou @tfs.com.br).`;
+      Auth.signOut(false); // limpa a sessão sem recarregar, pra pessoa ver a mensagem de erro
+      return;
+    }
+    overlay.classList.add('hidden');
+    if (window.Usuarios) window.Usuarios.registrarLogin(metodo);
+    loadAll();
+  }
+
   // Login com Microsoft termina de forma assíncrona (troca de code por token
   // depois do redirect de volta), então auth.js avisa por evento quando acabar.
-  window.addEventListener('topimport:auth-changed', () => {
-    overlay.classList.add('hidden');
-    if (window.Usuarios) window.Usuarios.registrarLogin('microsoft');
-    loadAll();
-  });
+  window.addEventListener('topimport:auth-changed', () => { aposLoginOk('microsoft'); });
   window.addEventListener('topimport:auth-error', (e) => {
-    errEl.textContent = e.detail || 'Falha ao entrar com a Microsoft.';
+    if (errEl) errEl.textContent = e.detail || 'Falha ao entrar com a Microsoft.';
   });
 
   if (window.Auth && Auth.isLoggedIn()) {
