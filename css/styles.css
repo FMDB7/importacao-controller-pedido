@@ -75,17 +75,46 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: width .2s ease;
 }
 
 .sidebar-logo {
   padding: 20px 20px 16px;
   border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
 }
 .logo-mark {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
 }
+.sidebar-toggle {
+  background: transparent; border: 1px solid var(--border-md); border-radius: 7px;
+  width: 26px; height: 26px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-3); cursor: pointer;
+  transition: background .15s, color .15s, transform .2s;
+}
+.sidebar-toggle:hover { background: var(--bg-hover); color: var(--ink-1); }
+
+/* ─── Sidebar recolhida ─────────────────────────────────────────── */
+.sidebar.collapsed { width: 64px; }
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-item span,
+.sidebar.collapsed .sidebar-label,
+.sidebar.collapsed .user-name,
+.sidebar.collapsed .user-role,
+.sidebar.collapsed .nav-badge,
+.sidebar.collapsed .logout-label {
+  display: none;
+}
+.sidebar.collapsed .sidebar-logo { padding: 20px 14px 16px; justify-content: center; }
+.sidebar.collapsed .sidebar-logo .logo-mark { justify-content: center; }
+.sidebar.collapsed .sidebar-toggle { transform: rotate(180deg); }
+.sidebar.collapsed .nav-item { justify-content: center; padding: 10px; }
+.sidebar.collapsed .user-card { justify-content: center; padding: 8px; }
+.sidebar.collapsed .sidebar-footer [data-logout] { padding: 8px; justify-content: center; }
 .logo-icon {
   width: 34px; height: 34px;
   background: linear-gradient(135deg, var(--cyan), var(--violet));

@@ -18,6 +18,36 @@ function showView(id) {
 
 navItems.forEach(n => n.addEventListener('click', () => showView(n.dataset.view)));
 
+/* ─── Sidebar: recolher / expandir ─────────────────────────────── */
+(function () {
+  const sidebar = document.getElementById('sidebar');
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  if (!sidebar || !toggleBtn) return;
+  const STORAGE_KEY = 'topimport_sidebar_collapsed';
+
+  // Com o menu recolhido só os ícones ficam visíveis — usa o texto de cada
+  // item como tooltip (title) pra o operador ainda saber o que é cada um.
+  navItems.forEach(n => {
+    const label = n.querySelector('span')?.textContent?.trim();
+    if (label) n.title = label;
+  });
+
+  function aplicar(colapsado) {
+    sidebar.classList.toggle('collapsed', colapsado);
+    toggleBtn.title = colapsado ? 'Expandir menu' : 'Recolher menu';
+  }
+
+  let colapsado = false;
+  try { colapsado = localStorage.getItem(STORAGE_KEY) === '1'; } catch (e) {}
+  aplicar(colapsado);
+
+  toggleBtn.addEventListener('click', () => {
+    colapsado = !sidebar.classList.contains('collapsed');
+    aplicar(colapsado);
+    try { localStorage.setItem(STORAGE_KEY, colapsado ? '1' : '0'); } catch (e) {}
+  });
+})();
+
 /* ─── Resumo Total Compras toggle ──────────────────────────────── */
 function toggleResumo() {
   const body    = document.getElementById('resumo-body');

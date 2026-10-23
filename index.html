@@ -26,7 +26,7 @@
 <!-- APP SHELL -->
 <div class="app">
   <!-- SIDEBAR -->
-  <nav class="sidebar">
+  <nav class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="logo-mark">
         <div class="logo-icon">IC</div>
@@ -35,6 +35,9 @@
           <div class="logo-sub">Controller Pedido</div>
         </div>
       </div>
+      <button type="button" class="sidebar-toggle" id="sidebar-toggle" title="Recolher menu">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.3" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
     </div>
 
     <div class="sidebar-section" style="padding-top:16px;">
@@ -98,8 +101,8 @@
           <div class="user-role" id="user-card-role">—</div>
         </div>
       </div>
-      <button type="button" class="btn btn-ghost" data-logout title="Sair do sistema" style="width:100%;margin-top:10px;font-size:12px;padding:8px;">
-        🚪 Sair do sistema
+      <button type="button" class="btn btn-ghost" data-logout title="Sair do sistema" style="width:100%;margin-top:10px;font-size:12px;padding:8px;justify-content:center;">
+        🚪 <span class="logout-label">Sair do sistema</span>
       </button>
     </div>
   </nav>
