@@ -22,10 +22,15 @@
   // Cache dos últimos registros carregados por tabela, usado para preencher o modal de edição
   const CACHE = { fornecedores: [], colaboradores: [], cidades: [] };
 
-  function friendlyError(e) {
+  function friendlyError(e, acao) {
     const msg = e?.message || '';
+    if (/row-level security|row level security/i.test(msg)) {
+      return 'Acesso negado pelo servidor para este usuário. Se você acabou de entrar (login), tente sair e entrar novamente; se persistir, fale com o administrador do sistema.';
+    }
     if (/foreign key|violat/i.test(msg)) {
-      return 'Não é possível excluir: existem pedidos ou outros registros vinculados a este cadastro.';
+      return acao === 'excluir'
+        ? 'Não é possível excluir: existem pedidos ou outros registros vinculados a este cadastro.'
+        : 'Não foi possível salvar: o registro conflita com uma regra do banco de dados (ex.: valor inválido ou vínculo quebrado).';
     }
     return msg || 'Erro ao processar a solicitação.';
   }
@@ -297,7 +302,7 @@
       closeQuickAdd();
       loadAll();
     } catch (e) {
-      alert('Erro ao salvar: ' + friendlyError(e));
+      alert('Erro ao salvar: ' + friendlyError(e, 'salvar'));
     } finally {
       qSave.disabled = false;
     }
@@ -309,7 +314,7 @@
       await DB.remove(table, id);
       loadAll();
     } catch (e) {
-      alert('Erro ao excluir: ' + friendlyError(e));
+      alert('Erro ao excluir: ' + friendlyError(e, 'excluir'));
     }
   }
 

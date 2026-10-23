@@ -80,7 +80,8 @@
 
   const openBtns = ['btn-novo-lancamento', 'btn-novo-lancamento-2'];
   openBtns.forEach(id => document.getElementById(id)?.addEventListener('click', () => {
-    if (!catalogLoaded) loadCatalogs();
+    loadCatalogs(); // sempre busca a lista atual (não usa cache) — um fornecedor/colaborador
+                     // recém-cadastrado precisa aparecer já na próxima vez que o modal abrir
     setModalModoCriacao();
     resetForm();
   }));
@@ -109,7 +110,7 @@
 
   /* ---------- Abrir modal em modo de edição, pré-preenchido ---------- */
   async function openEditPedido(pedidoId) {
-    if (!catalogLoaded) await loadCatalogs();
+    await loadCatalogs(); // sempre busca a lista atual (não usa cache)
     resetForm();
     try {
       const [pedidosRows, faturas, embarques, pagamentos] = await Promise.all([
