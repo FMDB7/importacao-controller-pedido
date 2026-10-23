@@ -16,10 +16,38 @@
     return h;
   }
 
+  /* Sessão expirada (JWT vencido) é tratada à parte de qualquer outro erro:
+     em vez de deixar a mensagem crua do Postgres/PostgREST aparecer dentro
+     de tabelas (ex. "JWT token has expired (exp=...)") e deixar partes do
+     app com permissão/visibilidade indefinida (ex. aba "Usuários" some
+     porque a checagem de admin também falhou silenciosamente), detectamos
+     o caso e levamos a pessoa de volta pra tela de login com um aviso claro. */
+  function isAuthError(status, msg) {
+    if (status === 401 || status === 403) return true;
+    return /jwt/i.test(msg || '') && /(expired|expirado|invalid)/i.test(msg || '');
+  }
+
+  let sessaoExpiradaTratada = false;
+  function tratarSessaoExpirada() {
+    if (sessaoExpiradaTratada) return;
+    sessaoExpiradaTratada = true;
+    if (window.Auth) window.Auth.signOut(false); // limpa o token sem recarregar a página
+    const overlay = document.getElementById('login-overlay');
+    const errEl = document.getElementById('login-error');
+    if (overlay) overlay.classList.remove('hidden');
+    if (errEl) errEl.textContent = 'Sua sessão expirou. Faça login novamente com a Microsoft.';
+    const msBtn = document.getElementById('login-microsoft');
+    if (msBtn) msBtn.disabled = false;
+  }
+
   async function handle(res) {
     if (!res.ok) {
       let msg = 'Erro ao comunicar com o banco de dados';
       try { const j = await res.json(); msg = j.message || j.error || msg; } catch (e) {}
+      if (isAuthError(res.status, msg)) {
+        tratarSessaoExpirada();
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
       throw new Error(msg);
     }
     if (res.status === 204) return null;
