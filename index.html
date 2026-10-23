@@ -520,17 +520,62 @@
           </div>
         </div>
 
+        <!-- Cards de período (vencimento da invoice) -->
+        <div class="period-cards" id="fat-period-cards"></div>
+
+        <!-- Painel de filtros avançados -->
+        <div class="filter-panel">
+          <div class="filter-panel-head">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            FILTROS
+          </div>
+          <div class="filter-panel-grid">
+            <div class="form-group">
+              <label class="form-label">Fornecedor</label>
+              <select class="form-select" id="fat-flt-fornecedor"><option value="">Todos os fornecedores</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="fat-flt-status"><option value="">Todos os status</option><option>Pendente</option><option>Paga</option><option>Vencida</option><option>Cancelada</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Moeda</label>
+              <select class="form-select" id="fat-flt-moeda"><option value="">Todas as moedas</option><option>USD</option><option>EUR</option><option>GBP</option><option>CHF</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vencimento inicial</label>
+              <input type="date" class="form-input" id="fat-flt-data-ini">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vencimento final</label>
+              <input type="date" class="form-input" id="fat-flt-data-fim">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor BRL mín</label>
+              <input type="number" step="0.01" class="form-input" id="fat-flt-valor-min" placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor BRL máx</label>
+              <input type="number" step="0.01" class="form-input" id="fat-flt-valor-max" placeholder="0,00">
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Buscar</label>
+              <input type="text" class="form-input" id="fat-flt-busca" placeholder="Invoice, PO, fornecedor...">
+            </div>
+          </div>
+          <div class="filter-panel-actions">
+            <button class="btn btn-primary" id="fat-flt-buscar">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Buscar
+            </button>
+            <button class="btn btn-ghost" id="fat-flt-limpar">✕ Limpar</button>
+          </div>
+        </div>
+
         <div class="table-card">
           <div class="table-head">
-            <div style="display:flex;gap:8px;align-items:center;">
-              <div class="search-box" style="width:280px;">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input placeholder="Buscar invoice, fornecedor, PO...">
-              </div>
-              <select class="filter-select"><option>Todas as Moedas</option><option>USD</option><option>EUR</option><option>GBP</option><option>CHF</option></select>
-              <select class="filter-select"><option>Todos os Status</option><option>Pendente</option><option>Paga</option><option>Vencida</option><option>Cancelada</option></select>
-            </div>
-            <div style="font-size:12px;color:var(--ink-3);" id="fat-contagem">Mostrando <strong style="color:var(--ink-1)">0</strong> invoices</div>
+            <div class="table-title">Invoices</div>
+            <div style="font-size:12px;color:var(--ink-3);" id="fat-contagem">—</div>
           </div>
           <table>
             <thead>
@@ -595,17 +640,54 @@
           </div>
         </div>
 
+        <!-- Cards de período (data de embarque) -->
+        <div class="period-cards" id="emb-period-cards"></div>
+
+        <!-- Painel de filtros avançados -->
+        <div class="filter-panel">
+          <div class="filter-panel-head">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            FILTROS
+          </div>
+          <div class="filter-panel-grid">
+            <div class="form-group">
+              <label class="form-label">Fornecedor</label>
+              <select class="form-select" id="emb-flt-fornecedor"><option value="">Todos os fornecedores</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="emb-flt-status"><option value="">Todos os status</option><option>Aguardando</option><option>Embarcado</option><option>Em Trânsito</option><option>No Porto</option><option>Desembaraçando</option><option>Entregue</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Modal</label>
+              <select class="form-select" id="emb-flt-tipo"><option value="">Todos os modais</option><option>Marítimo</option><option>Aéreo</option><option>Terrestre</option><option>Courier</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Embarque inicial</label>
+              <input type="date" class="form-input" id="emb-flt-data-ini">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Embarque final</label>
+              <input type="date" class="form-input" id="emb-flt-data-fim">
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Buscar</label>
+              <input type="text" class="form-input" id="emb-flt-busca" placeholder="BL, navio, container, PO...">
+            </div>
+          </div>
+          <div class="filter-panel-actions">
+            <button class="btn btn-primary" id="emb-flt-buscar">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Buscar
+            </button>
+            <button class="btn btn-ghost" id="emb-flt-limpar">✕ Limpar</button>
+          </div>
+        </div>
+
         <div class="table-card">
           <div class="table-head">
-            <div style="display:flex;gap:8px;align-items:center;">
-              <div class="search-box" style="width:280px;">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input placeholder="Buscar BL, navio, container, PO...">
-              </div>
-              <select class="filter-select"><option>Todos os Modais</option><option>🚢 Marítimo</option><option>✈️ Aéreo</option><option>🚛 Terrestre</option><option>📦 Courier</option></select>
-              <select class="filter-select"><option>Todos os Status</option><option>Aguardando</option><option>Embarcado</option><option>Em Trânsito</option><option>No Porto</option><option>Desembaraçando</option><option>Entregue</option></select>
-            </div>
-            <div style="font-size:12px;color:var(--ink-3);" id="emb-contagem">Mostrando <strong style="color:var(--ink-1)">0</strong> embarques</div>
+            <div class="table-title">Embarques</div>
+            <div style="font-size:12px;color:var(--ink-3);" id="emb-contagem">—</div>
           </div>
           <table>
             <thead>
@@ -669,17 +751,62 @@
           </div>
         </div>
 
+        <!-- Cards de período (vencimento do pagamento) -->
+        <div class="period-cards" id="pag-period-cards"></div>
+
+        <!-- Painel de filtros avançados -->
+        <div class="filter-panel">
+          <div class="filter-panel-head">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            FILTROS
+          </div>
+          <div class="filter-panel-grid">
+            <div class="form-group">
+              <label class="form-label">Fornecedor</label>
+              <select class="form-select" id="pag-flt-fornecedor"><option value="">Todos os fornecedores</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="pag-flt-status"><option value="">Todos os status</option><option>Pendente</option><option>Liquidado</option><option>Vencido</option><option>Cancelado</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Moeda</label>
+              <select class="form-select" id="pag-flt-moeda"><option value="">Todas as moedas</option><option>USD</option><option>EUR</option><option>GBP</option><option>CHF</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vencimento inicial</label>
+              <input type="date" class="form-input" id="pag-flt-data-ini">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vencimento final</label>
+              <input type="date" class="form-input" id="pag-flt-data-fim">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor BRL mín</label>
+              <input type="number" step="0.01" class="form-input" id="pag-flt-valor-min" placeholder="0,00">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Valor BRL máx</label>
+              <input type="number" step="0.01" class="form-input" id="pag-flt-valor-max" placeholder="0,00">
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Buscar</label>
+              <input type="text" class="form-input" id="pag-flt-busca" placeholder="Contrato, banco, PO...">
+            </div>
+          </div>
+          <div class="filter-panel-actions">
+            <button class="btn btn-primary" id="pag-flt-buscar">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Buscar
+            </button>
+            <button class="btn btn-ghost" id="pag-flt-limpar">✕ Limpar</button>
+          </div>
+        </div>
+
         <div class="table-card">
           <div class="table-head">
-            <div style="display:flex;gap:8px;align-items:center;">
-              <div class="search-box" style="width:280px;">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input placeholder="Buscar contrato, banco, PO...">
-              </div>
-              <select class="filter-select"><option>Todas as Moedas</option><option>USD</option><option>EUR</option><option>GBP</option><option>CHF</option></select>
-              <select class="filter-select"><option>Todos os Status</option><option>Pendente</option><option>Liquidado</option><option>Vencido</option><option>Cancelado</option></select>
-            </div>
-            <div style="font-size:12px;color:var(--ink-3);" id="pag-contagem">Mostrando <strong style="color:var(--ink-1)">0</strong> pagamentos</div>
+            <div class="table-title">Pagamentos</div>
+            <div style="font-size:12px;color:var(--ink-3);" id="pag-contagem">—</div>
           </div>
           <table>
             <thead>

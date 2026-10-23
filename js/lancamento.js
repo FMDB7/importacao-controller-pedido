@@ -336,6 +336,7 @@
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 4000);
   }
+  window.showToast = showToast;
 
   function val(id) { return document.getElementById(id)?.value?.trim() || ''; }
 
