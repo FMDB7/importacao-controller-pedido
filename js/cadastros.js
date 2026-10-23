@@ -214,7 +214,7 @@
         { name: 'email', label: 'E-mail' },
         { name: 'telefone', label: 'Telefone' },
         { name: 'cargo', label: 'Cargo', type: 'select', options: ['BM','COORD BM','Diretor','Analista','Assistente'], required: true },
-        { name: 'setor', label: 'Setor', type: 'select', options: ['A','B','BEB','BEB NAC','BOL','C','C&D','O','P','PUB','R'] },
+        { name: 'setor', label: 'Categoria Código', type: 'select', options: ['A','B','BEB','BEB NAC','BOL','C','C&D','O','P','PUB','R'] },
         { name: 'localizacao', label: 'Localização', type: 'select', options: ['ZF','SP'] }
       ]
     },

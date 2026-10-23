@@ -349,7 +349,7 @@
     const dataPedido = val('f-data-pedido');
 
     if (!numeroPedido || !fornecedorId || !colaboradorId || !setor || !dataPedido) {
-      alert('Preencha os campos obrigatórios da aba Pedido: Nº Pedido, Setor, Fornecedor, Responsável e Data de Envio.');
+      alert('Preencha os campos obrigatórios da aba Pedido: Nº Pedido, Categoria Código, Fornecedor, Responsável e Data de Envio.');
       return;
     }
 
