@@ -392,6 +392,11 @@
       const pedido = isEdit
         ? await DB.update('pedidos', editingPedidoId, dadosPedido)
         : await DB.create('pedidos', dadosPedido);
+      // A partir daqui o pedido já existe no banco — se um passo seguinte
+      // falhar (fatura/embarque/pagamento) e a pessoa clicar em salvar de
+      // novo, isso precisa virar um UPDATE no mesmo pedido, não um INSERT
+      // novo (que colidiria com o nº de pedido já gravado).
+      editingPedidoId = pedido.id;
 
       // 2) FATURA (se houver nº de invoice)
       let fatura = null;
@@ -410,6 +415,7 @@
         fatura = editingFaturaId
           ? await DB.update('faturas', editingFaturaId, dadosFatura)
           : await DB.create('faturas', { ...dadosFatura, status: 'Pendente' });
+        editingFaturaId = fatura.id;
       } else if (editingFaturaId) {
         // Pagamentos podem referenciar esta fatura (sem cascade) — desvincula antes de excluir
         await DB.updateWhere('pagamentos', `fatura_id=eq.${editingFaturaId}`, { fatura_id: null });
@@ -436,7 +442,8 @@
         if (editingEmbarqueId) {
           await DB.update('embarques', editingEmbarqueId, dadosEmbarque);
         } else {
-          await DB.create('embarques', { ...dadosEmbarque, status: val('f-emb-chegada') ? 'Entregue' : (embData ? 'Embarcado' : 'Aguardando') });
+          const embarqueCriado = await DB.create('embarques', { ...dadosEmbarque, status: val('f-emb-chegada') ? 'Entregue' : (embData ? 'Embarcado' : 'Aguardando') });
+          editingEmbarqueId = embarqueCriado.id;
         }
       } else if (editingEmbarqueId) {
         await DB.remove('embarques', editingEmbarqueId);
@@ -478,7 +485,8 @@
         if (editingPagamentoId) {
           await DB.update('pagamentos', editingPagamentoId, { ...dadosPagamento, status: val('pay-data-pgto') ? 'Liquidado' : undefined });
         } else {
-          await DB.create('pagamentos', { ...dadosPagamento, status: val('pay-data-pgto') ? 'Liquidado' : 'Pendente' });
+          const pagamentoCriado = await DB.create('pagamentos', { ...dadosPagamento, status: val('pay-data-pgto') ? 'Liquidado' : 'Pendente' });
+          editingPagamentoId = pagamentoCriado.id;
         }
       } else if (editingPagamentoId) {
         await DB.remove('pagamentos', editingPagamentoId);
@@ -496,7 +504,13 @@
       if (window.checkNotificacoes) window.checkNotificacoes();
     } catch (e) {
       console.error(e);
-      showToast('Erro ao salvar', e.message || 'Não foi possível gravar o lançamento.', false);
+      let msg = e.message || 'Não foi possível gravar o lançamento.';
+      if (/duplicate key|unique constraint/i.test(msg) && /numero_pedido/i.test(msg)) {
+        msg = `Já existe um pedido cadastrado com o número "${numeroPedido}". Use outro número de PO ou verifique na tela de Pedidos se este lançamento já foi salvo.`;
+      } else if (/duplicate key|unique constraint/i.test(msg)) {
+        msg = 'Já existe um registro com esses mesmos dados (nº de invoice, por exemplo). Verifique os valores informados.';
+      }
+      showToast('Erro ao salvar', msg, false);
     } finally {
       btn.disabled = false;
       btn.textContent = editingPedidoId ? '💾 Salvar Alterações' : '📤 Confirmar Lançamento';
