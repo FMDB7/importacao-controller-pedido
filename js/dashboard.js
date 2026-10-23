@@ -177,7 +177,7 @@
   }
 
   /* ---------- Relatórios (comparativo anual + top fornecedores) ---------- */
-  async function buildReportCharts() {
+  async function buildReportCharts(anoSelecionado) {
     let rows;
     try {
       rows = await DB.list('pedidos', 'select=valor_brl,valor_total,taxa_cambio,moeda,data_pedido,fornecedor_id,fornecedores(razao_social)&limit=2000');
@@ -187,7 +187,23 @@
     }
 
     const now = new Date();
-    const anoAtual = now.getFullYear(), anoAnterior = anoAtual - 1;
+    const anoAtual = anoSelecionado || now.getFullYear(), anoAnterior = anoAtual - 1;
+
+    // Seletor de ano: popula com os anos que realmente têm pedidos (+ o ano
+    // corrente do calendário), já que lançamentos retroativos podem cair em
+    // qualquer ano — antes era uma lista fixa (2024/2023/2022) que não fazia nada.
+    const selectAno = document.getElementById('rel-ano-select');
+    if (selectAno) {
+      const anosComDados = new Set(rows.filter(p => p.data_pedido).map(p => new Date(p.data_pedido + 'T00:00:00').getFullYear()));
+      anosComDados.add(now.getFullYear());
+      const anosOrdenados = Array.from(anosComDados).sort((a, b) => b - a);
+      const optsHtml = anosOrdenados.map(a => `<option value="${a}"${a === anoAtual ? ' selected' : ''}>${a}</option>`).join('');
+      if (selectAno.innerHTML !== optsHtml) selectAno.innerHTML = optsHtml;
+      if (!selectAno.dataset.wired) {
+        selectAno.addEventListener('change', () => buildReportCharts(parseInt(selectAno.value, 10)));
+        selectAno.dataset.wired = '1';
+      }
+    }
     document.getElementById('rel-ano-atual') && (document.getElementById('rel-ano-atual').textContent = anoAtual);
     document.getElementById('rel-ano-anterior') && (document.getElementById('rel-ano-anterior').textContent = anoAnterior);
     document.getElementById('rel-label-volume') && (document.getElementById('rel-label-volume').textContent = `Volume Total ${anoAtual}`);
