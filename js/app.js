@@ -8,7 +8,11 @@ function showView(id) {
   navItems.forEach(n => n.classList.remove('active'));
   document.getElementById('view-' + id)?.classList.add('active');
   document.querySelector(`[data-view="${id}"]`)?.classList.add('active');
-  pageTitle.textContent = views[id] || '';
+  if (pageTitle) pageTitle.textContent = views[id] || '';
+  // A maioria das telas já tem seu próprio cabeçalho (.page-actions); o
+  // título genérico só aparece no Dashboard, que não tem um próprio.
+  const heading = document.querySelector('.page-heading');
+  if (heading) heading.style.display = id === 'dashboard' ? '' : 'none';
   if (id === 'relatorios') { setTimeout(buildReportCharts, 50); }
   if (id === 'dashboard' && window.renderDashboard) { setTimeout(window.renderDashboard, 50); }
   if (id === 'usuarios' && window.Usuarios) {
@@ -17,36 +21,6 @@ function showView(id) {
 }
 
 navItems.forEach(n => n.addEventListener('click', () => showView(n.dataset.view)));
-
-/* ─── Sidebar: recolher / expandir ─────────────────────────────── */
-(function () {
-  const sidebar = document.getElementById('sidebar');
-  const toggleBtn = document.getElementById('sidebar-toggle');
-  if (!sidebar || !toggleBtn) return;
-  const STORAGE_KEY = 'topimport_sidebar_collapsed';
-
-  // Com o menu recolhido só os ícones ficam visíveis — usa o texto de cada
-  // item como tooltip (title) pra o operador ainda saber o que é cada um.
-  navItems.forEach(n => {
-    const label = n.querySelector('span')?.textContent?.trim();
-    if (label) n.title = label;
-  });
-
-  function aplicar(colapsado) {
-    sidebar.classList.toggle('collapsed', colapsado);
-    toggleBtn.title = colapsado ? 'Expandir menu' : 'Recolher menu';
-  }
-
-  let colapsado = false;
-  try { colapsado = localStorage.getItem(STORAGE_KEY) === '1'; } catch (e) {}
-  aplicar(colapsado);
-
-  toggleBtn.addEventListener('click', () => {
-    colapsado = !sidebar.classList.contains('collapsed');
-    aplicar(colapsado);
-    try { localStorage.setItem(STORAGE_KEY, colapsado ? '1' : '0'); } catch (e) {}
-  });
-})();
 
 /* ─── Resumo Total Compras toggle ──────────────────────────────── */
 function toggleResumo() {
@@ -145,8 +119,8 @@ function sparklineSVG(id, data, color) {
 if (typeof Chart === 'undefined') {
   console.warn('Chart.js não carregou — gráficos desativados (abra online ou com servidor local)');
 } else {
-  Chart.defaults.color = '#8AA3C0';
-  Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+  Chart.defaults.color = '#64748B';
+  Chart.defaults.borderColor = 'rgba(15,23,42,0.07)';
   Chart.defaults.font.family = "'Inter', sans-serif";
   Chart.defaults.font.size = 11;
 }
@@ -155,26 +129,17 @@ if (typeof Chart === 'undefined') {
 function buildReportCharts() {}
 
 /* ─── Filtro de Grupos / Localização (Pedidos) ──────────────────── */
+/* O recálculo em si (quais linhas ficam visíveis) é feito por
+   aplicarFiltrosAvancados() em js/lancamento.js, que também considera
+   fornecedor/status/moeda/data/valor/busca/mês — window.applyPedidosFilter
+   é atribuído lá. Este bloco só cuida do toggle visual dos chips. */
 (function () {
   const grpChips = document.querySelectorAll('.grp-chip:not(.loc-chip)');
   const locChips = document.querySelectorAll('.grp-chip.loc-chip');
-
-  function applyFilter() {
-    // Re-consulta as linhas a cada chamada: a tabela de Pedidos é
-    // renderizada dinamicamente a partir do banco (js/lancamento.js),
-    // então uma lista estática ficaria obsoleta após cada atualização.
-    const rows = document.querySelectorAll('#view-lancamentos tbody tr[data-grp]');
-    const activeGrps = [...grpChips].filter(c => c.classList.contains('active')).map(c => c.dataset.grp);
-    const activeLocs = [...locChips].filter(c => c.classList.contains('active')).map(c => c.dataset.loc);
-    rows.forEach(r => {
-      const show = activeGrps.includes(r.dataset.grp) && activeLocs.includes(r.dataset.loc);
-      r.style.display = show ? '' : 'none';
-    });
-  }
-
-  grpChips.forEach(c => c.addEventListener('click', () => { c.classList.toggle('active'); applyFilter(); }));
-  locChips.forEach(c => c.addEventListener('click', () => { c.classList.toggle('active'); applyFilter(); }));
-  window.applyPedidosFilter = applyFilter;
+  [...grpChips, ...locChips].forEach(c => c.addEventListener('click', () => {
+    c.classList.toggle('active');
+    if (window.applyPedidosFilter) window.applyPedidosFilter();
+  }));
 })();
 
 /* ─── Modal: Taxas de Câmbio ────────────────────────────────────── */

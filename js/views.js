@@ -127,7 +127,7 @@
       return;
     }
     const STATUS_BADGE = {
-      'Aguardando': '<span class="status-badge" style="background:rgba(255,255,255,0.06);color:var(--ink-3);">Aguardando</span>',
+      'Aguardando': '<span class="status-badge" style="background:rgba(15,23,42,0.055);color:var(--ink-3);">Aguardando</span>',
       'Embarcado': '<span class="status-badge s-pedido-enviado">Embarcado</span>',
       'Em Trânsito': '<span class="status-badge s-em-trânsito">Em Trânsito</span>',
       'No Porto': '<span class="status-badge s-bl-recebido">No Porto</span>',

@@ -530,14 +530,22 @@
   });
 
   /* ---------- Listagem real de Pedidos ---------- */
+  let PEDIDOS_CACHE = [];
+  const STATUS_OPCOES = Object.keys(STATUS_CLASS);
+  const MES_LABEL = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
   async function renderPedidos() {
     const tbody = document.getElementById('tbl-pedidos');
     if (!tbody) return;
     try {
       const rows = await DB.list('pedidos',
         'select=*,fornecedores(razao_social),colaboradores(nome,cargo)&order=created_at.desc&limit=100');
+      PEDIDOS_CACHE = rows;
       if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
+        renderPeriodCards([]);
+        popularFiltros([]);
+        atualizarContagem(0, 0);
         return;
       }
       tbody.innerHTML = rows.map(p => {
@@ -547,8 +555,12 @@
         const setorNome = SETOR_NOME[p.setor] || p.setor || '—';
         const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
         const locCls = p.localizacao === 'SP' ? 'loc-sp' : 'loc-zf';
+        const mesRef = p.data_pedido ? p.data_pedido.slice(0, 7) : '';
         return `
-          <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'ZF'}">
+          <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'ZF'}" data-mes="${mesRef}"
+              data-status="${p.status || ''}" data-moeda="${p.moeda || ''}" data-fornecedor="${forn}"
+              data-valor="${p.valor_brl || 0}" data-data="${p.data_pedido || ''}"
+              data-busca="${(p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + forn}">
             <td class="code" style="font-weight:700;color:var(--cyan);">${(p.numero_pedido||'').slice(-4)}</td>
             <td><span class="mono" style="font-size:11.5px;">${p.numero_pedido}</span>${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI" style="margin-left:6px;">📎</a>` : ''}${p.numero_pi ? `<div style="font-size:10px;color:var(--ink-3);">📁 ${p.numero_pi}</div>` : ''}</td>
             <td>${forn}</td>
@@ -559,18 +571,158 @@
             <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
             <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span><div style="font-size:10px;color:var(--ink-3);margin-top:2px;">${cargo} · ${colab}</div></td>
             <td class="date">—</td>
-            <td class="ta-c"><span class="status-badge ${statusCls}">${p.status}</span></td>
+            <td class="ta-c cell-editable" data-inline-status="${p.id}" title="Clique para alterar o status">
+              <span class="status-badge ${statusCls}">${p.status}</span>
+            </td>
             <td><div class="row-actions"><button type="button" data-edit-pedido="${p.id}" title="Editar pedido">✏️</button><button type="button" class="danger" data-delete-pedido="${p.id}" title="Excluir pedido">🗑️</button></div></td>
           </tr>`;
       }).join('');
-      if (window.applyPedidosFilter) {
-        document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
-        window.applyPedidosFilter();
-      }
+      renderPeriodCards(rows);
+      popularFiltros(rows);
+      document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
+      aplicarFiltrosAvancados();
     } catch (e) {
       tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
     }
   }
+
+  /* ---------- Cards de período (mês do pedido) ---------- */
+  let mesSelecionado = null;
+  function renderPeriodCards(rows) {
+    const wrap = document.getElementById('pedidos-period-cards');
+    if (!wrap) return;
+    const porMes = {};
+    rows.forEach(p => {
+      if (!p.data_pedido) return;
+      const mes = p.data_pedido.slice(0, 7);
+      if (!porMes[mes]) porMes[mes] = { count: 0, total: 0 };
+      porMes[mes].count++;
+      porMes[mes].total += Number(p.valor_brl) || 0;
+    });
+    const meses = Object.keys(porMes).sort().reverse();
+    if (!meses.length) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = meses.map(mes => {
+      const [ano, m] = mes.split('-');
+      const label = `${MES_LABEL[parseInt(m,10)-1]}/${ano.slice(2)}`;
+      const info = porMes[mes];
+      const ativo = mesSelecionado === mes;
+      return `<button type="button" class="period-card ${ativo ? 'active' : ''}" data-mes="${mes}">
+        <span class="period-card-label">${label}</span>
+        <span class="period-card-count">${info.count} tít.</span>
+        <span class="period-card-total">${fmtBRL(info.total)}</span>
+      </button>`;
+    }).join('');
+    wrap.querySelectorAll('.period-card').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mes = btn.dataset.mes;
+        mesSelecionado = mesSelecionado === mes ? null : mes;
+        wrap.querySelectorAll('.period-card').forEach(b => b.classList.toggle('active', b.dataset.mes === mesSelecionado));
+        aplicarFiltrosAvancados();
+      });
+    });
+  }
+
+  /* ---------- Popular selects de Fornecedor / Status ---------- */
+  function popularFiltros(rows) {
+    const selForn = document.getElementById('flt-fornecedor');
+    const selStatus = document.getElementById('flt-status');
+    if (selStatus && !selStatus.dataset.populado) {
+      selStatus.innerHTML = '<option value="">Todos os status</option>' +
+        STATUS_OPCOES.map(s => `<option value="${s}">${s}</option>`).join('');
+      selStatus.dataset.populado = '1';
+    }
+    if (selForn) {
+      const nomes = [...new Set(rows.map(p => p.fornecedores ? p.fornecedores.razao_social : null).filter(Boolean))].sort();
+      const atual = selForn.value;
+      selForn.innerHTML = '<option value="">Todos os fornecedores</option>' + nomes.map(n => `<option>${n}</option>`).join('');
+      selForn.value = atual;
+    }
+  }
+
+  function atualizarContagem(visiveis, total) {
+    const el = document.getElementById('pedidos-count');
+    if (el) el.textContent = total ? `${visiveis} de ${total}` : '0';
+  }
+
+  /* ---------- Filtros avançados (fornecedor/status/moeda/data/valor/busca) ---------- */
+  function aplicarFiltrosAvancados() {
+    const forn = document.getElementById('flt-fornecedor')?.value || '';
+    const status = document.getElementById('flt-status')?.value || '';
+    const moeda = document.getElementById('flt-moeda')?.value || '';
+    const dataIni = document.getElementById('flt-data-ini')?.value || '';
+    const dataFim = document.getElementById('flt-data-fim')?.value || '';
+    const valorMin = parseFloat(document.getElementById('flt-valor-min')?.value || '');
+    const valorMax = parseFloat(document.getElementById('flt-valor-max')?.value || '');
+    const busca = (document.getElementById('flt-busca')?.value || '').trim().toLowerCase();
+
+    const grpChips = document.querySelectorAll('.grp-chip:not(.loc-chip)');
+    const locChips = document.querySelectorAll('.grp-chip.loc-chip');
+    const activeGrps = [...grpChips].filter(c => c.classList.contains('active')).map(c => c.dataset.grp);
+    const activeLocs = [...locChips].filter(c => c.classList.contains('active')).map(c => c.dataset.loc);
+
+    const rows = document.querySelectorAll('#tbl-pedidos tr[data-grp]');
+    let visiveis = 0;
+    rows.forEach(r => {
+      let ok = true;
+      if (grpChips.length && !activeGrps.includes(r.dataset.grp)) ok = false;
+      if (locChips.length && !activeLocs.includes(r.dataset.loc)) ok = false;
+      if (forn && r.dataset.fornecedor !== forn) ok = false;
+      if (status && r.dataset.status !== status) ok = false;
+      if (moeda && r.dataset.moeda !== moeda) ok = false;
+      if (dataIni && r.dataset.data && r.dataset.data < dataIni) ok = false;
+      if (dataFim && r.dataset.data && r.dataset.data > dataFim) ok = false;
+      if (!isNaN(valorMin) && Number(r.dataset.valor) < valorMin) ok = false;
+      if (!isNaN(valorMax) && Number(r.dataset.valor) > valorMax) ok = false;
+      if (mesSelecionado && r.dataset.mes !== mesSelecionado) ok = false;
+      if (busca && !(r.dataset.busca || '').toLowerCase().includes(busca)) ok = false;
+      r.style.display = ok ? '' : 'none';
+      if (ok) visiveis++;
+    });
+    atualizarContagem(visiveis, rows.length);
+  }
+  window.applyPedidosFilter = aplicarFiltrosAvancados;
+
+  document.getElementById('flt-buscar')?.addEventListener('click', aplicarFiltrosAvancados);
+  document.getElementById('flt-busca')?.addEventListener('keydown', e => { if (e.key === 'Enter') aplicarFiltrosAvancados(); });
+  ['flt-fornecedor','flt-status','flt-moeda'].forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltrosAvancados));
+  document.getElementById('flt-limpar')?.addEventListener('click', () => {
+    ['flt-fornecedor','flt-status','flt-moeda','flt-data-ini','flt-data-fim','flt-valor-min','flt-valor-max','flt-busca'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    mesSelecionado = null;
+    document.querySelectorAll('.period-card').forEach(b => b.classList.remove('active'));
+    aplicarFiltrosAvancados();
+  });
+
+  /* ---------- Edição inline do Status (clique na célula → <select>) ---------- */
+  document.addEventListener('click', (e) => {
+    const cell = e.target.closest('[data-inline-status]');
+    if (!cell || cell.querySelector('select')) return;
+    const id = cell.dataset.inlineStatus;
+    const atual = cell.querySelector('.status-badge')?.textContent.trim() || '';
+    const sel = document.createElement('select');
+    sel.className = 'form-select inline-edit-select';
+    sel.innerHTML = STATUS_OPCOES.map(s => `<option value="${s}" ${s === atual ? 'selected' : ''}>${s}</option>`).join('');
+    cell.innerHTML = '';
+    cell.appendChild(sel);
+    sel.focus();
+    const commit = async () => {
+      const novo = sel.value;
+      if (novo === atual) { renderPedidos(); return; }
+      sel.disabled = true;
+      try {
+        await DB.update('pedidos', id, { status: novo });
+        showToast('Status atualizado', `Pedido marcado como "${novo}".`, true);
+        renderPedidos();
+        if (window.checkNotificacoes) window.checkNotificacoes();
+      } catch (err) {
+        showToast('Erro ao atualizar status', err.message || 'Tente novamente.', false);
+        renderPedidos();
+      }
+    };
+    sel.addEventListener('change', commit);
+    sel.addEventListener('blur', () => { if (document.body.contains(sel)) renderPedidos(); });
+  });
 
   // Excluir pedido (cascade no banco apaga faturas/embarques/pagamentos vinculados)
   document.addEventListener('click', async (e) => {

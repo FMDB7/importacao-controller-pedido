@@ -120,8 +120,8 @@
         },
         options: {
           responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { mode: 'index', backgroundColor: '#122035', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, padding: 10 } },
-          scales: { x: { grid: { display: false }, ticks: { color: '#4D6A88' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#4D6A88' } } },
+          plugins: { legend: { display: false }, tooltip: { mode: 'index', backgroundColor: '#0F172A', titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(15,23,42,0.1)', borderWidth: 1, padding: 10 } },
+          scales: { x: { grid: { display: false }, ticks: { color: '#64748B' } }, y: { grid: { color: 'rgba(15,23,42,0.06)' }, ticks: { color: '#64748B' } } },
           animation: { duration: 600 }
         }
       });
@@ -137,13 +137,13 @@
         type: 'doughnut',
         data: {
           labels: MOEDAS,
-          datasets: [{ data: dados, backgroundColor: ['rgba(0,207,255,0.85)', 'rgba(0,214,143,0.85)', 'rgba(245,166,35,0.85)', 'rgba(155,122,255,0.85)'], borderColor: '#0D1B2E', borderWidth: 3, hoverOffset: 4 }]
+          datasets: [{ data: dados, backgroundColor: ['rgba(37,99,235,0.85)', 'rgba(13,150,102,0.85)', 'rgba(185,116,10,0.85)', 'rgba(124,92,224,0.85)'], borderColor: '#fff', borderWidth: 3, hoverOffset: 4 }]
         },
         options: {
           responsive: true, maintainAspectRatio: false, cutout: '70%',
           plugins: {
-            legend: { position: 'bottom', labels: { color: '#8AA3C0', boxWidth: 10, padding: 14, font: { size: 11 } } },
-            tooltip: { backgroundColor: '#122035', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } }
+            legend: { position: 'bottom', labels: { color: '#64748B', boxWidth: 10, padding: 14, font: { size: 11 } } },
+            tooltip: { backgroundColor: '#0F172A', titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(15,23,42,0.1)', borderWidth: 1, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } }
           }
         }
       });
@@ -261,14 +261,14 @@
         data: {
           labels: ['Q1', 'Q2', 'Q3', 'Q4'],
           datasets: [
-            { label: String(anoAtual), data: porAno[anoAtual].map(v => +(v / 1e6).toFixed(2)), backgroundColor: 'rgba(0,207,255,0.75)', borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: false },
-            { label: String(anoAnterior), data: porAno[anoAnterior].map(v => +(v / 1e6).toFixed(2)), backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: false }
+            { label: String(anoAtual), data: porAno[anoAtual].map(v => +(v / 1e6).toFixed(2)), backgroundColor: 'rgba(37,99,235,0.8)', borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: false },
+            { label: String(anoAnterior), data: porAno[anoAnterior].map(v => +(v / 1e6).toFixed(2)), backgroundColor: 'rgba(15,23,42,0.14)', borderRadius: { topLeft: 4, topRight: 4 }, borderSkipped: false }
           ]
         },
         options: {
           responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { labels: { color: '#8AA3C0', boxWidth: 10 } }, tooltip: { backgroundColor: '#122035', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 } },
-          scales: { x: { grid: { display: false }, ticks: { color: '#4D6A88' } }, y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#4D6A88', callback: v => 'R$' + v + 'M' } } }
+          plugins: { legend: { labels: { color: '#64748B', boxWidth: 10 } }, tooltip: { backgroundColor: '#0F172A', titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(15,23,42,0.1)', borderWidth: 1 } },
+          scales: { x: { grid: { display: false }, ticks: { color: '#64748B' } }, y: { grid: { color: 'rgba(15,23,42,0.06)' }, ticks: { color: '#64748B', callback: v => 'R$' + v + 'M' } } }
         }
       });
     }
@@ -277,7 +277,7 @@
     const ctxForn = document.getElementById('chart-fornecedores')?.getContext('2d');
     if (ctxForn && typeof Chart !== 'undefined') {
       if (chartFornecedores) chartFornecedores.destroy();
-      const cores = ['rgba(0,207,255,0.75)', 'rgba(0,207,255,0.6)', 'rgba(0,214,143,0.75)', 'rgba(245,166,35,0.75)', 'rgba(155,122,255,0.75)'];
+      const cores = ['rgba(37,99,235,0.8)', 'rgba(37,99,235,0.6)', 'rgba(13,150,102,0.8)', 'rgba(185,116,10,0.8)', 'rgba(124,92,224,0.8)'];
       chartFornecedores = new Chart(ctxForn, {
         type: 'bar',
         data: {
@@ -286,8 +286,8 @@
         },
         options: {
           indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { backgroundColor: '#122035', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1 } },
-          scales: { x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#4D6A88', callback: v => 'R$' + v + 'M' } }, y: { grid: { display: false }, ticks: { color: '#8AA3C0' } } }
+          plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0F172A', titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(15,23,42,0.1)', borderWidth: 1 } },
+          scales: { x: { grid: { color: 'rgba(15,23,42,0.06)' }, ticks: { color: '#64748B', callback: v => 'R$' + v + 'M' } }, y: { grid: { display: false }, ticks: { color: '#64748B' } } }
         }
       });
     }
