@@ -214,7 +214,19 @@
         { name: 'email', label: 'E-mail' },
         { name: 'telefone', label: 'Telefone' },
         { name: 'cargo', label: 'Cargo', type: 'select', options: ['BM','COORD BM','Diretor','Analista','Assistente'], required: true },
-        { name: 'setor', label: 'Categoria Código', type: 'select', options: ['A','B','BEB','BEB NAC','BOL','C','C&D','O','P','PUB','R'] },
+        { name: 'setor', label: 'Setor - Categoria', type: 'select', options: [
+          { value: 'A', label: 'A: ACESSÓRIOS' },
+          { value: 'BEB', label: 'BEB: BEBIDAS' },
+          { value: 'BEB NAC', label: 'BEB NAC: BEBIDAS NACIONAL' },
+          { value: 'B', label: 'B: BIJOUX' },
+          { value: 'BOL', label: 'BOL: BOLSAS, MALAS' },
+          { value: 'C', label: 'C: COSMETIC' },
+          { value: 'C&D', label: 'C&D: CASA & DECORAÇÃO' },
+          { value: 'O', label: 'O: ÓCULOS' },
+          { value: 'P', label: 'P: PERFUMARIA' },
+          { value: 'PUB', label: 'PUB: PUBLICIDADE' },
+          { value: 'R', label: 'R: RELÓGIOS' }
+        ] },
         { name: 'localizacao', label: 'Localização', type: 'select', options: ['ZF','SP'] }
       ]
     },
@@ -250,7 +262,11 @@
         ${f.type === 'select'
           ? `<select class="form-select" data-field="${f.name}">
                <option value="">Selecionar...</option>
-               ${f.options.map(o => `<option value="${o}"${record && record[f.name] === o ? ' selected' : ''}>${o}</option>`).join('')}
+               ${f.options.map(o => {
+                 const val = (o && typeof o === 'object') ? o.value : o;
+                 const lbl = (o && typeof o === 'object') ? o.label : o;
+                 return `<option value="${val}"${record && record[f.name] === val ? ' selected' : ''}>${lbl}</option>`;
+               }).join('')}
              </select>`
           : `<input class="form-input" data-field="${f.name}" value="${record && record[f.name] != null ? String(record[f.name]).replace(/"/g, '&quot;') : ''}">`}
       </div>`).join('');
