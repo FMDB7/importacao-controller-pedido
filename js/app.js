@@ -22,15 +22,6 @@ function showView(id) {
 
 navItems.forEach(n => n.addEventListener('click', () => showView(n.dataset.view)));
 
-/* ─── Resumo Total Compras toggle ──────────────────────────────── */
-function toggleResumo() {
-  const body    = document.getElementById('resumo-body');
-  const chevron = document.getElementById('resumo-chevron');
-  const open    = body.style.maxHeight !== '0px';
-  body.style.maxHeight   = open ? '0px' : '600px';
-  chevron.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)';
-}
-
 /* ─── Modal ────────────────────────────────────────────────────── */
 const backdrop = document.getElementById('modal-backdrop');
 function openModal()  { backdrop.classList.add('open'); setModalTab(0); }
