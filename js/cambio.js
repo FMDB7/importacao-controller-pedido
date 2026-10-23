@@ -55,8 +55,10 @@
           `select=taxa_venda,data_cotacao&moeda=eq.${m.sigla}&order=data_cotacao.desc,created_at.desc&limit=1`);
         if (rows.length) {
           el.textContent = fmtTaxa(parseFloat(rows[0].taxa_venda));
+          el.classList.remove('is-empty');
         } else {
           el.textContent = '—';
+          el.classList.add('is-empty');
         }
       } catch (e) {
         console.warn('Falha ao carregar taxa atual de', m.sigla, e.message);

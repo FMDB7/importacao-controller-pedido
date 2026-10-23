@@ -73,14 +73,20 @@
     MOEDAS.forEach(m => {
       const valEl = document.getElementById(`kpi-${m.toLowerCase()}-valor`);
       const subEl = document.getElementById(`kpi-${m.toLowerCase()}-sub`);
-      if (valEl) valEl.textContent = fmtMoeda(totalMesAtual[m], m);
+      const temDados = totalMesAtual[m] > 0;
+      if (valEl) {
+        valEl.textContent = temDados ? fmtMoeda(totalMesAtual[m], m) : '—';
+        valEl.classList.toggle('is-empty', !temDados);
+      }
       if (subEl) {
         const anterior = totalMesAnterior[m];
-        if (anterior > 0) {
+        if (anterior > 0 && temDados) {
           const delta = ((totalMesAtual[m] - anterior) / anterior) * 100;
           subEl.innerHTML = pct(delta);
+        } else if (temDados) {
+          subEl.textContent = 'sem mês anterior p/ comparar';
         } else {
-          subEl.textContent = totalMesAtual[m] > 0 ? 'sem mês anterior p/ comparar' : 'sem dados ainda';
+          subEl.innerHTML = '<span class="kpi-empty">sem movimentação no período</span>';
         }
       }
       // Sparkline com a série real dos últimos 6 meses (zera tudo se não houver dados)

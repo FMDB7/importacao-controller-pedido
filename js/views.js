@@ -83,12 +83,12 @@
         <tr>
           <td><span class="mono">${f.numero_invoice}</span>${f.arquivo_url ? `<a href="${f.arquivo_url}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}${f.pedidos ? `<div style="font-size:10px;color:var(--ink-3);">📋 ${f.pedidos.numero_pedido}</div>` : ''}</td>
           <td>${forn}</td>
-          <td><span class="currency-tag ${CUR_CLASS[f.moeda]||''}">${f.moeda}</span></td>
-          <td class="mono">${fmtMoeda(f.valor, f.moeda)}</td>
-          <td class="mono" style="font-size:11px;">${f.pedidos?.taxa_cambio ? Number(f.pedidos.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
-          <td class="mono">${f.pedidos?.valor_brl ? fmtBRL(Number(f.pedidos.valor_brl)) : '—'}</td>
-          <td style="font-family:var(--ff-mono);font-size:12px;color:${vencCor};">${vencIcon}${toBR(f.data_vencimento)}</td>
-          <td>${STATUS_BADGE[f.status] || f.status}</td>
+          <td class="ta-c"><span class="currency-tag ${CUR_CLASS[f.moeda]||''}">${f.moeda}</span></td>
+          <td class="num">${fmtMoeda(f.valor, f.moeda)}</td>
+          <td class="num" style="font-size:11px;">${f.pedidos?.taxa_cambio ? Number(f.pedidos.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
+          <td class="num">${f.pedidos?.valor_brl ? fmtBRL(Number(f.pedidos.valor_brl)) : '—'}</td>
+          <td class="date" style="color:${vencCor};">${vencIcon}${toBR(f.data_vencimento)}</td>
+          <td class="ta-c">${STATUS_BADGE[f.status] || f.status}</td>
           <td><div class="row-actions"><button type="button" class="danger" data-delete-rec="faturas:${f.id}" title="Excluir invoice">🗑️</button></div></td>
         </tr>`;
     }).join('');
@@ -140,13 +140,13 @@
       return `
         <tr>
           <td>${e.pedidos ? `<span class="mono">${e.pedidos.numero_pedido}</span>` : '—'}${e.arquivo_bl_url ? `<a href="${e.arquivo_bl_url}" target="_blank" rel="noopener" title="Ver arquivo do BL" style="margin-left:6px;">📎</a>` : ''}<div style="font-size:10px;color:var(--ink-3);">${forn}</div></td>
-          <td style="font-size:18px;text-align:center;">${MODAL_ICON[e.tipo] || '📦'}</td>
-          <td class="mono" style="font-size:12px;">${navio}</td>
-          <td class="mono" style="font-size:11px;">${e.numero_container || '—'}</td>
-          <td class="mono" style="font-size:12px;">${toBR(e.data_embarque)}</td>
-          <td class="mono" style="font-size:12px;">${toBR(e.data_previsao_chegada)}</td>
-          <td class="mono" style="font-size:12px;">${toBR(e.data_chegada)}</td>
-          <td>${STATUS_BADGE[e.status] || e.status}</td>
+          <td class="ta-c" style="font-size:18px;">${MODAL_ICON[e.tipo] || '📦'}</td>
+          <td class="code">${navio}</td>
+          <td class="code">${e.numero_container || '—'}</td>
+          <td class="date">${toBR(e.data_embarque)}</td>
+          <td class="date">${toBR(e.data_previsao_chegada)}</td>
+          <td class="date">${toBR(e.data_chegada)}</td>
+          <td class="ta-c">${STATUS_BADGE[e.status] || e.status}</td>
           <td><div class="row-actions"><button type="button" class="danger" data-delete-rec="embarques:${e.id}" title="Excluir embarque">🗑️</button></div></td>
         </tr>`;
     }).join('');
@@ -198,13 +198,13 @@
         <tr>
           <td>${p.pedidos ? `<span class="mono">${p.pedidos.numero_pedido}</span>` : '—'}${p.arquivo_cambio_url ? `<a href="${p.arquivo_cambio_url}" target="_blank" rel="noopener" title="Ver comprovante de câmbio" style="margin-left:6px;">📎</a>` : ''}${p.faturas ? `<div style="font-size:10px;color:var(--ink-3);">${p.faturas.numero_invoice}</div>` : ''}</td>
           <td>${forn}</td>
-          <td style="font-size:11.5px;color:var(--ink-2);">${p.banco || '—'}</td>
-          <td><span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span></td>
-          <td class="mono">${fmtMoeda(p.valor, p.moeda)}</td>
-          <td class="mono" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
-          <td class="mono">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
-          <td style="font-family:var(--ff-mono);font-size:12px;color:var(--ink-2);">${toBR(p.data_vencimento)}</td>
-          <td>${badge}</td>
+          <td class="code">${p.banco || '—'}</td>
+          <td class="ta-c"><span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span></td>
+          <td class="num">${fmtMoeda(p.valor, p.moeda)}</td>
+          <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
+          <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
+          <td class="date">${toBR(p.data_vencimento)}</td>
+          <td class="ta-c">${badge}</td>
           <td><div class="row-actions"><button type="button" class="danger" data-delete-rec="pagamentos:${p.id}" title="Excluir pagamento">🗑️</button></div></td>
         </tr>`;
     }).join('');

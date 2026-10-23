@@ -156,15 +156,15 @@
       tbody.innerHTML = usuarios.map(u => `
         <tr>
           <td>${u.nome || '—'}</td>
-          <td class="mono" style="font-size:12px;">${u.email}</td>
-          <td>
+          <td class="code" style="text-align:left;">${u.email}</td>
+          <td class="ta-c">
             <select class="form-select" style="padding:4px 8px;font-size:12px;width:auto;" data-perfil-change="${u.email}">
               <option value="Usuario"${u.perfil === 'Usuario' ? ' selected' : ''}>Usuário</option>
               <option value="Administrador"${u.perfil === 'Administrador' ? ' selected' : ''}>Administrador</option>
             </select>
           </td>
-          <td><span class="status-badge ${u.ativo ? 's-entregue' : 's-aguardando'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
-          <td style="font-size:12px;color:var(--ink-3);">${ultimoLogin[u.email] ? new Date(ultimoLogin[u.email]).toLocaleString('pt-BR') : 'nunca'}</td>
+          <td class="ta-c"><span class="status-badge ${u.ativo ? 's-entregue' : 's-aguardando'}">${u.ativo ? 'Ativo' : 'Inativo'}</span></td>
+          <td class="date">${ultimoLogin[u.email] ? new Date(ultimoLogin[u.email]).toLocaleString('pt-BR') : 'nunca'}</td>
           <td>
             <div class="row-actions">
               <button type="button" data-toggle-ativo-usuario="${u.email}" title="${u.ativo ? 'Desativar' : 'Ativar'}">${u.ativo ? '⛔' : '✅'}</button>

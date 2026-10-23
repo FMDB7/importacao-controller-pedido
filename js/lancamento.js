@@ -523,17 +523,17 @@
         const locCls = p.localizacao === 'SP' ? 'loc-sp' : 'loc-zf';
         return `
           <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'ZF'}">
-            <td class="mono" style="font-weight:700;color:var(--cyan);font-size:13px;">${(p.numero_pedido||'').slice(-4)}</td>
+            <td class="code" style="font-weight:700;color:var(--cyan);">${(p.numero_pedido||'').slice(-4)}</td>
             <td><span class="mono" style="font-size:11.5px;">${p.numero_pedido}</span>${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI" style="margin-left:6px;">📎</a>` : ''}${p.numero_pi ? `<div style="font-size:10px;color:var(--ink-3);">📁 ${p.numero_pi}</div>` : ''}</td>
             <td>${forn}</td>
-            <td>${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}</span>` : '—'}</td>
-            <td>${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
-            <td class="mono">${fmtMoeda(p.valor_total, p.moeda)}</td>
-            <td class="mono" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
-            <td class="mono">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
-            <td><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span><div style="font-size:10px;color:var(--ink-3);margin-top:2px;">${cargo} · ${colab}</div></td>
-            <td style="text-align:center;font-size:13px;">—</td>
-            <td><span class="status-badge ${statusCls}">${p.status}</span></td>
+            <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}</span>` : '—'}</td>
+            <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
+            <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
+            <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
+            <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
+            <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span><div style="font-size:10px;color:var(--ink-3);margin-top:2px;">${cargo} · ${colab}</div></td>
+            <td class="date">—</td>
+            <td class="ta-c"><span class="status-badge ${statusCls}">${p.status}</span></td>
             <td><div class="row-actions"><button type="button" data-edit-pedido="${p.id}" title="Editar pedido">✏️</button><button type="button" class="danger" data-delete-pedido="${p.id}" title="Excluir pedido">🗑️</button></div></td>
           </tr>`;
       }).join('');
