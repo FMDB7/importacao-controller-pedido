@@ -386,4 +386,48 @@ upload/download do arquivo).
 
 ---
 
+## Fase 14 — Deploy corporativo na Vercel (concluída)
+
+Pedido do usuário: *"o app tem que ser corporativo e terá função multi usuário, será
+usado no ambiente corporativo"* — sair do artifact do claude.ai (URL privada, de uso
+individual) para uma hospedagem própria, multi-usuário, com domínio da empresa.
+
+### Decisão
+Vercel, com domínio próprio da empresa (opção escolhida pelo usuário entre as
+alternativas apresentadas).
+
+### Como foi feito
+- Código-fonte movido para um repositório Git próprio:
+  **`github.com/FMDB7/importacao-controller-pedido`** (privado seria recomendado,
+  ficou público por padrão de criação do GitHub — pode ser trocado para privado nas
+  configurações do repo a qualquer momento, sem afetar o deploy).
+- Esse repositório foi conectado ao projeto já existente na Vercel
+  (`vercel.com/topinternacional/importacao-controller-pedido`) via
+  **Settings → Git → Connect Git Repository**. A partir daí, todo `git push` na
+  branch `main` gera automaticamente um novo deployment de produção.
+- **URL de produção atual:** `https://importacao-controller-pedido.vercel.app`
+- Site 100% estático (os mesmos `index.html` + `css/` + `js/` de sempre) — não há
+  build step, `Framework Preset` fica como "Other" e a Vercel serve os arquivos tal
+  como estão no repositório.
+
+### Observação importante sobre deploys futuros
+Qualquer alteração nos arquivos do app agora deve ser enviada por `git commit` +
+`git push origin main` neste repositório para ir ao ar — o artifact do claude.ai
+deixou de ser a versão "oficial" do app (continua existindo só como referência
+visual/histórica, ver link na seção acima).
+
+### Próximos passos (fora do alcance das ferramentas disponíveis nesta sessão)
+- **Domínio próprio da empresa** (ex. `controller.topinternacional.com.br`): precisa
+  ser configurado em **Vercel → Settings → Domains**, adicionando o domínio e criando
+  o registro DNS (CNAME/A) indicado pela Vercel no provedor de domínio da empresa.
+  Ainda não configurado — pendente de decisão do nome exato do subdomínio.
+- Depois de ter o domínio definitivo, adicionar essa URL como *trusted origin* no
+  Neon Auth (Stack Auth), do mesmo jeito que foi feito para `claude.ai` na Fase 13,
+  para o login com a Microsoft continuar funcionando no novo domínio.
+- Recomendado tornar o repositório GitHub **privado** (hoje está público), já que o
+  código contém a chave pública do Supabase Storage (ver risco residual documentado
+  na Fase 12) — tornar o repo privado não afeta o deploy na Vercel.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
