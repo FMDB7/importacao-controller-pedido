@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importação - Controller Pedido</title>
+  <meta name="claude:viewport-fit-sides" content="cover">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<!-- NOTIFICATION TOAST -->
+<div class="notif-toast" id="toast">
+  <div class="notif-icon">✅</div>
+  <div class="notif-text">
+    <div class="notif-title">Lançamento registrado!</div>
+    <div class="notif-body">PO-2024-0089 foi salvo com sucesso.</div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">IC</div>
+        <div class="logo-text">
+          <div class="logo-name">Importação</div>
+          <div class="logo-sub">Controller Pedido</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section" style="padding-top:16px;">
+      <div class="sidebar-label">Principal</div>
+      <div class="nav-item active" data-view="dashboard">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Dashboard</span>
+        <div class="nav-badge">3</div>
+      </div>
+      <div class="nav-item" data-view="lancamentos">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        <span>Pedidos</span>
+      </div>
+      <div class="nav-item" data-view="faturamento">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Faturamento</span>
+      </div>
+      <div class="nav-item" data-view="embarque">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 20h20M6 20V10l6-6 6 6v10"/><path d="M12 4v16M2 14h20"/></svg>
+        <span>Embarque</span>
+      </div>
+      <div class="nav-item" data-view="pagamento">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        <span>Pagamento</span>
+      </div>
+      <div class="nav-item" data-view="relatorios">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <span>Relatórios</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Cadastros</div>
+      <div class="nav-item" data-view="fornecedores">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Fornecedores</span>
+      </div>
+      <div class="nav-item" data-view="colaboradores">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Colaboradores</span>
+      </div>
+      <div class="nav-item" data-view="cidades">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        <span>Cidades</span>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="user-avatar">MF</div>
+        <div>
+          <div class="user-name">Marques F.</div>
+          <div class="user-role">Financeiro</div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions">
+        <div class="topbar-chip">
+          <div class="chip-dot"></div>
+          Câmbio ao vivo
+        </div>
+        <div class="notif-bell-wrap">
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" id="btn-notificacoes">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+          </button>
+          <div class="notif-dropdown" id="notif-dropdown">
+            <div class="notif-dropdown-header">Notificações de vencimento</div>
+            <div class="notif-dropdown-list" id="notif-dropdown-list">
+              <div style="padding:20px;text-align:center;color:var(--ink-3);font-size:12px;">Carregando...</div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="btn-novo-lancamento">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Lançamento
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: DASHBOARD -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view active" id="view-dashboard">
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card usd">
+            <div class="kpi-label">Dólar (USD) <span class="kpi-currency-flag">🇺🇸</span></div>
+            <div class="kpi-value" id="kpi-usd-valor">$ 0</div>
+            <div class="kpi-sub" id="kpi-usd-sub">sem dados ainda</div>
+            <div class="kpi-sparkline" id="spark-usd"></div>
+          </div>
+          <div class="kpi-card eur">
+            <div class="kpi-label">Euro (EUR) <span class="kpi-currency-flag">🇪🇺</span></div>
+            <div class="kpi-value" id="kpi-eur-valor">€ 0</div>
+            <div class="kpi-sub" id="kpi-eur-sub">sem dados ainda</div>
+            <div class="kpi-sparkline" id="spark-eur"></div>
+          </div>
+          <div class="kpi-card gbp">
+            <div class="kpi-label">Libra (GBP) <span class="kpi-currency-flag">🇬🇧</span></div>
+            <div class="kpi-value" id="kpi-gbp-valor">£ 0</div>
+            <div class="kpi-sub" id="kpi-gbp-sub">sem dados ainda</div>
+            <div class="kpi-sparkline" id="spark-gbp"></div>
+          </div>
+          <div class="kpi-card chf">
+            <div class="kpi-label">Franco Suíço (CHF) <span class="kpi-currency-flag">🇨🇭</span></div>
+            <div class="kpi-value" id="kpi-chf-valor">CHF 0</div>
+            <div class="kpi-sub" id="kpi-chf-sub">sem dados ainda</div>
+            <div class="kpi-sparkline" id="spark-chf"></div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="chart-grid">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title" id="dash-mensal-title">Compras por Mês</div>
+                <div class="chart-subtitle">Valor total por moeda (nativo)</div>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c1)"></div>USD</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c2)"></div>EUR</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c3)"></div>GBP</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c4)"></div>CHF</div>
+              </div>
+            </div>
+            <canvas id="chart-mensal" height="200"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Distribuição por Moeda</div>
+                <div class="chart-subtitle">Participação no volume total</div>
+              </div>
+            </div>
+            <canvas id="chart-donut" height="200"></canvas>
+          </div>
+        </div>
+
+        <!-- Recent Transactions Table -->
+        <div class="table-card">
+          <div class="table-head">
+            <div class="table-title">Últimos Lançamentos</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div class="search-box">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input placeholder="Buscar pedido, fornecedor...">
+              </div>
+              <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;">Filtros</button>
+            </div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nº Pedido · Pasta</th>
+                <th>Fornecedor · Marca</th>
+                <th>Moeda</th>
+                <th>Valor</th>
+                <th>Vencimento</th>
+                <th>BM</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-dashboard-recentes">
+              <tr><td colspan="7" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: LANÇAMENTOS -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-lancamentos">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Pedidos</div>
+            <div class="page-desc">Registro completo de ordens de compra internacionais · <span style="color:var(--ink-3)">ZF = Zona Franca · SP = São Paulo · BM = Brand Manager · COORD BM = Coordenador Brand Manager</span></div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="btn-export-pedidos">📤 Exportar</button>
+            <button class="btn btn-ghost" id="btn-taxas-cambio" style="color:var(--amber);border-color:rgba(245,166,35,0.3);">
+              💱 Taxas de Câmbio
+            </button>
+            <button class="btn btn-primary" id="btn-novo-lancamento-2">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo Lançamento
+            </button>
+          </div>
+        </div>
+        <!-- ── RESUMO TOTAL COMPRAS ─────────────────────────────── -->
+        <div class="resumo-card" id="resumo-card">
+          <div class="resumo-header" onclick="toggleResumo()">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--cyan)"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              <span style="font-weight:700;letter-spacing:.8px;font-size:12px;">RESUMO TOTAL COMPRAS</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <span style="font-size:11px;color:var(--ink-3);">Ano fiscal 2024</span>
+              <span style="font-size:11.5px;color:var(--cyan);font-weight:700;font-family:var(--ff-mono);">R$ 5.337.309,13</span>
+              <svg id="resumo-chevron" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="color:var(--ink-3);transition:transform .25s;"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div id="resumo-body" style="overflow:hidden;max-height:600px;transition:max-height .3s ease;">
+            <div style="overflow-x:auto;">
+              <table class="resumo-table">
+                <thead>
+                  <tr>
+                    <th style="min-width:200px;">SETOR</th>
+                    <th style="min-width:130px;">TOTAL PEÇAS<br>FATURADAS</th>
+                    <th style="min-width:130px;">COMPRAS USD</th>
+                    <th style="min-width:130px;">COMPRAS EURO</th>
+                    <th style="min-width:130px;">COMPRAS CHF</th>
+                    <th style="min-width:150px;">TOTAL USD<br>POR SETOR</th>
+                    <th style="min-width:100px;">% SETOR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="resumo-row">
+                    <td><span class="grp-tag" style="margin-right:6px;">A</span>ACESSÓRIOS</td>
+                    <td class="resumo-num">18.805</td>
+                    <td class="resumo-num resumo-usd">$40.097,94</td>
+                    <td class="resumo-num resumo-eur">€197.810,65</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num resumo-brl">R$ 273.514,51</td>
+                    <td class="resumo-pct"><div class="pct-bar-wrap"><div class="pct-bar" style="width:2.6%"></div></div><span>2,6%</span></td>
+                  </tr>
+                  <tr class="resumo-row">
+                    <td><span class="grp-tag" style="margin-right:6px;">BEB</span>BEBIDAS</td>
+                    <td class="resumo-num">2.930</td>
+                    <td class="resumo-num resumo-usd">$95.593,62</td>
+                    <td class="resumo-num resumo-eur">€0,00</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num resumo-brl">R$ 95.593,62</td>
+                    <td class="resumo-pct"><div class="pct-bar-wrap"><div class="pct-bar" style="width:1%"></div></div><span>1%</span></td>
+                  </tr>
+                  <tr class="resumo-row resumo-zero">
+                    <td><span class="grp-tag" style="margin-right:6px;font-size:9px;">BEB NAC</span>BEBIDAS NACIONAL</td>
+                    <td class="resumo-num">0</td>
+                    <td class="resumo-num resumo-usd">$0,00</td>
+                    <td class="resumo-num resumo-eur">€0,00</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num">R$ —</td>
+                    <td class="resumo-pct"><span>0%</span></td>
+                  </tr>
+                  <tr class="resumo-row">
+                    <td><span class="grp-tag" style="margin-right:6px;">B</span>BIJOUX</td>
+                    <td class="resumo-num">178</td>
+                    <td class="resumo-num resumo-usd">$4.067,05</td>
+                    <td class="resumo-num resumo-eur">€0,00</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num resumo-brl">R$ 4.067,05</td>
+                    <td class="resumo-pct"><div class="pct-bar-wrap"><div class="pct-bar" style="width:0.1%"></div></div><span>0,0%</span></td>
+                  </tr>
+                  <tr class="resumo-row">
+                    <td><span class="grp-tag" style="margin-right:6px;">BOL</span>BOLSAS, MALAS</td>
+                    <td class="resumo-num">535</td>
+                    <td class="resumo-num resumo-usd">$10.543,35</td>
+                    <td class="resumo-num resumo-eur">€0,00</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num resumo-brl">R$ 10.543,35</td>
+                    <td class="resumo-pct"><div class="pct-bar-wrap"><div class="pct-bar" style="width:0.2%"></div></div><span>0,1%</span></td>
+                  </tr>
+                  <tr class="resumo-row">
+                    <td><span class="grp-tag" style="margin-right:6px;">C</span>COSMETIC</td>
+                    <td class="resumo-num">58.917</td>
+                    <td class="resumo-num resumo-usd">$367.276,82</td>
+                    <td class="resumo-num resumo-eur">€14.752,87</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num resumo-brl">R$ 384.685,20</td>
+                    <td class="resumo-pct"><div class="pct-bar-wrap"><div class="pct-bar" style="width:4%"></div></div><span>4%</span></td>
+                  </tr>
+                  <tr class="resumo-row resumo-zero">
+                    <td><span class="grp-tag" style="margin-right:6px;font-size:9px;">C&amp;D</span>CASA &amp; DECORAÇÃO</td>
+                    <td class="resumo-num">0</td>
+                    <td class="resumo-num resumo-usd">$0,00</td>
+                    <td class="resumo-num resumo-eur">€0,00</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num">R$ —</td>
+                    <td class="resumo-pct"><span>0%</span></td>
+                  </tr>
+                  <tr class="resumo-row">
+                    <td><span class="grp-tag" style="margin-right:6px;">O</span>ÓCULOS</td>
+                    <td class="resumo-num">2.415</td>
+                    <td class="resumo-num resumo-usd">$80.840,82</td>
+                    <td class="resumo-num resumo-eur">€0,00</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num resumo-brl">R$ 80.840,82</td>
+                    <td class="resumo-pct"><div class="pct-bar-wrap"><div class="pct-bar" style="width:0.8%"></div></div><span>0,8%</span></td>
+                  </tr>
+                  <tr class="resumo-row resumo-destaque">
+                    <td><span class="grp-tag" style="margin-right:6px;">P</span>PERFUMARIA</td>
+                    <td class="resumo-num">483.562</td>
+                    <td class="resumo-num resumo-usd">$3.859.671,75</td>
+                    <td class="resumo-num resumo-eur">€349.775,37</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num resumo-brl">R$ 4.272.406,69</td>
+                    <td class="resumo-pct resumo-pct-big"><div class="pct-bar-wrap"><div class="pct-bar pct-bar-hi" style="width:40%"></div></div><span style="color:var(--cyan);font-weight:700;">40%</span></td>
+                  </tr>
+                  <tr class="resumo-row">
+                    <td><span class="grp-tag" style="margin-right:6px;">PUB</span>PUBLICIDADE</td>
+                    <td class="resumo-num">25.016</td>
+                    <td class="resumo-num resumo-usd">$14.704,59</td>
+                    <td class="resumo-num resumo-eur">€6.138,29</td>
+                    <td class="resumo-num resumo-chf">CHF —</td>
+                    <td class="resumo-num resumo-brl">R$ 21.947,77</td>
+                    <td class="resumo-pct"><div class="pct-bar-wrap"><div class="pct-bar" style="width:0.2%"></div></div><span>0,2%</span></td>
+                  </tr>
+                  <tr class="resumo-row">
+                    <td><span class="grp-tag" style="margin-right:6px;">R</span>RELÓGIOS</td>
+                    <td class="resumo-num">3.706</td>
+                    <td class="resumo-num resumo-usd">$161.236,70</td>
+                    <td class="resumo-num resumo-eur">€0,00</td>
+                    <td class="resumo-num resumo-chf" style="color:var(--violet);">CHF 25.173,20</td>
+                    <td class="resumo-num resumo-brl">R$ 193.710,13</td>
+                    <td class="resumo-pct"><div class="pct-bar-wrap"><div class="pct-bar" style="width:2%"></div></div><span>2%</span></td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="resumo-subtotal">
+                    <td>SUB TOTAL USD</td>
+                    <td class="resumo-num" style="color:var(--ink-2);">—</td>
+                    <td class="resumo-num resumo-usd" style="font-size:13px;">$4.634.032,64</td>
+                    <td class="resumo-num resumo-eur" style="font-size:13px;">€568.477,18</td>
+                    <td class="resumo-num resumo-chf" style="font-size:13px;color:var(--violet);">CHF 25.173,20</td>
+                    <td class="resumo-num resumo-brl" style="font-size:13px;">R$ 5.337.309,13</td>
+                    <td class="resumo-pct" style="color:var(--ink-2);">—</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtros de Código de Setor -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;align-items:center;">
+          <span style="font-size:11px;color:var(--ink-3);align-self:center;margin-right:2px;font-weight:600;letter-spacing:.5px;">SETOR:</span>
+          <label class="grp-chip active" data-grp="A"     title="ACESSÓRIOS">A</label>
+          <label class="grp-chip active" data-grp="B"     title="BIJOUX">B</label>
+          <label class="grp-chip active" data-grp="BEB"   title="BEBIDAS">BEB</label>
+          <label class="grp-chip active" data-grp="BEB NAC" title="BEBIDAS NACIONAL">BEB NAC</label>
+          <label class="grp-chip active" data-grp="BOL"   title="BOLSAS, MALAS">BOL</label>
+          <label class="grp-chip active" data-grp="C"     title="COSMETIC">C</label>
+          <label class="grp-chip active" data-grp="C&D"   title="CASA &amp; DECORAÇÃO">C&amp;D</label>
+          <label class="grp-chip active" data-grp="O"     title="ÓCULOS">O</label>
+          <label class="grp-chip active" data-grp="P"     title="PERFUMARIA">P</label>
+          <label class="grp-chip active" data-grp="PUB"   title="PUBLICIDADE">PUB</label>
+          <label class="grp-chip active" data-grp="R"     title="RELÓGIOS">R</label>
+          <span style="font-size:11px;color:rgba(255,255,255,0.12);align-self:center;margin:0 4px;">│</span>
+          <label class="grp-chip loc-chip active" data-loc="ZF" title="Zona Franca · Manaus">ZF</label>
+          <label class="grp-chip loc-chip active" data-loc="SP" title="São Paulo">SP</label>
+        </div>
+
+        <div class="table-card">
+          <div class="table-head">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div class="search-box" style="width:260px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input placeholder="Buscar nº pedido, PO, fornecedor...">
+              </div>
+              <select class="filter-select"><option>Todas as Moedas</option><option>USD</option><option>EUR</option><option>GBP</option><option>CHF</option></select>
+              <select class="filter-select"><option>Todos os Responsáveis</option><option>ZF · BM</option><option>ZF · COORD BM</option><option>SP · BM</option><option>SP · COORD BM</option></select>
+              <select class="filter-select"><option>Todos os Status</option><option>Pedido Enviado</option><option>Faturado</option><option>Em Trânsito</option><option>BL Recebido</option><option>Desembaraço</option><option>Entregue</option><option>Câmbio Liquidado</option></select>
+            </div>
+            <div style="font-size:12px;color:var(--ink-3);">Mostrando <strong style="color:var(--ink-1)">88</strong> pedidos</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nº Pedido</th>
+                <th>PO · Pasta</th>
+                <th>Fornecedor · Marca</th>
+                <th>Grp</th>
+                <th>Moeda</th>
+                <th>Valor</th>
+                <th>Taxa</th>
+                <th>Valor BRL</th>
+                <th>Local · Resp.</th>
+                <th>BL</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-pedidos">
+              <tr><td colspan="12" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando pedidos...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: FATURAMENTO                                -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-faturamento">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Faturamento</div>
+            <div class="page-desc">Controle de invoices e documentos fiscais internacionais</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="btn-export-faturamento">📤 Exportar</button>
+            <button class="btn btn-primary" onclick="openModal()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nova Invoice
+            </button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="summary-row" style="grid-template-columns:repeat(4,1fr);">
+          <div class="summary-card">
+            <div class="summary-label">Total Faturado</div>
+            <div class="summary-value" id="fat-kpi-total" style="color:var(--cyan)">R$ —</div>
+            <div class="summary-change" id="fat-kpi-total-sub" style="color:var(--ink-3)">—</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Invoices Abertas</div>
+            <div class="summary-value" id="fat-kpi-abertas">—</div>
+            <div class="summary-change" id="fat-kpi-abertas-sub" style="color:var(--ink-3)">—</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Invoices Pagas</div>
+            <div class="summary-value" id="fat-kpi-pagas" style="color:var(--green)">—</div>
+            <div class="summary-change" style="color:var(--ink-3)">Este ano</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Valor Pendente</div>
+            <div class="summary-value" id="fat-kpi-pendente" style="color:var(--rose)">R$ —</div>
+            <div class="summary-change" id="fat-kpi-pendente-sub" style="color:var(--ink-3)">—</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-head">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div class="search-box" style="width:280px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input placeholder="Buscar invoice, fornecedor, PO...">
+              </div>
+              <select class="filter-select"><option>Todas as Moedas</option><option>USD</option><option>EUR</option><option>GBP</option><option>CHF</option></select>
+              <select class="filter-select"><option>Todos os Status</option><option>Pendente</option><option>Paga</option><option>Vencida</option><option>Cancelada</option></select>
+            </div>
+            <div style="font-size:12px;color:var(--ink-3);" id="fat-contagem">Mostrando <strong style="color:var(--ink-1)">0</strong> invoices</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Invoice · PO</th>
+                <th>Fornecedor</th>
+                <th>Moeda</th>
+                <th>Valor Invoice</th>
+                <th>Taxa R$</th>
+                <th>Total BRL</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-faturamento">
+              <tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: EMBARQUE                                    -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-embarque">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Embarque</div>
+            <div class="page-desc">Rastreamento de cargas, BL e trânsito internacional</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="btn-export-embarque">📤 Exportar</button>
+            <button class="btn btn-primary" onclick="openModal()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo Embarque
+            </button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="summary-row" style="grid-template-columns:repeat(4,1fr);">
+          <div class="summary-card">
+            <div class="summary-label">Em Trânsito</div>
+            <div class="summary-value" id="emb-kpi-transito" style="color:var(--cyan)">—</div>
+            <div class="summary-change" style="color:var(--ink-3)">cargas no mar/ar</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">No Porto / Desembaraçando</div>
+            <div class="summary-value" id="emb-kpi-porto" style="color:var(--green)">—</div>
+            <div class="summary-change" style="color:var(--green)">aguardando liberação</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">ETA Esta Semana</div>
+            <div class="summary-value" id="emb-kpi-eta" style="color:var(--amber)">—</div>
+            <div class="summary-change" style="color:var(--amber)">⚓ chegando em breve</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label" id="emb-kpi-entregues-label">Entregues</div>
+            <div class="summary-value" id="emb-kpi-entregues">—</div>
+            <div class="summary-change" style="color:var(--ink-3)">este mês</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-head">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div class="search-box" style="width:280px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input placeholder="Buscar BL, navio, container, PO...">
+              </div>
+              <select class="filter-select"><option>Todos os Modais</option><option>🚢 Marítimo</option><option>✈️ Aéreo</option><option>🚛 Terrestre</option><option>📦 Courier</option></select>
+              <select class="filter-select"><option>Todos os Status</option><option>Aguardando</option><option>Embarcado</option><option>Em Trânsito</option><option>No Porto</option><option>Desembaraçando</option><option>Entregue</option></select>
+            </div>
+            <div style="font-size:12px;color:var(--ink-3);" id="emb-contagem">Mostrando <strong style="color:var(--ink-1)">0</strong> embarques</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>PO · Fornecedor</th>
+                <th>Modal</th>
+                <th>Navio / AWB</th>
+                <th>Container</th>
+                <th>Embarque</th>
+                <th>ETA</th>
+                <th>Chegada</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-embarque">
+              <tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: PAGAMENTO                                   -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-pagamento">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Pagamento</div>
+            <div class="page-desc">Controle de câmbio, contratos bancários e liquidações</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="btn-taxas-cambio-pag" style="color:var(--amber);border-color:rgba(245,166,35,0.3);">
+              💱 Taxas de Câmbio
+            </button>
+            <button class="btn btn-ghost" id="btn-export-pagamento">📤 Exportar</button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="summary-row" style="grid-template-columns:repeat(4,1fr);">
+          <div class="summary-card">
+            <div class="summary-label">A Vencer (30d)</div>
+            <div class="summary-value" id="pag-kpi-avencer" style="color:var(--rose)">R$ —</div>
+            <div class="summary-change" id="pag-kpi-avencer-sub" style="color:var(--rose)">—</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Vencendo Esta Semana</div>
+            <div class="summary-value" id="pag-kpi-semana" style="color:var(--amber)">R$ —</div>
+            <div class="summary-change" id="pag-kpi-semana-sub" style="color:var(--amber)">—</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label" id="pag-kpi-liquidados-label">Liquidados</div>
+            <div class="summary-value" id="pag-kpi-liquidados" style="color:var(--green)">R$ —</div>
+            <div class="summary-change" style="color:var(--ink-3)">este mês</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Taxa Média USD</div>
+            <div class="summary-value" id="pag-kpi-taxa" style="color:var(--cyan)">—</div>
+            <div class="summary-change" style="color:var(--ink-3)">últimas liquidações</div>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-head">
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div class="search-box" style="width:280px;">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input placeholder="Buscar contrato, banco, PO...">
+              </div>
+              <select class="filter-select"><option>Todas as Moedas</option><option>USD</option><option>EUR</option><option>GBP</option><option>CHF</option></select>
+              <select class="filter-select"><option>Todos os Status</option><option>Pendente</option><option>Liquidado</option><option>Vencido</option><option>Cancelado</option></select>
+            </div>
+            <div style="font-size:12px;color:var(--ink-3);" id="pag-contagem">Mostrando <strong style="color:var(--ink-1)">0</strong> pagamentos</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>PO · Invoice</th>
+                <th>Fornecedor</th>
+                <th>Banco</th>
+                <th>Moeda</th>
+                <th>Valor</th>
+                <th>Taxa</th>
+                <th>Total BRL</th>
+                <th>Vencimento</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-pagamento">
+              <tr><td colspan="10" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: RELATÓRIOS -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-relatorios">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Relatórios — Diretoria</div>
+            <div class="page-desc">Análise comparativa mês a mês e ano a ano</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <select class="filter-select"><option>2024</option><option>2023</option><option>2022</option></select>
+            <button class="btn btn-ghost" id="btn-export-relatorio-pdf">📄 Exportar PDF</button>
+            <button class="btn btn-ghost" id="btn-export-relatorio-xlsx">📊 Exportar Excel</button>
+          </div>
+        </div>
+
+        <div class="summary-row">
+          <div class="summary-card">
+            <div class="summary-label" id="rel-label-volume">Volume Total</div>
+            <div class="summary-value" id="rel-volume-total">R$ —</div>
+            <div class="summary-change" id="rel-volume-change" style="color:var(--ink-3)">vs. ano anterior</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Nº de Pedidos</div>
+            <div class="summary-value" id="rel-num-pedidos">—</div>
+            <div class="summary-change" id="rel-pedidos-change" style="color:var(--ink-3)">vs. ano anterior</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Câmbio Médio USD</div>
+            <div class="summary-value" id="rel-cambio-medio">—</div>
+            <div class="summary-change" id="rel-cambio-change" style="color:var(--ink-3)">vs. ano anterior</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Comparativo Anual (BRL)</div>
+                <div class="chart-subtitle" id="rel-anual-subtitle">por trimestre</div>
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:var(--c1)"></div><span id="rel-ano-atual">—</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--ink-3)"></div><span id="rel-ano-anterior">—</span></div>
+              </div>
+            </div>
+            <canvas id="chart-anual" height="220"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <div>
+                <div class="chart-title">Volume por Fornecedor</div>
+                <div class="chart-subtitle">Top 5 — 2024</div>
+              </div>
+            </div>
+            <canvas id="chart-fornecedores" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: FORNECEDORES -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-fornecedores">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Fornecedores</div>
+            <div class="page-desc">Cadastro de fornecedores internacionais</div>
+          </div>
+          <button class="btn btn-primary" data-quick-add="fornecedores">+ Novo Fornecedor</button>
+        </div>
+        <div class="table-card">
+          <div class="table-head">
+            <div class="search-box"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input placeholder="Buscar fornecedor..."></div>
+          </div>
+          <table>
+            <thead><tr><th>Fornecedor</th><th>País</th><th>Moeda</th><th>Contato</th><th>Status</th><th></th></tr></thead>
+            <tbody id="tbl-fornecedores">
+              <tr><td colspan="6" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: COLABORADORES -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-colaboradores">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Colaboradores</div>
+            <div class="page-desc">Responsáveis por marcas, grupos e processos</div>
+          </div>
+          <button class="btn btn-primary" data-quick-add="colaboradores">+ Novo Colaborador</button>
+        </div>
+        <div class="card-grid" id="grid-colaboradores">
+          <div style="color:var(--ink-3);padding:24px;">Carregando...</div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: CIDADES -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-cidades">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Cidades</div>
+            <div class="page-desc">Cadastro de cidades de origem e rotas logísticas</div>
+          </div>
+          <button class="btn btn-primary" data-quick-add="cidades">+ Nova Cidade</button>
+        </div>
+        <div class="city-table" id="list-cidades">
+          <div class="city-row" style="background:var(--bg-card2);border-color:var(--border-md);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);">
+            <div>Cidade</div><div>País</div><div>Zona</div><div>Porto / Aeroporto</div><div></div>
+          </div>
+          <div style="color:var(--ink-3);padding:24px;">Carregando...</div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- MODAL: NOVO LANÇAMENTO -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">📦 Novo Lançamento</div>
+        <div class="modal-subtitle">Registro de ordem de compra internacional · PO-2024-0089</div>
+      </div>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+
+    <!-- Progress Timeline -->
+    <div style="padding:12px 24px 0;background:var(--bg-panel);">
+      <div class="timeline-bar">
+        <div class="tl-step current"><div class="tl-dot"></div><div class="tl-label">Pedido</div></div>
+        <div class="tl-step"><div class="tl-dot"></div><div class="tl-label">Fatura</div></div>
+        <div class="tl-step"><div class="tl-dot"></div><div class="tl-label">Embarque</div></div>
+        <div class="tl-step"><div class="tl-dot"></div><div class="tl-label">Pagamento</div></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="modal-tabs">
+      <button class="modal-tab active" data-tab="pedido">📋 PEDIDO</button>
+      <button class="modal-tab" data-tab="fatura">🧾 FATURA</button>
+      <button class="modal-tab" data-tab="embarque">🚢 EMBARQUE</button>
+      <button class="modal-tab" data-tab="pagamento">💱 PAGAMENTO</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- ── TAB 1: PEDIDO ── -->
+      <div class="modal-tab-pane active" data-pane="pedido">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nº Pedido / PO <span class="form-required">*</span></label>
+            <input class="form-input mono" id="f-numero-pedido" placeholder="PO-2024-0089">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Pasta</label>
+            <input class="form-input mono" id="f-pasta" placeholder="PA-1089">
+            <div class="form-hint">Número do processo / pasta física</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Código / SKU</label>
+            <input class="form-input mono" id="f-sku" placeholder="NK-AIR-M-2024">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Marca</label>
+            <input class="form-input" id="f-marca" placeholder="Nome da marca">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Setor <span class="form-required">*</span></label>
+            <select class="form-select" id="f-setor">
+              <option value="">Selecionar setor...</option>
+              <option value="A">A — Acessórios</option>
+              <option value="B">B — Bijoux</option>
+              <option value="BEB">BEB — Bebidas</option>
+              <option value="BEB NAC">BEB NAC — Bebidas Nacional</option>
+              <option value="BOL">BOL — Bolsas, Malas</option>
+              <option value="C">C — Cosmetic</option>
+              <option value="C&D">C&D — Casa &amp; Decoração</option>
+              <option value="O">O — Óculos</option>
+              <option value="P">P — Perfumaria</option>
+              <option value="PUB">PUB — Publicidade</option>
+              <option value="R">R — Relógios</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fornecedor <span class="form-required">*</span></label>
+            <select class="form-select" id="f-fornecedor">
+              <option value="">Selecionar fornecedor...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Responsável <span class="form-required">*</span></label>
+            <div class="form-hint" style="margin-bottom:6px;">ZF = Zona Franca · SP = São Paulo · BM = Brand Manager · COORD = Coordenador</div>
+            <select class="form-select" id="f-colaborador">
+              <option value="">Selecionar colaborador...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Destino</label>
+            <select class="form-select" id="f-destino">
+              <option value="ZF" selected>Manaus — ZF (Zona Franca)</option>
+              <option value="SP">São Paulo — SP</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data Envio Pedido <span class="form-required">*</span></label>
+            <input class="form-input" type="date" id="f-data-pedido">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data Entrega Despachante</label>
+            <input class="form-input" type="date" id="f-data-previsao">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Qtde Pedido Original</label>
+            <input class="form-input mono" id="f-qtde" placeholder="0">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">📎 Arquivo da PI (PDF ou imagem)</label>
+            <div class="file-upload-field" data-upload="pi">
+              <input type="file" id="f-pi-arquivo" accept=".pdf,image/*" style="display:none;">
+              <button type="button" class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" data-upload-trigger="pi">Escolher arquivo</button>
+              <span class="file-upload-status" id="f-pi-status">Nenhum arquivo</span>
+              <button type="button" class="file-upload-remove" id="f-pi-remove" data-upload-remove="pi" style="display:none;" title="Remover">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB 2: FATURA ── -->
+      <div class="modal-tab-pane" data-pane="fatura">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Nº Fatura Fornecedor <span class="form-required">*</span></label>
+            <input class="form-input mono" id="f-invoice" placeholder="INV-78343">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data Emissão Fatura <span class="form-required">*</span></label>
+            <input class="form-input" type="date" id="f-fat-emissao">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Moeda <span class="form-required">*</span></label>
+            <select class="form-select" id="f-fat-moeda">
+              <option value="USD" selected>🇺🇸 USD — Dólar Americano</option>
+              <option value="EUR">🇪🇺 EUR — Euro</option>
+              <option value="GBP">🇬🇧 GBP — Libra Esterlina</option>
+              <option value="CHF">🇨🇭 CHF — Franco Suíço</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Valor Fatura <span class="form-required">*</span></label>
+            <input class="form-input mono" id="f-fat-valor" placeholder="0,00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Incoterm</label>
+            <select class="form-select" id="f-fat-incoterm">
+              <option selected>FOB — Free On Board</option>
+              <option>CIF — Cost, Insurance &amp; Freight</option>
+              <option>EXW — Ex Works</option>
+              <option>DDP — Delivered Duty Paid</option>
+              <option>CFR — Cost and Freight</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prazo Pagamento (dias)</label>
+            <input class="form-input mono" id="f-fat-prazo" placeholder="30" value="30">
+            <div class="form-hint">A partir da data de emissão</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Vencimento Invoice</label>
+            <input class="form-input mono" id="f-fat-vencimento" readonly style="background:rgba(0,207,255,0.04);color:var(--cyan);">
+            <div class="form-hint">Calculado automaticamente</div>
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">📎 Arquivo da Invoice / NF (PDF ou imagem)</label>
+            <div class="file-upload-field" data-upload="nf">
+              <input type="file" id="f-nf-arquivo" accept=".pdf,image/*" style="display:none;">
+              <button type="button" class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" data-upload-trigger="nf">Escolher arquivo</button>
+              <span class="file-upload-status" id="f-nf-status">Nenhum arquivo</span>
+              <button type="button" class="file-upload-remove" id="f-nf-remove" data-upload-remove="nf" style="display:none;" title="Remover">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB 3: EMBARQUE ── -->
+      <div class="modal-tab-pane" data-pane="embarque">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Modal de Transporte <span class="form-required">*</span></label>
+            <select class="form-select" id="f-emb-tipo">
+              <option value="Marítimo" selected>🚢 Marítimo</option>
+              <option value="Aéreo">✈️ Aéreo</option>
+              <option value="Terrestre">🚛 Terrestre</option>
+              <option value="Courier">📦 Courier</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Porto de Embarque</label>
+            <input class="form-input" id="f-emb-porto" placeholder="Port of Los Angeles">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Navio / AWB</label>
+            <input class="form-input mono" id="f-emb-navio" placeholder="MSC GÜLSÜN">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data de Embarque</label>
+            <input class="form-input" type="date" id="f-emb-data">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº Container</label>
+            <input class="form-input mono" id="f-emb-container" placeholder="MSCU1234567">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Peso Bruto (KG)</label>
+            <input class="form-input mono" id="f-emb-peso" placeholder="0,00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ETA Porto Brasil</label>
+            <input class="form-input" type="date" id="f-emb-eta">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data Chegada Porto</label>
+            <input class="form-input" type="date" id="f-emb-chegada">
+          </div>
+          <!-- BL Recebido full row -->
+          <div class="form-group form-full" style="margin-top:4px;">
+            <div class="alert-row">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--ink-1);">BL Original Recebido</div>
+                <div style="font-size:11.5px;color:var(--ink-3);margin-top:2px;">Confirmar recebimento do Bill of Lading original do fornecedor</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <label class="form-check">
+                  <input type="checkbox" id="bl-check"> Confirmar
+                </label>
+                <input class="form-input" type="date" id="f-emb-bl-data" style="width:160px;" placeholder="Data recebimento">
+              </div>
+            </div>
+          </div>
+          <div class="form-group form-full" style="margin-top:4px;">
+            <label class="form-label">📎 Arquivo do BL (PDF ou imagem)</label>
+            <div class="file-upload-field" data-upload="bl">
+              <input type="file" id="f-bl-arquivo" accept=".pdf,image/*" style="display:none;">
+              <button type="button" class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" data-upload-trigger="bl">Escolher arquivo</button>
+              <span class="file-upload-status" id="f-bl-status">Nenhum arquivo</span>
+              <button type="button" class="file-upload-remove" id="f-bl-remove" data-upload-remove="bl" style="display:none;" title="Remover">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB 4: PAGAMENTO / CÂMBIO ── -->
+      <div class="modal-tab-pane" data-pane="pagamento">
+
+        <!-- ── Programação de Pagamento ── -->
+        <div class="pay-schedule-box">
+          <div class="pay-schedule-header">
+            <span>📅 Programação de Pagamento</span>
+            <span class="pay-schedule-badge" id="sched-status-badge">—</span>
+          </div>
+
+          <div class="form-grid" style="margin-bottom:0;">
+            <!-- Data de Embarque (lida do tab anterior) -->
+            <div class="form-group">
+              <label class="form-label">Data de Embarque <span style="color:var(--ink-3);font-weight:400;">(ref. Embarque)</span></label>
+              <input class="form-input" type="date" id="pay-data-embarque" value="2024-11-01">
+              <div class="form-hint">Base para cálculo do vencimento</div>
+            </div>
+            <!-- Condição de pagamento / prazo -->
+            <div class="form-group">
+              <label class="form-label">Condição de Pagamento <span class="form-required">*</span></label>
+              <select class="form-select" id="pay-condicao">
+                <option value="">Selecionar condição...</option>
+                <optgroup label="À Vista">
+                  <option value="0">À Vista · 0 dias</option>
+                </optgroup>
+                <optgroup label="Curto Prazo">
+                  <option value="30">30 dias</option>
+                  <option value="45">45 dias</option>
+                  <option value="60">60 dias</option>
+                  <option value="90" selected>90 dias</option>
+                </optgroup>
+                <optgroup label="Médio Prazo">
+                  <option value="120">120 dias</option>
+                  <option value="150">150 dias</option>
+                  <option value="180">180 dias</option>
+                </optgroup>
+                <optgroup label="Longo Prazo">
+                  <option value="270">270 dias</option>
+                  <option value="360">360 dias</option>
+                </optgroup>
+                <optgroup label="Personalizado">
+                  <option value="custom">Outro prazo (digitar)</option>
+                </optgroup>
+              </select>
+            </div>
+            <!-- Prazo personalizado (oculto até selecionar "Outro") -->
+            <div class="form-group" id="pay-custom-wrap" style="display:none;">
+              <label class="form-label">Prazo em dias <span class="form-required">*</span></label>
+              <input class="form-input mono" type="number" id="pay-custom-dias" placeholder="Ex: 75" min="1" max="720">
+              <div class="form-hint">Número de dias corridos após embarque</div>
+            </div>
+            <!-- Data de Vencimento (calculada) -->
+            <div class="form-group">
+              <label class="form-label">Data de Vencimento</label>
+              <input class="form-input mono" id="pay-vencimento" readonly
+                style="background:rgba(0,207,255,0.06);color:var(--cyan);font-weight:600;letter-spacing:.5px;">
+              <div class="form-hint" id="pay-dias-restantes" style="color:var(--ink-2);">Selecione condição e data de embarque</div>
+            </div>
+          </div>
+
+          <!-- Linha do tempo visual do pagamento -->
+          <div class="pay-timeline" id="pay-timeline" style="display:none;">
+            <div class="pay-tl-bar-wrap">
+              <div class="pay-tl-bar-bg">
+                <div class="pay-tl-bar-fill" id="pay-bar-fill"></div>
+              </div>
+              <div class="pay-tl-markers">
+                <div class="pay-tl-marker" style="left:0%">
+                  <div class="pay-tl-dot pay-tl-dot-done"></div>
+                  <div class="pay-tl-label" id="pay-lbl-embarque">Embarque<br>—</div>
+                </div>
+                <div class="pay-tl-marker" id="pay-marker-hoje">
+                  <div class="pay-tl-dot pay-tl-dot-hoje"></div>
+                  <div class="pay-tl-label" style="color:var(--amber)">Hoje<br>—</div>
+                </div>
+                <div class="pay-tl-marker" style="left:100%">
+                  <div class="pay-tl-dot pay-tl-dot-venc" id="pay-dot-venc"></div>
+                  <div class="pay-tl-label" id="pay-lbl-venc">Vencimento<br>—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Câmbio e Liquidação ── -->
+        <div class="form-grid" style="margin-top:16px;">
+          <div class="form-group">
+            <label class="form-label">Taxa de Câmbio (R$) <span class="form-required">*</span></label>
+            <input class="form-input mono" id="f-pag-taxa" placeholder="5,1240">
+            <div class="form-hint">Taxa contratada com o banco</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Valor em BRL</label>
+            <input class="form-input mono" id="f-pag-valorbrl" readonly style="background:rgba(0,207,255,0.05);color:var(--cyan);">
+            <div class="form-hint">Calculado automaticamente</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Banco <span class="form-required">*</span></label>
+            <select class="form-select" id="f-pag-banco">
+              <option value="">Selecionar banco...</option>
+              <option>Itaú · Mesa de Câmbio</option>
+              <option>Bradesco · Câmbio</option>
+              <option>Santander · Trade Finance</option>
+              <option>BTG Pactual · FX</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nº Contrato de Câmbio</label>
+            <input class="form-input mono" id="f-pag-contrato" placeholder="CC-2024-00321">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data Pagamento Invoice</label>
+            <input class="form-input" type="date" id="pay-data-pgto">
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Status do Processo <span class="form-required">*</span></label>
+            <select class="form-select" id="f-pag-status">
+              <option value="Aprovado">📋 Pedido Enviado</option>
+              <option value="Faturado" selected>🧾 Faturado</option>
+              <option value="Embarcado">🚢 Embarcado</option>
+              <option value="Em Trânsito">📄 Em Trânsito</option>
+              <option value="Desembaraçado">🔍 Desembaraço Aduaneiro</option>
+              <option value="Entregue">✅ Entregue no Depósito</option>
+            </select>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Observações</label>
+            <textarea class="form-input" id="f-pag-obs" rows="2" placeholder="Informações adicionais sobre câmbio, banco ou processo aduaneiro..."></textarea>
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">📎 Comprovante / Contrato de Câmbio (PDF ou imagem)</label>
+            <div class="file-upload-field" data-upload="cambio">
+              <input type="file" id="f-cambio-arquivo" accept=".pdf,image/*" style="display:none;">
+              <button type="button" class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" data-upload-trigger="cambio">Escolher arquivo</button>
+              <span class="file-upload-status" id="f-cambio-status">Nenhum arquivo</span>
+              <button type="button" class="file-upload-remove" id="f-cambio-remove" data-upload-remove="cambio" style="display:none;" title="Remover">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /modal-body -->
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-cancel">Cancelar</button>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" id="modal-prev" style="display:none;">← Anterior</button>
+        <button class="btn btn-success" id="modal-next">Próximo →</button>
+        <button class="btn btn-primary" id="modal-confirm" style="display:none;">📤 Confirmar Lançamento</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- MODAL: TAXAS DE CÂMBIO                                       -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="cambio-backdrop">
+  <div class="modal" style="max-width:660px;width:94%;">
+
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">💱 Atualizar Taxas de Câmbio</div>
+        <div class="modal-subtitle">Atualize as taxas abaixo. Ao confirmar, todas as invoices em aberto com câmbio pendente serão recalculadas automaticamente.</div>
+      </div>
+      <button class="modal-close" id="cambio-close">✕</button>
+    </div>
+
+    <div class="modal-body" style="padding:0 24px 20px;">
+
+      <!-- Tabela de taxas -->
+      <table class="cambio-table">
+        <thead>
+          <tr>
+            <th>Moeda</th>
+            <th>Taxa Atual</th>
+            <th>Nova Taxa (R$)</th>
+            <th>Invoices Afetadas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="currency-tag cur-usd" style="font-size:13px;padding:4px 10px;">US$ USD</span></td>
+            <td class="mono cambio-taxa-atual" id="taxa-atual-usd">5,1790</td>
+            <td><input class="cambio-input mono" id="nova-taxa-usd" value="5,1790" data-moeda="USD" data-total="1977012.67" data-count="46"></td>
+            <td><span class="cambio-invoices warn" id="inv-usd">46 invoice(s)</span></td>
+          </tr>
+          <tr>
+            <td><span class="currency-tag cur-eur" style="font-size:13px;padding:4px 10px;">€ EUR</span></td>
+            <td class="mono cambio-taxa-atual" id="taxa-atual-eur">5,8990</td>
+            <td><input class="cambio-input mono" id="nova-taxa-eur" value="5,8990" data-moeda="EUR" data-total="383598.63" data-count="12"></td>
+            <td><span class="cambio-invoices warn" id="inv-eur">12 invoice(s)</span></td>
+          </tr>
+          <tr>
+            <td><span class="currency-tag cur-chf" style="font-size:13px;padding:4px 10px;">Fr CHF</span></td>
+            <td class="mono cambio-taxa-atual" id="taxa-atual-chf">6,3310</td>
+            <td><input class="cambio-input mono" id="nova-taxa-chf" value="6,3310" data-moeda="CHF" data-total="0" data-count="0"></td>
+            <td><span class="cambio-invoices" id="inv-chf">0 invoice(s)</span></td>
+          </tr>
+          <tr>
+            <td><span class="currency-tag cur-gbp" style="font-size:13px;padding:4px 10px;">£ GBP</span></td>
+            <td class="mono cambio-taxa-atual" id="taxa-atual-gbp" style="color:var(--ink-3);">—</td>
+            <td><input class="cambio-input mono" id="nova-taxa-gbp" placeholder="Ex: 5,4585" data-moeda="GBP" data-total="0" data-count="0"></td>
+            <td><span class="cambio-invoices" id="inv-gbp">0 invoice(s)</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Preview de impacto -->
+      <div class="cambio-preview">
+        <div class="cambio-preview-title">📊 Preview do impacto:</div>
+        <table class="cambio-preview-table">
+          <thead>
+            <tr>
+              <th>Moeda</th>
+              <th>Nova Taxa</th>
+              <th>Total Moeda</th>
+              <th>Total R$</th>
+            </tr>
+          </thead>
+          <tbody id="cambio-preview-body"></tbody>
+        </table>
+      </div>
+
+    </div><!-- /modal-body -->
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="cambio-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="cambio-aplicar" style="min-width:160px;">✅ Aplicar Taxas</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- LOGIN OVERLAY -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">📦 Importação <span>Controller Pedido</span></div>
+    <div class="login-sub">Grupo Top Internacional Ltda</div>
+    <div class="form-group">
+      <label class="form-label">E-mail</label>
+      <input class="form-input" id="login-email" type="email" placeholder="voce@topinternacional.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha</label>
+      <input class="form-input" id="login-password" type="password" placeholder="••••••••">
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="btn btn-primary" id="login-submit" style="width:100%;justify-content:center;">Entrar</button>
+    <div class="login-toggle">
+      <span id="login-mode-label">Ainda não tem conta?</span>
+      <a href="#" id="login-toggle-link">Criar conta</a>
+    </div>
+    <div class="login-divider">ou</div>
+    <button class="btn-microsoft" id="login-microsoft" type="button" style="width:100%;">
+      <span class="ms-logo"><i></i><i></i><i></i><i></i></span>
+      Entrar com a Microsoft
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- MODAL GENÉRICO: CADASTRO RÁPIDO (Fornecedor / Colaborador / Cidade) -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="quick-modal-backdrop">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div><div class="modal-title" id="quick-modal-title">Novo Registro</div></div>
+      <button class="modal-close" id="quick-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid" id="quick-modal-fields"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="quick-modal-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="quick-modal-save">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/api.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/views.js"></script>
+<script src="js/lancamento.js"></script>
+<script src="js/cambio.js"></script>
+<script src="js/export.js"></script>
+<script src="js/notificacoes.js"></script>
+<script src="js/cadastros.js"></script>
+</body>
+</html>
