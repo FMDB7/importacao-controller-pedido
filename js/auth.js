@@ -63,6 +63,46 @@
     return s ? s.access_token : null;
   }
 
+  /* ---------- Renovação silenciosa do access token (refresh_token) ----------
+     O access token (JWT) do Stack Auth dura poucas horas; sem isso, qualquer
+     pessoa que ficasse com o app aberto por um período mais longo (ex.: um
+     turno de trabalho) seria deslogada no meio do uso. Usamos o refresh_token
+     guardado no login (senha ou Microsoft) para pedir um novo access token
+     sem precisar que a pessoa faça login de novo — chamado automaticamente
+     por js/api.js quando uma requisição volta com erro de autenticação.
+     Só força um novo login de fato quando o próprio refresh_token não é
+     mais válido (revogado ou expirado). */
+  let refreshEmAndamento = null;
+  async function refreshAccessToken() {
+    if (refreshEmAndamento) return refreshEmAndamento;
+    refreshEmAndamento = (async () => {
+      try {
+        const session = getSession();
+        if (!session || !session.refresh_token) return null;
+        const body = new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: session.refresh_token,
+          client_id: cfg.STACK_PROJECT_ID,
+          client_secret: cfg.STACK_PUBLISHABLE_CLIENT_KEY
+        });
+        const res = await fetch(cfg.STACK_API_URL + '/auth/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.access_token) return null;
+        saveSession({ access_token: data.access_token, refresh_token: data.refresh_token || session.refresh_token });
+        return data.access_token;
+      } catch (e) {
+        return null;
+      } finally {
+        refreshEmAndamento = null;
+      }
+    })();
+    return refreshEmAndamento;
+  }
+
   function isLoggedIn() {
     return !!getToken();
   }
@@ -179,7 +219,7 @@
     saveSession({ access_token: data.access_token, refresh_token: data.refresh_token });
   }
 
-  window.Auth = { signUp, signIn, signOut, getToken, isLoggedIn, getSession, signInWithMicrosoft };
+  window.Auth = { signUp, signIn, signOut, getToken, isLoggedIn, getSession, signInWithMicrosoft, refreshAccessToken };
 
   // Se a página acabou de voltar do login da Microsoft, conclui o fluxo
   // e avisa o resto do app (cadastros.js) por evento, já que isso é assíncrono.
