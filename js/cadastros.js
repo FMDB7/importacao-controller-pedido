@@ -74,6 +74,7 @@
       if (mode === 'signin') await Auth.signIn(email, password);
       else await Auth.signUp(email, password);
       overlay.classList.add('hidden');
+      if (window.Usuarios) window.Usuarios.registrarLogin('senha');
       loadAll();
     } catch (err) {
       errEl.textContent = err.message || 'Falha na autenticação.';
@@ -101,6 +102,7 @@
   // depois do redirect de volta), então auth.js avisa por evento quando acabar.
   window.addEventListener('topimport:auth-changed', () => {
     overlay.classList.add('hidden');
+    if (window.Usuarios) window.Usuarios.registrarLogin('microsoft');
     loadAll();
   });
   window.addEventListener('topimport:auth-error', (e) => {
@@ -109,6 +111,9 @@
 
   if (window.Auth && Auth.isLoggedIn()) {
     overlay.classList.add('hidden');
+    // já estava logado (sessão retomada ao reabrir a página) — não registra
+    // um novo login, só retoma/garante a sessão ativa e o heartbeat.
+    if (window.Usuarios) window.Usuarios.garantirSessao();
   }
 
   /* ---------- RENDER: FORNECEDORES ---------- */
@@ -207,6 +212,7 @@
     if (window.renderOperacionais) window.renderOperacionais();
     if (window.refreshCambioExposicao) window.refreshCambioExposicao();
     if (window.checkNotificacoes) window.checkNotificacoes();
+    if (window.Usuarios) window.Usuarios.refreshMeAndPermissions();
   }
 
   /* ---------- QUICK-ADD MODAL ---------- */

@@ -64,5 +64,23 @@
     return handle(res);
   }
 
-  window.DB = { list, create, update, remove, updateWhere };
+  /* Remove em massa por filtro PostgREST, ex. "email=eq.foo@bar.com" —
+     usado quando não há um único id (ex.: usuarios_permitidos, chave é o e-mail). */
+  async function removeWhere(table, query) {
+    const res = await fetch(`${cfg.DATA_API_URL}/${table}?${query}`, {
+      method: 'DELETE', headers: authHeaders()
+    });
+    return handle(res);
+  }
+
+  /* Chama uma função do banco exposta pela Data API (PostgREST) em /rpc/<nome>.
+     Usado para operações que não são um CRUD simples de tabela, ex. app_me(). */
+  async function rpc(fn, params) {
+    const res = await fetch(`${cfg.DATA_API_URL}/rpc/${fn}`, {
+      method: 'POST', headers: authHeaders(), body: JSON.stringify(params || {})
+    });
+    return handle(res);
+  }
+
+  window.DB = { list, create, update, remove, updateWhere, removeWhere, rpc };
 })();

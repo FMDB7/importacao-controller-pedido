@@ -1,5 +1,5 @@
 /* ─── Navigation ───────────────────────────────────────────────── */
-const views   = { dashboard:'Dashboard', lancamentos:'Pedidos', faturamento:'Faturamento', embarque:'Embarque', pagamento:'Pagamento', relatorios:'Relatórios — Diretoria', fornecedores:'Fornecedores', colaboradores:'Colaboradores', cidades:'Cidades' };
+const views   = { dashboard:'Dashboard', lancamentos:'Pedidos', faturamento:'Faturamento', embarque:'Embarque', pagamento:'Pagamento', relatorios:'Relatórios — Diretoria', fornecedores:'Fornecedores', colaboradores:'Colaboradores', cidades:'Cidades', usuarios:'Usuários' };
 const navItems = document.querySelectorAll('.nav-item[data-view]');
 const pageTitle = document.getElementById('page-title');
 
@@ -11,6 +11,9 @@ function showView(id) {
   pageTitle.textContent = views[id] || '';
   if (id === 'relatorios') { setTimeout(buildReportCharts, 50); }
   if (id === 'dashboard' && window.renderDashboard) { setTimeout(window.renderDashboard, 50); }
+  if (id === 'usuarios' && window.Usuarios) {
+    setTimeout(() => { window.Usuarios.renderUsuarios(); window.Usuarios.renderSessoesAtivas(); }, 50);
+  }
 }
 
 navItems.forEach(n => n.addEventListener('click', () => showView(n.dataset.view)));

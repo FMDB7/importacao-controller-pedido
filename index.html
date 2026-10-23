@@ -82,14 +82,25 @@
       </div>
     </div>
 
+    <div class="sidebar-section" data-requires-admin style="display:none;">
+      <div class="sidebar-label">Administração</div>
+      <div class="nav-item" data-view="usuarios">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>Usuários</span>
+      </div>
+    </div>
+
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="user-avatar">MF</div>
+        <div class="user-avatar" id="user-card-avatar">··</div>
         <div>
-          <div class="user-name">Marques F.</div>
-          <div class="user-role">Financeiro</div>
+          <div class="user-name" id="user-card-name">—</div>
+          <div class="user-role" id="user-card-role">—</div>
         </div>
       </div>
+      <button type="button" class="btn btn-ghost" data-logout title="Sair do sistema" style="width:100%;margin-top:10px;font-size:12px;padding:8px;">
+        🚪 Sair do sistema
+      </button>
     </div>
   </nav>
 
@@ -778,6 +789,85 @@
         </div>
       </div>
 
+      <!-- ══════════════════════════════════════════════════ -->
+      <!-- VIEW: USUÁRIOS (acesso restrito a Administrador) -->
+      <!-- ══════════════════════════════════════════════════ -->
+      <div class="view" id="view-usuarios">
+        <div class="page-actions">
+          <div>
+            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Usuários</div>
+            <div class="page-desc">Controle de acesso, perfis e segurança do sistema</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-ghost" id="btn-ver-log">📜 Ver log</button>
+            <button class="btn btn-primary" id="btn-novo-usuario">+ Novo Usuário</button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="table-head">
+            <div style="font-family:var(--ff-display);font-weight:600;font-size:14px;">Usuários cadastrados</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Perfil</th>
+                <th>Status</th>
+                <th>Último login</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-usuarios">
+              <tr><td colspan="6" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="chart-card" style="margin-top:16px;">
+          <div style="font-family:var(--ff-display);font-weight:600;font-size:14px;margin-bottom:12px;">Permissões por perfil</div>
+          <table>
+            <thead>
+              <tr><th>Recurso</th><th>Usuário</th><th>Administrador</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Dashboard, Pedidos, Faturamento, Embarque, Pagamento, Relatórios</td><td>✅ Acesso total</td><td>✅ Acesso total</td></tr>
+              <tr><td>Fornecedores, Colaboradores, Cidades (cadastros)</td><td>✅ Acesso total</td><td>✅ Acesso total</td></tr>
+              <tr><td>Aba Usuários (esta tela)</td><td>⛔ Sem acesso</td><td>✅ Acesso total</td></tr>
+              <tr><td>Alterar perfil / ativar-desativar usuários</td><td>⛔ Sem acesso</td><td>✅ Acesso total</td></tr>
+              <tr><td>Ver log de acessos</td><td>⛔ Sem acesso</td><td>✅ Acesso total</td></tr>
+              <tr><td>Ver e encerrar sessões ativas de outros usuários</td><td>⛔ Sem acesso</td><td>✅ Acesso total</td></tr>
+            </tbody>
+          </table>
+          <div class="page-desc" style="margin-top:10px;">
+            O bloqueio é reforçado também no banco de dados (RLS): mesmo que alguém tente acessar
+            diretamente, só um perfil Administrador consegue ler ou alterar essas informações.
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-top:16px;">
+          <div class="table-head">
+            <div style="font-family:var(--ff-display);font-weight:600;font-size:14px;">🔒 Sessões ativas</div>
+            <div class="page-desc" style="margin:0;">Onde cada usuário está logado agora — encerre uma sessão suspeita a qualquer momento</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>E-mail</th>
+                <th>Dispositivo</th>
+                <th>Login em</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tbl-sessoes">
+              <tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -1300,6 +1390,67 @@
   </div>
 </div>
 
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- MODAL: VER LOG (histórico de login) -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="log-modal-backdrop">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">📜 Log de acessos</div>
+        <div class="modal-subtitle">Histórico de login — data/hora, e-mail e dispositivo</div>
+      </div>
+      <button class="modal-close" id="log-modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <table>
+        <thead>
+          <tr><th>Data / hora</th><th>E-mail</th><th>Método</th><th>Dispositivo</th></tr>
+        </thead>
+        <tbody id="tbl-log">
+          <tr><td colspan="4" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- MODAL: NOVO USUÁRIO (pré-autorizar e-mail de acesso) -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="modal-backdrop" id="novo-usuario-backdrop">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header">
+      <div><div class="modal-title">👤 Novo Usuário</div></div>
+      <button class="modal-close" id="novo-usuario-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">E-mail <span class="form-required">*</span></label>
+          <input class="form-input" id="nu-email" placeholder="pessoa@topinternacional.com.br">
+          <div class="form-hint">A pessoa precisa criar conta com este e-mail (senha ou Microsoft) para conseguir entrar.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nome</label>
+          <input class="form-input" id="nu-nome" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Perfil</label>
+          <select class="form-select" id="nu-perfil">
+            <option value="Usuario">Usuário</option>
+            <option value="Administrador">Administrador</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="novo-usuario-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="novo-usuario-save">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/config.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/api.js"></script>
@@ -1312,5 +1463,6 @@
 <script src="js/export.js"></script>
 <script src="js/notificacoes.js"></script>
 <script src="js/cadastros.js"></script>
+<script src="js/usuarios.js"></script>
 </body>
 </html>

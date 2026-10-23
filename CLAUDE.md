@@ -430,4 +430,90 @@ visual/histórica, ver link na seção acima).
 
 ---
 
+## Fase 15 — Usuários, Permissões por Perfil, Log de Acessos e Sessões Ativas (concluída)
+
+Pedido do usuário: *"adicione uma aba Usuários, com uma tabela lista de usuário, com
+nome, e-mail, perfil, status(Ativo), login, ações. Permissões por perfil adicione o
+botão Ver log adicione recurso de segurança Ativos botão de sair do sistema"*.
+
+Escopo confirmado com o usuário: 2 perfis (Administrador/Usuário), bloqueio real
+(UI + banco), log = apenas histórico de login, "Ativos" = sessões/dispositivos
+logados com opção de encerrar.
+
+### Banco de dados (Neon)
+- `usuarios_permitidos` ganhou a coluna `perfil` (`'Administrador'` ou `'Usuario'`,
+  CHECK constraint). Os dois usuários existentes (`marquesfb7@gmail.com`,
+  `adm.financeiro@topinternacional.com.br`) foram marcados como `Administrador`.
+- Novas funções SECURITY DEFINER: `app_current_email()` (e-mail do usuário logado,
+  via `auth.user_id()` + `neon_auth.users_sync`), `app_is_admin()` (true se o e-mail
+  logado está em `usuarios_permitidos` com `perfil='Administrador'` e `ativo=true`)
+  e `app_me()` (RPC — `select email,nome,perfil,ativo` do próprio usuário; é assim
+  que o front obtém o próprio perfil sem precisar de SELECT direto na tabela).
+- `usuarios_permitidos`: SELECT/INSERT/UPDATE/DELETE agora são **admin-only**
+  (`admin_select`/`admin_insert`/`admin_update`/`admin_delete`) — um usuário comum
+  não lista nem altera a tabela de usuários; ele só vê o próprio perfil via `app_me()`.
+- Novas tabelas, ambas com RLS "vê/edita o próprio registro, ou tudo se for admin":
+  - `login_log` (id, email default `app_current_email()`, nome, metodo
+    `'senha'|'microsoft'`, dispositivo, data_hora) — um INSERT por login bem-sucedido.
+  - `sessoes_ativas` (id, session_token único, email default `app_current_email()`,
+    nome, dispositivo, iniciado_em, ultimo_ping, revogado) — uma linha por aba/sessão
+    de navegador logada; heartbeat atualiza `ultimo_ping`; admin apaga a linha de
+    outro usuário para "forçar logout" dele.
+
+### Frontend
+- **`js/api.js`**: novos helpers genéricos `DB.rpc(fn, params)` (chama
+  `POST /rpc/<fn>` da Data API) e `DB.removeWhere(table, query)` (DELETE em massa
+  por filtro PostgREST, usado para apagar `usuarios_permitidos` por e-mail).
+- **`js/usuarios.js`** (novo arquivo) concentra toda a lógica:
+  - `getMe()`/`applyPerfilUI()` — busca o perfil via `app_me()` e mostra/esconde
+    todo elemento com `[data-requires-admin]` (o item de menu "Usuários" e seu
+    conteúdo); também preenche o cartão de usuário da sidebar (nome/perfil/iniciais),
+    que deixou de ser texto fixo ("Marques F." / "Financeiro").
+  - `registrarLogin(metodo)` — grava uma linha em `login_log` e garante uma sessão
+    ativa, chamado nos dois pontos de sucesso de login (e-mail/senha e Microsoft).
+  - `garantirSessao()`/`iniciarHeartbeat()` — cria (ou reaproveita, via
+    `sessionStorage`) um `session_token` por aba, grava a linha em `sessoes_ativas`
+    e, a cada 60s, atualiza `ultimo_ping`; se a linha desaparecer (sessão encerrada
+    por um admin) ou vier `revogado=true`, a aba é deslogada automaticamente com um
+    aviso.
+  - `encerrarSessaoPropria()`/`sair()` — usado pelo novo botão "🚪 Sair do sistema"
+    na sidebar: apaga a própria linha de sessão e chama `Auth.signOut()`.
+  - `renderUsuarios()` — preenche a tabela da aba Usuários (Nome/E-mail/Perfil via
+    `<select>`/Status/Último login/Ações), com ações para alternar Ativo/Inativo e
+    remover o acesso (deleta de `usuarios_permitidos`).
+  - `renderSessoesAtivas()` — tabela de sessões ativas (e-mail, dispositivo resumido,
+    início, Online/Inativa conforme o `ultimo_ping`) com botão "Encerrar sessão".
+  - Modal **"👤 Novo Usuário"** — pré-autoriza um e-mail (insere em
+    `usuarios_permitidos` com nome/perfil); a pessoa só ganha acesso de fato depois
+    de criar a própria conta (senha ou Microsoft) com esse e-mail.
+  - Modal **"📜 Ver Log"** — lista as últimas 300 entradas de `login_log`.
+- **`index.html`**: novo item de menu "Usuários" (dentro de uma seção
+  `data-requires-admin`, escondida por padrão), a view `#view-usuarios` (tabela de
+  usuários + matriz "Permissões por Perfil" + tabela de Sessões Ativas), os modais
+  `#log-modal-backdrop` e `#novo-usuario-backdrop`, e o botão "🚪 Sair do sistema" no
+  rodapé da sidebar (`[data-logout]`).
+- **`js/app.js`**: `views` ganhou `usuarios:'Usuários'`; `showView('usuarios')`
+  dispara `renderUsuarios()` + `renderSessoesAtivas()`.
+- **`js/cadastros.js`**: `doAuth()` (login por senha) e o listener de
+  `topimport:auth-changed` (login Microsoft) agora chamam
+  `Usuarios.registrarLogin(metodo)`; o caminho de "já estava logado ao recarregar a
+  página" chama `Usuarios.garantirSessao()` (retoma o heartbeat sem logar um novo
+  acesso); `loadAll()` chama `Usuarios.refreshMeAndPermissions()` para manter a UI
+  de admin/usuário sempre atualizada.
+
+### Observações
+- O bloqueio é "de verdade" nos dois níveis pedidos: a UI escondida (`display:none`)
+  é só conveniência — a proteção real é a RLS acima, então mesmo chamando a Data API
+  direto, um usuário comum nunca lê a lista de usuários, o log de acessos ou as
+  sessões de outra pessoa.
+- Não existe deleção de conta de autenticação do Stack Auth por aqui — "remover
+  usuário" remove apenas da lista de permissão (`usuarios_permitidos`); a pessoa
+  pode até ter uma conta no Stack Auth, mas sem entrada ativa na lista ela não
+  acessa nenhum dado (mesma lógica da Fase 12).
+- Perfis são só dois por decisão do usuário (Administrador/Usuário); criar um
+  terceiro perfil no futuro exigiria estender a CHECK constraint de `perfil` e as
+  funções `app_is_admin()`/matriz de permissões.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
