@@ -230,7 +230,7 @@
           <td class="num">${f.pedidos?.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
           <td class="date" style="color:${vencCor};">${vencIcon}${toBR(f.data_vencimento)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="faturas" data-inline-status-id="${f.id}" title="Clique para alterar o status">${STATUS_BADGE[f.status] || f.status}</td>
-          <td><div class="row-actions"><button type="button" class="danger" data-delete-rec="faturas:${f.id}" title="Excluir invoice">🗑️</button></div></td>
+          <td><div class="row-actions"><button type="button" data-edit-lancamento="${f.pedido_id}:fatura" title="Editar invoice">✏️</button><button type="button" class="danger" data-delete-rec="faturas:${f.id}" title="Excluir invoice">🗑️</button></div></td>
         </tr>`;
     }).join('');
     ferramentasFat.renderPeriodCards(rows, f => f.data_vencimento, f => f.pedidos?.valor_brl);
@@ -303,7 +303,7 @@
           <td class="date">${toBR(e.data_previsao_chegada)}</td>
           <td class="date">${toBR(e.data_chegada)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="embarques" data-inline-status-id="${e.id}" title="Clique para alterar o status">${STATUS_BADGE[e.status] || e.status}</td>
-          <td><div class="row-actions"><button type="button" class="danger" data-delete-rec="embarques:${e.id}" title="Excluir embarque">🗑️</button></div></td>
+          <td><div class="row-actions"><button type="button" data-edit-lancamento="${e.pedido_id}:embarque" title="Editar embarque">✏️</button><button type="button" class="danger" data-delete-rec="embarques:${e.id}" title="Excluir embarque">🗑️</button></div></td>
         </tr>`;
     }).join('');
     ferramentasEmb.renderPeriodCards(rows, e => e.data_embarque, null);
@@ -375,7 +375,7 @@
           <td class="num">${p.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
           <td class="date">${toBR(p.data_vencimento)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="pagamentos" data-inline-status-id="${p.id}" title="Clique para alterar o status">${badge}</td>
-          <td><div class="row-actions"><button type="button" class="danger" data-delete-rec="pagamentos:${p.id}" title="Excluir pagamento">🗑️</button></div></td>
+          <td><div class="row-actions"><button type="button" data-edit-lancamento="${p.pedido_id}:pagamento" title="Editar pagamento">✏️</button><button type="button" class="danger" data-delete-rec="pagamentos:${p.id}" title="Excluir pagamento">🗑️</button></div></td>
         </tr>`;
     }).join('');
     ferramentasPag.renderPeriodCards(rows, p => p.data_vencimento, p => p.valor_brl);

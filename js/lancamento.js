@@ -108,8 +108,13 @@
     return out;
   }
 
-  /* ---------- Abrir modal em modo de edição, pré-preenchido ---------- */
-  async function openEditPedido(pedidoId) {
+  /* ---------- Abrir modal em modo de edição, pré-preenchido ----------
+     `tabAlvo` (opcional) abre direto na aba indicada — usado quando a edição
+     é disparada a partir das telas de Faturamento/Embarque/Pagamento, que
+     editam o mesmo pedido mas devem cair na aba relevante, não sempre em
+     "Pedido". Valores aceitos: 'pedido' | 'fatura' | 'embarque' | 'pagamento'. */
+  const TAB_IDX = { pedido: 0, fatura: 1, embarque: 2, pagamento: 3 };
+  async function openEditPedido(pedidoId, tabAlvo) {
     await loadCatalogs(); // sempre busca a lista atual (não usa cache)
     resetForm();
     try {
@@ -208,7 +213,7 @@
       if (confirmBtn) confirmBtn.textContent = '💾 Salvar Alterações';
 
       if (window.openModal) window.openModal(); else document.getElementById('modal-backdrop')?.classList.add('open');
-      if (window.setModalTab) window.setModalTab(0);
+      if (window.setModalTab) window.setModalTab(TAB_IDX[tabAlvo] || 0);
     } catch (e) {
       showToast('Erro ao abrir edição', e.message || 'Tente novamente.', false);
     }
@@ -218,6 +223,17 @@
     const btn = e.target.closest('[data-edit-pedido]');
     if (btn) openEditPedido(btn.dataset.editPedido);
   });
+
+  // Edição disparada a partir de Faturamento/Embarque/Pagamento: formato
+  // "pedidoId:aba" (ex.: "data-edit-lancamento=abc123:fatura").
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-edit-lancamento]');
+    if (!btn) return;
+    const [pedidoId, tabAlvo] = btn.dataset.editLancamento.split(':');
+    if (pedidoId) openEditPedido(pedidoId, tabAlvo);
+  });
+
+  window.openEditPedido = openEditPedido;
 
   function resetForm() {
     document.querySelectorAll('#modal-backdrop input:not([type=checkbox])').forEach(el => { if (!el.readOnly) el.value = ''; });
