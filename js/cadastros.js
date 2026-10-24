@@ -177,7 +177,6 @@
           <div class="city-row">
             <div><div class="city-name">${c.nome}</div>${c.estado ? `<div class="city-country">${c.estado}</div>` : ''}</div>
             <div>${flag(c.pais)} ${c.pais}</div>
-            <div style="font-size:13px;color:var(--ink-2);">${c.tipo_zona || '—'}</div>
             <div style="text-align:right;font-family:var(--ff-mono);font-size:13px;">${c.codigo_porto || c.codigo_aeroporto || '—'}</div>
             <div>${rowActions('cidades', c.id)}</div>
           </div>`);
@@ -240,10 +239,9 @@
     cidades: {
       title: 'Nova Cidade',
       fields: [
-        { name: 'nome', label: 'Cidade', required: true },
+        { name: 'nome', label: 'Cidade', type: 'select', options: ['Manaus','Macapá','Extrema','Guajará'], required: true },
         { name: 'estado', label: 'Estado' },
         { name: 'pais', label: 'País', required: true },
-        { name: 'tipo_zona', label: 'Tipo de Zona', type: 'select', options: ['ZF','Nacional','Internacional'] },
         { name: 'codigo_porto', label: 'Código do Porto' },
         { name: 'codigo_aeroporto', label: 'Código do Aeroporto' }
       ]
