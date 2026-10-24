@@ -158,6 +158,7 @@
       if (embarque) {
         setVal('f-emb-tipo', embarque.tipo);
         setVal('f-emb-porto', embarque.porto_origem);
+        setVal('f-emb-cidade-destino', embarque.porto_destino);
         setVal('f-emb-navio', desc.navio);
         setVal('f-emb-data', embarque.data_embarque);
         setVal('f-emb-container', embarque.numero_container);
@@ -432,11 +433,13 @@
       const embTipo = val('f-emb-tipo');
       const embPorto = val('f-emb-porto');
       const embData = val('f-emb-data');
-      if (embTipo && (embPorto || embData || val('f-emb-container'))) {
+      const embCidadeDestino = val('f-emb-cidade-destino');
+      if (embTipo && (embPorto || embData || embCidadeDestino || val('f-emb-container'))) {
         const dadosEmbarque = {
           pedido_id: pedido.id,
           tipo: embTipo,
           porto_origem: embPorto || null,
+          porto_destino: embCidadeDestino || null,
           numero_container: val('f-emb-container') || null,
           data_embarque: embData || null,
           data_previsao_chegada: val('f-emb-eta') || null,
