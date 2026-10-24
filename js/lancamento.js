@@ -707,16 +707,11 @@
     if (el) el.textContent = total ? `${visiveis} de ${total}` : '0';
   }
 
-  /* ---------- Filtros avançados (fornecedor/status/moeda/data/valor/busca) ---------- */
+  /* ---------- Filtros avançados (fornecedor/status/moeda) ---------- */
   function aplicarFiltrosAvancados() {
     const forn = document.getElementById('flt-fornecedor')?.value || '';
     const status = document.getElementById('flt-status')?.value || '';
     const moeda = document.getElementById('flt-moeda')?.value || '';
-    const dataIni = document.getElementById('flt-data-ini')?.value || '';
-    const dataFim = document.getElementById('flt-data-fim')?.value || '';
-    const valorMin = parseFloat(document.getElementById('flt-valor-min')?.value || '');
-    const valorMax = parseFloat(document.getElementById('flt-valor-max')?.value || '');
-    const busca = (document.getElementById('flt-busca')?.value || '').trim().toLowerCase();
 
     const grpChips = document.querySelectorAll('.grp-chip:not(.loc-chip)');
     const locChips = document.querySelectorAll('.grp-chip.loc-chip');
@@ -732,15 +727,10 @@
       if (forn && r.dataset.fornecedor !== forn) ok = false;
       if (status && r.dataset.status !== status) ok = false;
       if (moeda && r.dataset.moeda !== moeda) ok = false;
-      if (dataIni && r.dataset.data && r.dataset.data < dataIni) ok = false;
-      if (dataFim && r.dataset.data && r.dataset.data > dataFim) ok = false;
-      if (!isNaN(valorMin) && Number(r.dataset.valor) < valorMin) ok = false;
-      if (!isNaN(valorMax) && Number(r.dataset.valor) > valorMax) ok = false;
       if (mesSelecionado) {
         const [mesSel, moedaSel] = mesSelecionado.split('|');
         if (r.dataset.mes !== mesSel || r.dataset.moeda !== moedaSel) ok = false;
       }
-      if (busca && !(r.dataset.busca || '').toLowerCase().includes(busca)) ok = false;
       r.style.display = ok ? '' : 'none';
       if (ok) visiveis++;
     });
@@ -750,10 +740,9 @@
   window.applyPedidosFilter = aplicarFiltrosAvancados;
 
   document.getElementById('flt-buscar')?.addEventListener('click', aplicarFiltrosAvancados);
-  document.getElementById('flt-busca')?.addEventListener('keydown', e => { if (e.key === 'Enter') aplicarFiltrosAvancados(); });
   ['flt-fornecedor','flt-status','flt-moeda'].forEach(id => document.getElementById(id)?.addEventListener('change', aplicarFiltrosAvancados));
   document.getElementById('flt-limpar')?.addEventListener('click', () => {
-    ['flt-fornecedor','flt-status','flt-moeda','flt-data-ini','flt-data-fim','flt-valor-min','flt-valor-max','flt-busca'].forEach(id => {
+    ['flt-fornecedor','flt-status','flt-moeda'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
     // "Limpar" precisa reativar também os chips de Setor/Local — senão um
