@@ -30,12 +30,6 @@
     const [y, m, d] = iso.split('-');
     return `${d}/${m}/${y}`;
   }
-  function pct(delta) {
-    if (delta == null || !isFinite(delta)) return null;
-    const arrow = delta >= 0 ? '↑' : '↓';
-    const cls = delta >= 0 ? 'delta-up' : 'delta-down';
-    return `<span class="kpi-delta ${cls}">${arrow} ${Math.abs(delta).toFixed(1)}%</span> vs. mês anterior`;
-  }
 
   /* ---------- Dashboard ---------- */
   async function renderDashboard() {
@@ -48,50 +42,49 @@
     }
 
     const now = new Date();
-    const thisMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-    const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const prevMonthKey = prevMonthDate.getFullYear() + '-' + String(prevMonthDate.getMonth() + 1).padStart(2, '0');
 
-    // Totais por moeda: mês atual, mês anterior, e série dos últimos 6 meses
+    // Série dos últimos 6 meses (usada só na sparkline — continua por mês)
     const monthKeys = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       monthKeys.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
     }
     const seriesPorMoeda = {}; MOEDAS.forEach(m => seriesPorMoeda[m] = monthKeys.map(() => 0));
-    const totalMesAtual = {}; const totalMesAnterior = {};
-    MOEDAS.forEach(m => { totalMesAtual[m] = 0; totalMesAnterior[m] = 0; });
+
+    // Totais GERAIS por moeda — somam TODOS os pedidos cadastrados, sem filtro
+    // de data (nem do pedido, nem do vencimento): um pedido feito agora com
+    // vencimento só em 2027, ou um pedido antigo de anos atrás, contam do
+    // mesmo jeito. Os cards do topo mostram exposição total, não "do mês".
+    const totalGeral = {}; const countGeral = {};
+    MOEDAS.forEach(m => { totalGeral[m] = 0; countGeral[m] = 0; });
     let totalBRLporMoeda = {}; MOEDAS.forEach(m => totalBRLporMoeda[m] = 0);
 
     rows.forEach(p => {
-      if (!p.data_pedido || !p.moeda) return;
-      const key = p.data_pedido.slice(0, 7);
+      if (!p.moeda) return;
       const valor = Number(p.valor_total) || 0;
-      const idx = monthKeys.indexOf(key);
-      if (idx >= 0 && seriesPorMoeda[p.moeda]) seriesPorMoeda[p.moeda][idx] += valor;
-      if (key === thisMonthKey && totalMesAtual[p.moeda] != null) totalMesAtual[p.moeda] += valor;
-      if (key === prevMonthKey && totalMesAnterior[p.moeda] != null) totalMesAnterior[p.moeda] += valor;
+      if (totalGeral[p.moeda] != null) { totalGeral[p.moeda] += valor; countGeral[p.moeda]++; }
       if (totalBRLporMoeda[p.moeda] != null) totalBRLporMoeda[p.moeda] += Number(p.valor_brl) || 0;
+      if (p.data_pedido) {
+        const key = p.data_pedido.slice(0, 7);
+        const idx = monthKeys.indexOf(key);
+        if (idx >= 0 && seriesPorMoeda[p.moeda]) seriesPorMoeda[p.moeda][idx] += valor;
+      }
     });
 
     // KPI cards
     MOEDAS.forEach(m => {
       const valEl = document.getElementById(`kpi-${m.toLowerCase()}-valor`);
       const subEl = document.getElementById(`kpi-${m.toLowerCase()}-sub`);
-      const temDados = totalMesAtual[m] > 0;
+      const temDados = totalGeral[m] > 0;
       if (valEl) {
-        valEl.textContent = temDados ? fmtMoeda(totalMesAtual[m], m) : '—';
+        valEl.textContent = temDados ? fmtMoeda(totalGeral[m], m) : '—';
         valEl.classList.toggle('is-empty', !temDados);
       }
       if (subEl) {
-        const anterior = totalMesAnterior[m];
-        if (anterior > 0 && temDados) {
-          const delta = ((totalMesAtual[m] - anterior) / anterior) * 100;
-          subEl.innerHTML = pct(delta);
-        } else if (temDados) {
-          subEl.textContent = 'sem mês anterior p/ comparar';
+        if (temDados) {
+          subEl.textContent = `${countGeral[m]} pedido${countGeral[m] === 1 ? '' : 's'} no total`;
         } else {
-          subEl.innerHTML = '<span class="kpi-empty">sem movimentação no período</span>';
+          subEl.innerHTML = '<span class="kpi-empty">nenhum pedido lançado ainda</span>';
         }
       }
       // Sparkline com a série real dos últimos 6 meses (zera tudo se não houver dados)
