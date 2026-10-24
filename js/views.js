@@ -192,12 +192,12 @@
     const pendenteBRL = rows.filter(f => f.status === 'Pendente').reduce((s, f) => s + (f.pedidos?.valor_brl ? Number(f.pedidos.valor_brl) : 0), 0);
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-    set('fat-kpi-total', fmtBRLCompacto(totalBRL));
+    set('fat-kpi-total', fmtBRL(totalBRL));
     set('fat-kpi-total-sub', `${rows.length} invoice${rows.length === 1 ? '' : 's'} no total`);
     set('fat-kpi-abertas', abertas);
     set('fat-kpi-abertas-sub', 'aguardando pagamento');
     set('fat-kpi-pagas', pagas);
-    set('fat-kpi-pendente', fmtBRLCompacto(pendenteBRL));
+    set('fat-kpi-pendente', fmtBRL(pendenteBRL));
     set('fat-kpi-pendente-sub', `${abertas} invoice${abertas === 1 ? '' : 's'} pendente${abertas === 1 ? '' : 's'}`);
     if (!rows.length) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhuma invoice lançada ainda.</td></tr>`;
