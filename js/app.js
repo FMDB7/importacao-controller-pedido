@@ -48,18 +48,16 @@ function setModalTab(idx) {
     if (i < idx) step.classList.add('done');
     else if (i === idx) step.classList.add('current');
   });
-  // Footer buttons
+  // Footer buttons — o botão Salvar fica disponível em TODAS as abas
+  // (Pedido/Fatura/Embarque/Pagamento), não só na última: a pessoa pode
+  // alterar ou preencher algo em qualquer aba e salvar na hora, sem
+  // precisar navegar até o fim do assistente.
   const prev = document.getElementById('modal-prev');
   const next = document.getElementById('modal-next');
   const confirm = document.getElementById('modal-confirm');
   prev.style.display = idx > 0 ? 'inline-flex' : 'none';
-  if (idx === tabOrder.length - 1) {
-    next.style.display = 'none';
-    confirm.style.display = 'inline-flex';
-  } else {
-    next.style.display = 'inline-flex';
-    confirm.style.display = 'none';
-  }
+  next.style.display = idx === tabOrder.length - 1 ? 'none' : 'inline-flex';
+  confirm.style.display = 'inline-flex';
 }
 
 document.querySelectorAll('.modal-tab').forEach((btn, i) => {
