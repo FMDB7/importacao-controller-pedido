@@ -239,7 +239,7 @@
     cidades: {
       title: 'Nova Cidade',
       fields: [
-        { name: 'nome', label: 'Cidade', type: 'select', options: ['Manaus','Macapá','Extrema','Guajará'], required: true },
+        { name: 'nome', label: 'Cidade', required: true },
         { name: 'estado', label: 'Estado' },
         { name: 'pais', label: 'País', required: true },
         { name: 'codigo_porto', label: 'Código do Porto' },
