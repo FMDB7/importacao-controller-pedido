@@ -587,7 +587,7 @@
         'select=*,fornecedores(razao_social),colaboradores(nome,cargo,coordenador_nome)&order=created_at.desc&limit=100');
       PEDIDOS_CACHE = rows;
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
         renderPeriodCards([]);
         popularFiltros([]);
         atualizarContagem(0, 0);
@@ -616,6 +616,8 @@
             <td>${colab}${coord ? `<div style="font-size:10px;color:var(--ink-3);margin-top:2px;">👤 Coord.: ${coord}</div>` : ''}</td>
             <td>${forn}</td>
             <td>${marca}</td>
+            <td class="ta-c date">${toBRDate(p.data_pedido)}</td>
+            <td class="ta-c date">${toBRDate(p.data_previsao_entrega)}</td>
             <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
             <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
             <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
@@ -635,7 +637,7 @@
       document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
       aplicarFiltrosAvancados();
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
     }
   }
 
