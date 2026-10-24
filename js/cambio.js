@@ -22,7 +22,11 @@
     return v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
   }
 
-  /* ---------- Carrega exposição em aberto (pedidos sem taxa fixada) ---------- */
+  /* ---------- Carrega quantos pedidos de cada moeda serão afetados ----------
+     Antes só contava pedidos com câmbio pendente (taxa_cambio IS NULL). Como a
+     taxa já é preenchida logo no lançamento, praticamente nenhum pedido ficava
+     "pendente" — por isso "Aplicar Taxas" parecia não fazer nada. Agora conta
+     (e, ao aplicar, recalcula) TODOS os pedidos da moeda, contratados ou não. */
   async function carregarExposicao() {
     for (const m of MOEDAS) {
       const inp = document.getElementById('nova-taxa-' + m.id);
@@ -30,7 +34,7 @@
       if (!inp) continue;
       try {
         const rows = await DB.list('pedidos',
-          `select=valor_total&moeda=eq.${m.sigla}&taxa_cambio=is.null`);
+          `select=valor_total&moeda=eq.${m.sigla}`);
         const total = rows.reduce((s, r) => s + (parseFloat(r.valor_total) || 0), 0);
         const count = rows.length;
         inp.dataset.total = total.toFixed(2);
@@ -104,9 +108,10 @@
           moeda: m.sigla, taxa_compra: taxa, taxa_venda: taxa, fonte: 'Manual'
         });
 
-        // 2) recalcula os pedidos com câmbio ainda pendente nessa moeda
+        // 2) recalcula TODOS os pedidos dessa moeda com a nova taxa
+        //    (inclusive os que já tinham câmbio contratado)
         const pendentes = await DB.list('pedidos',
-          `select=id,valor_total&moeda=eq.${m.sigla}&taxa_cambio=is.null`);
+          `select=id,valor_total&moeda=eq.${m.sigla}`);
         for (const p of pendentes) {
           const valorBRL = (parseFloat(p.valor_total) || 0) * taxa;
           await DB.update('pedidos', p.id, { taxa_cambio: taxa, valor_brl: valorBRL });
