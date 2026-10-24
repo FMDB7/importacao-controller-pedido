@@ -602,7 +602,7 @@
         'select=*,fornecedores(razao_social),colaboradores(nome,cargo,coordenador_nome)&order=created_at.desc&limit=100');
       PEDIDOS_CACHE = rows;
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
         renderPeriodCards([]);
         popularFiltros([]);
         atualizarContagem(0, 0);
@@ -612,7 +612,6 @@
       tbody.innerHTML = rows.map(p => {
         const forn = p.fornecedores ? p.fornecedores.razao_social : '—';
         const colab = p.colaboradores ? p.colaboradores.nome : '—';
-        const cargo = p.colaboradores ? p.colaboradores.cargo : '';
         const coord = p.colaboradores ? p.colaboradores.coordenador_nome : '';
         const setorNome = SETOR_NOME[p.setor] || p.setor || '—';
         const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
@@ -640,7 +639,6 @@
             <td class="num">${qtdePedidaNum != null ? qtdePedidaNum.toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
             <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
             <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
-            <td class="ta-c">${cargo ? `<span class="grp-tag">${cargo}</span>` : '—'}</td>
             <td class="date">—</td>
             <td class="ta-c cell-editable" data-inline-status="${p.id}" title="Clique para alterar o status">
               <span class="status-badge ${statusCls}">${p.status}</span>
@@ -653,7 +651,7 @@
       document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
       aplicarFiltrosAvancados();
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
     }
   }
 

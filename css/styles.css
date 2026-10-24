@@ -439,6 +439,7 @@ td.num, td.val {
   text-align: right;
   color: var(--ink-1);
   letter-spacing: -.1px;
+  white-space: nowrap;
 }
 td.code, td.date {
   font-family: var(--ff-mono);
