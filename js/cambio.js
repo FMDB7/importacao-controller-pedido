@@ -22,6 +22,22 @@
     return v.toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 });
   }
 
+  // Máscara de digitação: a pessoa só digita números e o campo formata
+  // sozinho (últimos 4 dígitos viram as casas decimais da taxa).
+  function attachMoneyMask(id, decimals) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      let digits = el.value.replace(/\D/g, '');
+      if (!digits) { el.value = ''; return; }
+      while (digits.length <= decimals) digits = '0' + digits;
+      const intDigits = digits.slice(0, digits.length - decimals).replace(/^0+(?=\d)/, '');
+      const decDigits = digits.slice(digits.length - decimals);
+      el.value = Number(intDigits).toLocaleString('pt-BR') + ',' + decDigits;
+    });
+  }
+  MOEDAS.forEach(m => attachMoneyMask('nova-taxa-' + m.id, 4));
+
   /* ---------- Carrega quantos pedidos de cada moeda serão afetados ----------
      Antes só contava pedidos com câmbio pendente (taxa_cambio IS NULL). Como a
      taxa já é preenchida logo no lançamento, praticamente nenhum pedido ficava

@@ -31,6 +31,23 @@
     if (n == null || isNaN(n)) return '—';
     return (CUR_SYM[moeda] || '') + n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
+  // Máscara de digitação para campos de valor/taxa: a pessoa só digita
+  // números (sem separador de milhar nem vírgula decimal) e o campo já
+  // formata sozinho, tratando os últimos dígitos como casas decimais
+  // (ex.: digitar "386400" vira "3.864,00").
+  function attachMoneyMask(id, decimals) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      let digits = el.value.replace(/\D/g, '');
+      if (!digits) { el.value = ''; return; }
+      while (digits.length <= decimals) digits = '0' + digits;
+      const intDigits = digits.slice(0, digits.length - decimals).replace(/^0+(?=\d)/, '');
+      const decDigits = digits.slice(digits.length - decimals);
+      el.value = Number(intDigits).toLocaleString('pt-BR') + ',' + decDigits;
+    });
+  }
+
   function addDays(dateStr, days) {
     if (!dateStr) return null;
     const d = new Date(dateStr + 'T00:00:00');
@@ -305,6 +322,10 @@
       if (urlAnterior && window.Storage) Storage.remove(urlAnterior);
     });
   });
+
+  /* ---------- Máscara automática nos campos de valor/taxa ---------- */
+  attachMoneyMask('f-fat-valor', 2);
+  attachMoneyMask('f-pag-taxa', 4);
 
   /* ---------- Cálculos automáticos ---------- */
   function recalcVencimentoFatura() {
@@ -593,7 +614,7 @@
             <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
             <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
             <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
-            <td class="num">${qtdePedida ? Number(qtdePedida).toLocaleString('pt-BR') + ' pçs' : '—'}</td>
+            <td class="num">${qtdePedida ? Number(qtdePedida).toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
             <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
             <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
             <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span><div style="font-size:10px;color:var(--ink-3);margin-top:2px;">${cargo} · ${colab}</div></td>

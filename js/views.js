@@ -230,7 +230,7 @@
           <td>${forn}</td>
           <td class="ta-c"><span class="currency-tag ${CUR_CLASS[f.moeda]||''}">${f.moeda}</span></td>
           <td class="num">${fmtMoeda(f.valor, f.moeda)}</td>
-          <td class="num">${f.qtd_pecas != null ? Number(f.qtd_pecas).toLocaleString('pt-BR') + ' pçs' : '—'}</td>
+          <td class="num">${f.qtd_pecas != null ? Number(f.qtd_pecas).toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
           <td class="num" style="font-size:11px;">${f.pedidos?.taxa_cambio ? Number(f.pedidos.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${f.pedidos?.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
           <td class="date" style="color:${vencCor};">${vencIcon}${toBR(f.data_vencimento)}</td>
