@@ -417,8 +417,7 @@
       { id: 'emb-flt-status', attr: 'status', type: 'select' },
       { id: 'emb-flt-tipo', attr: 'tipo', type: 'select' },
       { id: 'emb-flt-data-ini', attr: 'embarque', type: 'dateMin' },
-      { id: 'emb-flt-data-fim', attr: 'embarque', type: 'dateMax' },
-      { id: 'emb-flt-busca', attr: 'busca', type: 'text' }
+      { id: 'emb-flt-data-fim', attr: 'embarque', type: 'dateMax' }
     ]);
     ferramentasEmb.aplicar();
   }

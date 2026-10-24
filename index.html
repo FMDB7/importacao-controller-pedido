@@ -560,16 +560,12 @@
               <select class="form-select" id="emb-flt-tipo"><option value="">Todos os modais</option><option>Marítimo</option><option>Aéreo</option><option>Terrestre</option><option>Courier</option></select>
             </div>
             <div class="form-group">
-              <label class="form-label">Embarque inicial</label>
-              <input type="date" class="form-input" id="emb-flt-data-ini">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Embarque final</label>
-              <input type="date" class="form-input" id="emb-flt-data-fim">
-            </div>
-            <div class="form-group form-full">
-              <label class="form-label">Buscar</label>
-              <input type="text" class="form-input" id="emb-flt-busca" placeholder="BL, navio, container, PO...">
+              <label class="form-label">Período de Embarque</label>
+              <div class="date-range-row">
+                <input type="date" class="form-input" id="emb-flt-data-ini">
+                <span class="date-range-sep">até</span>
+                <input type="date" class="form-input" id="emb-flt-data-fim">
+              </div>
             </div>
           </div>
           <div class="filter-panel-actions">

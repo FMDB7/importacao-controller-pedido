@@ -768,6 +768,9 @@ td.code, td.date {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 14px;
 }
 .filter-panel-actions { display: flex; gap: 8px; margin-top: 14px; }
+.date-range-row { display: flex; align-items: center; gap: 6px; }
+.date-range-row .form-input { flex: 1; min-width: 0; }
+.date-range-sep { font-size: 11.5px; color: var(--ink-3); flex-shrink: 0; }
 .cell-editable { cursor: pointer; }
 .cell-editable:hover .status-badge { outline: 1.5px dashed var(--border-md); outline-offset: 2px; }
 
