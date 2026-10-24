@@ -12,6 +12,11 @@
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="assets/icons/icon-512.png">
   <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Controller Pedido">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -46,6 +51,10 @@
         <div class="chip-dot"></div>
         Câmbio ao vivo
       </div>
+      <button class="btn btn-ghost" id="btn-instalar-app" style="font-size:12px;padding:6px 11px;color:var(--cyan);border-color:rgba(0,207,255,0.3);display:none;" title="Instalar o app nesta tela inicial / área de trabalho">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Instalar app
+      </button>
       <div class="notif-bell-wrap">
         <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;" id="btn-notificacoes">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -1565,5 +1574,6 @@
 <script src="js/notificacoes.js"></script>
 <script src="js/usuarios.js"></script>
 <script src="js/cadastros.js"></script>
+<script src="js/pwa-install.js"></script>
 </body>
 </html>
