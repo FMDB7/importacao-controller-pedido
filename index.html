@@ -334,13 +334,13 @@
           <table>
             <thead>
               <tr>
-                <th>Pasta</th>
                 <th>Nº Pedido</th>
                 <th>Fornecedor</th>
                 <th>Marca</th>
                 <th class="ta-c">Setor - Categoria</th>
                 <th class="ta-c">Moeda</th>
                 <th class="ta-r">Valor</th>
+                <th class="ta-r">Qtde Pedida</th>
                 <th class="ta-r">Taxa</th>
                 <th class="ta-r">Valor BRL</th>
                 <th class="ta-c">Local · Resp.</th>
@@ -458,11 +458,13 @@
           <table>
             <thead>
               <tr>
+                <th>Pasta</th>
                 <th>Invoice</th>
                 <th>Nº Pedido</th>
                 <th>Fornecedor</th>
                 <th class="ta-c">Moeda</th>
                 <th class="ta-r">Valor Invoice</th>
+                <th class="ta-r">QTD PÇS FAT</th>
                 <th class="ta-r">Taxa R$</th>
                 <th class="ta-r">Total BRL</th>
                 <th class="ta-c">Vencimento</th>
@@ -471,7 +473,7 @@
               </tr>
             </thead>
             <tbody id="tbl-faturamento">
-              <tr><td colspan="10" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+              <tr><td colspan="12" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1115,6 +1117,11 @@
           <div class="form-group">
             <label class="form-label">Valor Fatura <span class="form-required">*</span></label>
             <input class="form-input mono" id="f-fat-valor" placeholder="0,00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">QTD PÇS FAT</label>
+            <input class="form-input mono" id="f-fat-qtd" placeholder="Ex: 900">
+            <div class="form-hint">Peças faturadas nesta invoice (pode ser menor que a Qtde Pedida)</div>
           </div>
           <div class="form-group">
             <label class="form-label">Incoterm</label>

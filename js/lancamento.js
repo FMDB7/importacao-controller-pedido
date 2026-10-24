@@ -153,6 +153,7 @@
       if (fatura) {
         setVal('f-invoice', fatura.numero_invoice);
         setVal('f-fat-emissao', fatura.data_emissao);
+        setVal('f-fat-qtd', fatura.qtd_pecas);
         if (fatura.data_emissao && fatura.data_vencimento) {
           const dias = Math.round((new Date(fatura.data_vencimento + 'T00:00:00') - new Date(fatura.data_emissao + 'T00:00:00')) / 86400000);
           setVal('f-fat-prazo', String(dias));
@@ -432,6 +433,7 @@
           data_vencimento: vencIso,
           valor: valorFatura || 0,
           moeda: moeda,
+          qtd_pecas: val('f-fat-qtd') ? parseBRNumber(val('f-fat-qtd')) : null,
           arquivo_url: anexos.nf
         };
         fatura = editingFaturaId
@@ -577,19 +579,21 @@
         const LOC_CLASS = { 'Manaus': 'loc-manaus', 'Macapá': 'loc-macapa', 'Extrema': 'loc-extrema', 'Guajará': 'loc-guajara' };
         const locCls = LOC_CLASS[p.localizacao] || 'loc-manaus';
         const mesRef = p.data_pedido ? p.data_pedido.slice(0, 7) : '';
-        const marca = parseDescricao(p.descricao).marca || '—';
+        const descInfo = parseDescricao(p.descricao);
+        const marca = descInfo.marca || '—';
+        const qtdePedida = descInfo.qtde || '';
         return `
           <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'Manaus'}" data-mes="${mesRef}"
               data-status="${p.status || ''}" data-moeda="${p.moeda || ''}" data-fornecedor="${forn}"
               data-valor="${p.valor_brl || 0}" data-data="${p.data_pedido || ''}"
               data-busca="${(p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + forn + ' ' + marca}">
-            <td>${p.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${p.numero_pi}</span>` : '—'}${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI" style="margin-left:6px;">📎</a>` : ''}</td>
-            <td><span class="mono" style="font-size:11.5px;color:var(--cyan);font-weight:700;">${p.numero_pedido || '—'}</span></td>
+            <td><span class="mono" style="font-size:11.5px;color:var(--cyan);font-weight:700;">${p.numero_pedido || '—'}</span>${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI (${p.numero_pi||''})" style="margin-left:6px;">📎</a>` : ''}</td>
             <td>${forn}</td>
             <td>${marca}</td>
             <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
             <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
             <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
+            <td class="num">${qtdePedida ? Number(qtdePedida).toLocaleString('pt-BR') + ' pçs' : '—'}</td>
             <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
             <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
             <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span><div style="font-size:10px;color:var(--ink-3);margin-top:2px;">${cargo} · ${colab}</div></td>
