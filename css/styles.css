@@ -388,6 +388,29 @@ tbody tr:hover { background: var(--bg-hover); }
 tbody td { padding: 11px 16px; font-size: 13px; color: var(--ink-2); vertical-align: middle; }
 tbody td:first-child { color: var(--ink-1); font-weight: 500; }
 
+/* Linhas fora da página atual (paginação) — não interfere nos filtros,
+   que continuam controlando a visibilidade via style.display inline. */
+tr.pg-hide { display: none !important; }
+
+/* Paginação de tabelas (15 linhas por página) */
+.pg-pager {
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+  padding: 12px 20px; border-top: 1px solid var(--border);
+  background: var(--bg-card2);
+}
+.pg-btn {
+  min-width: 28px; height: 28px; padding: 0 6px;
+  border: 1px solid var(--border-md); border-radius: 6px;
+  background: var(--bg-card); color: var(--ink-2);
+  font-family: var(--ff-body); font-size: 12.5px; font-weight: 600;
+  cursor: pointer; transition: background .1s, color .1s, border-color .1s;
+}
+.pg-btn:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--border-md); color: var(--ink-1); }
+.pg-btn.active { background: var(--header-grad-1); border-color: var(--header-grad-1); color: #fff; }
+.pg-btn:disabled { opacity: .4; cursor: default; }
+.pg-dots { color: var(--ink-3); font-size: 12px; padding: 0 2px; }
+.pg-info { margin-left: auto; font-size: 12px; color: var(--ink-3); white-space: nowrap; }
+
 /* Grade de dados de alta densidade: texto à esquerda (padrão acima),
    códigos/datas/status ao centro, valores/quantidades à direita.
    Aplicadas via classes utilitárias nas células geradas em JS. */

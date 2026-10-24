@@ -589,6 +589,7 @@
         renderPeriodCards([]);
         popularFiltros([]);
         atualizarContagem(0, 0);
+        if (window.Paginacao) window.Paginacao.paginar('tbl-pedidos', { reset: true });
         return;
       }
       tbody.innerHTML = rows.map(p => {
@@ -742,6 +743,7 @@
       if (ok) visiveis++;
     });
     atualizarContagem(visiveis, rows.length);
+    if (window.Paginacao) window.Paginacao.paginar('tbl-pedidos', { reset: true });
   }
   window.applyPedidosFilter = aplicarFiltrosAvancados;
 

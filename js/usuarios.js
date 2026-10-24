@@ -151,6 +151,7 @@
       logins.forEach(l => { if (!ultimoLogin[l.email]) ultimoLogin[l.email] = l.data_hora; });
       if (!usuarios.length) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum usuário cadastrado ainda.</td></tr>`;
+        if (window.Paginacao) window.Paginacao.paginar('tbl-usuarios', { reset: true });
         return;
       }
       tbody.innerHTML = usuarios.map(u => `
@@ -172,8 +173,10 @@
             </div>
           </td>
         </tr>`).join('');
+      if (window.Paginacao) window.Paginacao.paginar('tbl-usuarios', { reset: true });
     } catch (e) {
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--rose);padding:24px;">Erro ao carregar usuários: ${e.message}</td></tr>`;
+      if (window.Paginacao) window.Paginacao.paginar('tbl-usuarios', { reset: true });
     }
   }
 
@@ -186,6 +189,7 @@
       const rows = await DB.list('sessoes_ativas', 'revogado=eq.false&order=ultimo_ping.desc');
       if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhuma sessão ativa no momento.</td></tr>`;
+        if (window.Paginacao) window.Paginacao.paginar('tbl-sessoes', { reset: true });
         return;
       }
       const agora = Date.now();
@@ -201,8 +205,10 @@
           <td><button type="button" class="btn btn-ghost" style="font-size:11px;padding:5px 10px;" data-encerrar-sessao="${s.id}">Encerrar sessão</button></td>
         </tr>`;
       }).join('');
+      if (window.Paginacao) window.Paginacao.paginar('tbl-sessoes', { reset: true });
     } catch (e) {
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--rose);padding:24px;">Erro ao carregar sessões: ${e.message}</td></tr>`;
+      if (window.Paginacao) window.Paginacao.paginar('tbl-sessoes', { reset: true });
     }
   }
 

@@ -115,6 +115,7 @@
       });
       const countEl = document.getElementById(`${prefixo}-contagem`);
       if (countEl) countEl.innerHTML = rows.length ? `Mostrando <strong style="color:var(--ink-1)">${visiveis}</strong> de ${rows.length}` : 'Nenhum registro';
+      if (window.Paginacao) window.Paginacao.paginar(tbody.id, { reset: true });
     }
 
     function limpar() {
@@ -206,6 +207,7 @@
       ferramentasFat.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('fat-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
+      if (window.Paginacao) window.Paginacao.paginar('tbl-faturamento', { reset: true });
       return;
     }
     const STATUS_BADGE = {
@@ -288,6 +290,7 @@
       ferramentasEmb.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('emb-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
+      if (window.Paginacao) window.Paginacao.paginar('tbl-embarque', { reset: true });
       return;
     }
     const STATUS_BADGE = {
@@ -371,6 +374,7 @@
       ferramentasPag.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('pag-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
+      if (window.Paginacao) window.Paginacao.paginar('tbl-pagamento', { reset: true });
       return;
     }
     tbody.innerHTML = rows.map(p => {
