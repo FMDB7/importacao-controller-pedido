@@ -562,7 +562,7 @@
         'select=*,fornecedores(razao_social),colaboradores(nome,cargo)&order=created_at.desc&limit=100');
       PEDIDOS_CACHE = rows;
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
         renderPeriodCards([]);
         popularFiltros([]);
         atualizarContagem(0, 0);
@@ -576,14 +576,16 @@
         const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
         const locCls = p.localizacao === 'SP' ? 'loc-sp' : 'loc-zf';
         const mesRef = p.data_pedido ? p.data_pedido.slice(0, 7) : '';
+        const marca = parseDescricao(p.descricao).marca || '—';
         return `
           <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'ZF'}" data-mes="${mesRef}"
               data-status="${p.status || ''}" data-moeda="${p.moeda || ''}" data-fornecedor="${forn}"
               data-valor="${p.valor_brl || 0}" data-data="${p.data_pedido || ''}"
-              data-busca="${(p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + forn}">
-            <td class="code" style="font-weight:700;color:var(--cyan);">${(p.numero_pedido||'').slice(-4)}</td>
-            <td><span class="mono" style="font-size:11.5px;">${p.numero_pedido}</span>${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI" style="margin-left:6px;">📎</a>` : ''}${p.numero_pi ? `<div style="font-size:10px;color:var(--ink-3);">📁 ${p.numero_pi}</div>` : ''}</td>
+              data-busca="${(p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + forn + ' ' + marca}">
+            <td>${p.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${p.numero_pi}</span>` : '—'}${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI" style="margin-left:6px;">📎</a>` : ''}</td>
+            <td><span class="mono" style="font-size:11.5px;color:var(--cyan);font-weight:700;">${p.numero_pedido || '—'}</span></td>
             <td>${forn}</td>
+            <td>${marca}</td>
             <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
             <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
             <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
@@ -602,7 +604,7 @@
       document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
       aplicarFiltrosAvancados();
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
     }
   }
 
