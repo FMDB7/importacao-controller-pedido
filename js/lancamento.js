@@ -584,7 +584,7 @@
     if (!tbody) return;
     try {
       const rows = await DB.list('pedidos',
-        'select=*,fornecedores(razao_social),colaboradores(nome,cargo)&order=created_at.desc&limit=100');
+        'select=*,fornecedores(razao_social),colaboradores(nome,cargo,coordenador_nome)&order=created_at.desc&limit=100');
       PEDIDOS_CACHE = rows;
       if (!rows.length) {
         tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
@@ -598,6 +598,7 @@
         const forn = p.fornecedores ? p.fornecedores.razao_social : '—';
         const colab = p.colaboradores ? p.colaboradores.nome : '—';
         const cargo = p.colaboradores ? p.colaboradores.cargo : '';
+        const coord = p.colaboradores ? p.colaboradores.coordenador_nome : '';
         const setorNome = SETOR_NOME[p.setor] || p.setor || '—';
         const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
         const LOC_CLASS = { 'Manaus': 'loc-manaus', 'Macapá': 'loc-macapa', 'Extrema': 'loc-extrema', 'Guajará': 'loc-guajara' };
@@ -612,7 +613,7 @@
               data-valor="${p.valor_brl || 0}" data-data="${p.data_pedido || ''}"
               data-busca="${(p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + forn + ' ' + marca}">
             <td><span class="mono" style="font-size:11.5px;color:var(--cyan);font-weight:700;">${p.numero_pedido || '—'}</span>${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI (${p.numero_pi||''})" style="margin-left:6px;">📎</a>` : ''}</td>
-            <td>${colab}</td>
+            <td>${colab}${coord ? `<div style="font-size:10px;color:var(--ink-3);margin-top:2px;">👤 Coord.: ${coord}</div>` : ''}</td>
             <td>${forn}</td>
             <td>${marca}</td>
             <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
