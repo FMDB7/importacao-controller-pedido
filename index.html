@@ -581,12 +581,13 @@
                 <th class="ta-c">Embarque</th>
                 <th class="ta-c">ETA</th>
                 <th class="ta-c">Chegada</th>
+                <th class="ta-c">Entrada Depósito</th>
                 <th class="ta-c">Status</th>
                 <th></th>
               </tr>
             </thead>
             <tbody id="tbl-embarque">
-              <tr><td colspan="10" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
+              <tr><td colspan="11" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1204,6 +1205,11 @@
           <div class="form-group">
             <label class="form-label">Data Chegada Porto</label>
             <input class="form-input" type="date" id="f-emb-chegada">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data Entrada no Depósito</label>
+            <input class="form-input" type="date" id="f-emb-deposito">
+            <div class="form-hint">Data em que a mercadoria deu entrada no depósito/estoque</div>
           </div>
           <!-- BL Recebido full row -->
           <div class="form-group form-full" style="margin-top:4px;">

@@ -188,6 +188,7 @@
         setVal('f-emb-peso', desc.peso);
         setVal('f-emb-eta', embarque.data_previsao_chegada);
         setVal('f-emb-chegada', embarque.data_chegada);
+        setVal('f-emb-deposito', embarque.data_entrada_deposito);
       }
 
       setVal('f-pag-banco', pagamento && pagamento.banco);
@@ -483,6 +484,7 @@
           data_embarque: embData || null,
           data_previsao_chegada: val('f-emb-eta') || null,
           data_chegada: val('f-emb-chegada') || null,
+          data_entrada_deposito: val('f-emb-deposito') || null,
           observacoes: val('f-emb-navio') ? ('Navio/AWB: ' + val('f-emb-navio')) : null,
           arquivo_bl_url: anexos.bl
         };

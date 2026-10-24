@@ -263,7 +263,7 @@
     try {
       rows = await DB.list('embarques', 'select=*,pedidos(numero_pedido,fornecedores(razao_social))&order=data_embarque.desc.nullslast');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
       return;
     }
 
@@ -286,7 +286,7 @@
     set('emb-kpi-entregues', entreguesMes);
     set('emb-kpi-entregues-sub', `${pct(entreguesMes, rows.length)}% do total`);
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
       ferramentasEmb.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('emb-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
@@ -316,6 +316,7 @@
           <td class="date">${toBR(e.data_embarque)}</td>
           <td class="date">${toBR(e.data_previsao_chegada)}</td>
           <td class="date">${toBR(e.data_chegada)}</td>
+          <td class="date">${toBR(e.data_entrada_deposito)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="embarques" data-inline-status-id="${e.id}" title="Clique para alterar o status">${STATUS_BADGE[e.status] || e.status}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${e.pedido_id}:embarque" title="Editar embarque">✏️</button><button type="button" class="danger" data-delete-rec="embarques:${e.id}" title="Excluir embarque">🗑️</button></div></td>
         </tr>`;
