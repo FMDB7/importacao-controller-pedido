@@ -25,6 +25,11 @@
     if (Math.abs(n) >= 1e3) return 'R$ ' + (n / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'K';
     return 'R$ ' + n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
   }
+  function toBR(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  }
   function pct(delta) {
     if (delta == null || !isFinite(delta)) return null;
     const arrow = delta >= 0 ? '↑' : '↓';
@@ -36,7 +41,7 @@
   async function renderDashboard() {
     let rows;
     try {
-      rows = await DB.list('pedidos', 'select=numero_pedido,numero_pi,moeda,valor_total,valor_brl,data_pedido,status,fornecedores(razao_social),colaboradores(nome,cargo)&order=data_pedido.desc&limit=500');
+      rows = await DB.list('pedidos', 'select=numero_pedido,numero_pi,moeda,valor_total,valor_brl,data_pedido,status,fornecedores(razao_social),colaboradores(nome,cargo),faturas(data_vencimento)&order=data_pedido.desc&limit=500');
     } catch (e) {
       console.error('Erro ao carregar dashboard:', e);
       return;
@@ -161,13 +166,14 @@
           const colab = p.colaboradores ? p.colaboradores.nome : '—';
           const cargo = p.colaboradores ? p.colaboradores.cargo : '';
           const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
+          const vencimento = (p.faturas && p.faturas[0] && p.faturas[0].data_vencimento) ? toBR(p.faturas[0].data_vencimento) : '—';
           return `
             <tr>
               <td><span class="mono">${p.numero_pedido}</span>${p.numero_pi ? `<div style="font-size:10px;color:var(--ink-3);">📁 ${p.numero_pi}</div>` : ''}</td>
               <td>${forn}</td>
               <td>${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
               <td class="mono">${fmtMoeda(p.valor_total, p.moeda)}</td>
-              <td style="font-family:var(--ff-mono);font-size:12px;color:var(--ink-2);">—</td>
+              <td style="font-family:var(--ff-mono);font-size:12px;color:var(--ink-2);">${vencimento}</td>
               <td>${colab}<div style="font-size:9px;color:var(--ink-3);">${cargo}</div></td>
               <td><span class="status-badge ${statusCls}">${p.status}</span></td>
             </tr>`;
