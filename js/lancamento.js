@@ -48,6 +48,19 @@
     });
   }
 
+  // Máscara para campos de quantidade (inteiro, sem casas decimais): a
+  // pessoa só digita números e o campo formata sozinho com separador de
+  // milhar (ex.: digitar "1500" vira "1.500") — evita o valor ser salvo
+  // como "1.500" (string) e depois mal-interpretado como 1,5 ao exibir.
+  function attachIntMask(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', () => {
+      const digits = el.value.replace(/\D/g, '');
+      el.value = digits ? Number(digits).toLocaleString('pt-BR') : '';
+    });
+  }
+
   function addDays(dateStr, days) {
     if (!dateStr) return null;
     const d = new Date(dateStr + 'T00:00:00');
@@ -327,6 +340,8 @@
   /* ---------- Máscara automática nos campos de valor/taxa ---------- */
   attachMoneyMask('f-fat-valor', 2);
   attachMoneyMask('f-pag-taxa', 4);
+  attachIntMask('f-qtde');
+  attachIntMask('f-fat-qtd');
 
   /* ---------- Cálculos automáticos ---------- */
   function recalcVencimentoFatura() {
@@ -587,7 +602,7 @@
         'select=*,fornecedores(razao_social),colaboradores(nome,cargo,coordenador_nome)&order=created_at.desc&limit=100');
       PEDIDOS_CACHE = rows;
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
         renderPeriodCards([]);
         popularFiltros([]);
         atualizarContagem(0, 0);
@@ -606,7 +621,7 @@
         const mesRef = p.data_pedido ? p.data_pedido.slice(0, 7) : '';
         const descInfo = parseDescricao(p.descricao);
         const marca = descInfo.marca || '—';
-        const qtdePedida = descInfo.qtde || '';
+        const qtdePedidaNum = parseBRNumber(descInfo.qtde);
         return `
           <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'Manaus'}" data-mes="${mesRef}"
               data-status="${p.status || ''}" data-moeda="${p.moeda || ''}" data-fornecedor="${forn}"
@@ -619,12 +634,13 @@
             <td class="ta-c date">${toBRDate(p.data_pedido)}</td>
             <td class="ta-c date">${toBRDate(p.data_previsao_entrega)}</td>
             <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
+            <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span></td>
             <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
             <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
-            <td class="num">${qtdePedida ? Number(qtdePedida).toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
+            <td class="num">${qtdePedidaNum != null ? qtdePedidaNum.toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
             <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
             <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
-            <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span>${cargo ? `<div style="font-size:10px;color:var(--ink-3);margin-top:2px;">${cargo}</div>` : ''}</td>
+            <td class="ta-c">${cargo ? `<span class="grp-tag">${cargo}</span>` : '—'}</td>
             <td class="date">—</td>
             <td class="ta-c cell-editable" data-inline-status="${p.id}" title="Clique para alterar o status">
               <span class="status-badge ${statusCls}">${p.status}</span>
@@ -637,7 +653,7 @@
       document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
       aplicarFiltrosAvancados();
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="17" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
     }
   }
 
