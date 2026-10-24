@@ -143,7 +143,7 @@
       setVal('f-setor', p.setor);
       setVal('f-fornecedor', p.fornecedor_id);
       setVal('f-colaborador', p.colaborador_id);
-      setVal('f-destino', p.localizacao || 'ZF');
+      setVal('f-destino', p.localizacao || 'Manaus');
       setVal('f-data-pedido', p.data_pedido);
       setVal('f-data-previsao', p.data_previsao_entrega);
 
@@ -399,7 +399,7 @@
         fornecedor_id: fornecedorId,
         colaborador_id: colaboradorId,
         setor: setor,
-        localizacao: val('f-destino') || 'ZF',
+        localizacao: val('f-destino') || 'Manaus',
         descricao: obsParts.join(' · ') || null,
         moeda: moeda,
         valor_total: valorFatura,
@@ -574,11 +574,12 @@
         const cargo = p.colaboradores ? p.colaboradores.cargo : '';
         const setorNome = SETOR_NOME[p.setor] || p.setor || '—';
         const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
-        const locCls = p.localizacao === 'SP' ? 'loc-sp' : 'loc-zf';
+        const LOC_CLASS = { 'Manaus': 'loc-manaus', 'Macapá': 'loc-macapa', 'Extrema': 'loc-extrema', 'Guajará': 'loc-guajara' };
+        const locCls = LOC_CLASS[p.localizacao] || 'loc-manaus';
         const mesRef = p.data_pedido ? p.data_pedido.slice(0, 7) : '';
         const marca = parseDescricao(p.descricao).marca || '—';
         return `
-          <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'ZF'}" data-mes="${mesRef}"
+          <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'Manaus'}" data-mes="${mesRef}"
               data-status="${p.status || ''}" data-moeda="${p.moeda || ''}" data-fornecedor="${forn}"
               data-valor="${p.valor_brl || 0}" data-data="${p.data_pedido || ''}"
               data-busca="${(p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + forn + ' ' + marca}">

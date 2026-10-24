@@ -232,7 +232,7 @@
           { value: 'PUB', label: 'PUB: PUBLICIDADE' },
           { value: 'R', label: 'R: RELÓGIOS' }
         ] },
-        { name: 'localizacao', label: 'Localização', type: 'select', options: ['ZF','SP'] },
+        { name: 'localizacao', label: 'Localização', type: 'select', options: ['Manaus','Macapá','Extrema','Guajará'] },
         { name: 'coordenador_nome', label: 'Coordenador(a) Responsável' }
       ]
     },

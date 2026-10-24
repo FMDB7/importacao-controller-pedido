@@ -509,14 +509,16 @@ td.code, td.date {
   border: 1px solid rgba(0,207,255,0.25); letter-spacing:.4px;
 }
 
-/* ── Badge de localização ZF / SP ───────────────────────── */
+/* ── Badge de localização (cidade destino) ───────────────────────── */
 .loc-tag {
   display:inline-block; padding: 1px 7px; border-radius: 4px;
   font-size: 10.5px; font-weight: 800; font-family: var(--ff-mono);
   letter-spacing:.6px;
 }
-.loc-zf { background: rgba(0,214,143,0.12); color: var(--green); border: 1px solid rgba(0,214,143,0.3); }
-.loc-sp { background: rgba(245,166,35,0.12); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
+.loc-manaus  { background: rgba(0,214,143,0.12); color: var(--green);  border: 1px solid rgba(0,214,143,0.3); }
+.loc-macapa  { background: rgba(245,166,35,0.12); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
+.loc-extrema { background: rgba(0,207,255,0.12); color: var(--cyan);   border: 1px solid rgba(0,207,255,0.3); }
+.loc-guajara { background: rgba(155,122,255,0.12); color: var(--violet); border: 1px solid rgba(155,122,255,0.3); }
 .s-bl-recebido { background: rgba(0,207,255,0.14); color: var(--cyan); }
 .s-bl-recebido::before { background: var(--cyan); }
 .s-desembara-o { background: rgba(245,158,11,0.14); color: var(--amber); }

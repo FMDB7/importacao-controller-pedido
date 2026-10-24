@@ -223,7 +223,7 @@
         <div class="page-actions">
           <div>
             <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Pedidos</div>
-            <div class="page-desc">Registro completo de ordens de compra internacionais · <span style="color:var(--ink-3)">ZF = Zona Franca · SP = São Paulo · BM = Brand Manager · COORD BM = Coordenador Brand Manager</span></div>
+            <div class="page-desc">Registro completo de ordens de compra internacionais · <span style="color:var(--ink-3)">BM = Brand Manager · COORD BM = Coordenador Brand Manager</span></div>
           </div>
           <div style="display:flex;gap:8px;">
             <button class="btn btn-ghost" id="btn-export-pedidos">📤 Exportar</button>
@@ -252,8 +252,10 @@
           <label class="grp-chip active" data-grp="PUB"   title="PUBLICIDADE">PUB</label>
           <label class="grp-chip active" data-grp="R"     title="RELÓGIOS">R</label>
           <span style="font-size:11px;color:rgba(255,255,255,0.12);align-self:center;margin:0 4px;">│</span>
-          <label class="grp-chip loc-chip active" data-loc="ZF" title="Zona Franca · Manaus">ZF</label>
-          <label class="grp-chip loc-chip active" data-loc="SP" title="São Paulo">SP</label>
+          <label class="grp-chip loc-chip active" data-loc="Manaus">Manaus</label>
+          <label class="grp-chip loc-chip active" data-loc="Macapá">Macapá</label>
+          <label class="grp-chip loc-chip active" data-loc="Extrema">Extrema</label>
+          <label class="grp-chip loc-chip active" data-loc="Guajará">Guajará</label>
         </div>
 
         <!-- Cards de período (mês do pedido) -->
@@ -1036,7 +1038,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Responsável <span class="form-required">*</span></label>
-            <div class="form-hint" style="margin-bottom:6px;">ZF = Zona Franca · SP = São Paulo · BM = Brand Manager · COORD = Coordenador</div>
+            <div class="form-hint" style="margin-bottom:6px;">BM = Brand Manager · COORD = Coordenador</div>
             <select class="form-select" id="f-colaborador">
               <option value="">Selecionar colaborador...</option>
             </select>
@@ -1044,8 +1046,10 @@
           <div class="form-group">
             <label class="form-label">Destino</label>
             <select class="form-select" id="f-destino">
-              <option value="ZF" selected>Manaus — ZF (Zona Franca)</option>
-              <option value="SP">São Paulo — SP</option>
+              <option value="Manaus" selected>Manaus</option>
+              <option value="Macapá">Macapá</option>
+              <option value="Extrema">Extrema</option>
+              <option value="Guajará">Guajará</option>
             </select>
           </div>
           <div class="form-group">
