@@ -609,36 +609,48 @@
     }
   }
 
-  /* ---------- Cards de período (mês do pedido) ---------- */
-  let mesSelecionado = null;
+  /* ---------- Cards de período (mês + moeda do pedido) ---------- */
+  // Um card por combinação mês/moeda (em vez de somar moedas diferentes
+  // num único R$) — mostra o valor na moeda estrangeira em destaque, o
+  // equivalente em BRL embaixo, e o % que esse grupo representa do total
+  // geral (soma de valor_brl de todos os pedidos, sem filtro de data).
+  let mesSelecionado = null; // formato "AAAA-MM|MOEDA"
   function renderPeriodCards(rows) {
     const wrap = document.getElementById('pedidos-period-cards');
     if (!wrap) return;
-    const porMes = {};
+    const porGrupo = {};
+    let totalGeralBRL = 0;
     rows.forEach(p => {
+      totalGeralBRL += Number(p.valor_brl) || 0;
       if (!p.data_pedido) return;
       const mes = p.data_pedido.slice(0, 7);
-      if (!porMes[mes]) porMes[mes] = { count: 0, total: 0 };
-      porMes[mes].count++;
-      porMes[mes].total += Number(p.valor_brl) || 0;
+      const moeda = p.moeda || '—';
+      const key = mes + '|' + moeda;
+      if (!porGrupo[key]) porGrupo[key] = { mes, moeda, count: 0, totalMoeda: 0, totalBRL: 0 };
+      porGrupo[key].count++;
+      porGrupo[key].totalMoeda += Number(p.valor_total) || 0;
+      porGrupo[key].totalBRL += Number(p.valor_brl) || 0;
     });
-    const meses = Object.keys(porMes).sort().reverse();
-    if (!meses.length) { wrap.innerHTML = ''; return; }
-    wrap.innerHTML = meses.map(mes => {
-      const [ano, m] = mes.split('-');
+    const chaves = Object.keys(porGrupo).sort().reverse();
+    if (!chaves.length) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = chaves.map(key => {
+      const info = porGrupo[key];
+      const [ano, m] = info.mes.split('-');
       const label = `${MES_LABEL[parseInt(m,10)-1]}/${ano.slice(2)}`;
-      const info = porMes[mes];
-      const ativo = mesSelecionado === mes;
-      return `<button type="button" class="period-card ${ativo ? 'active' : ''}" data-mes="${mes}">
-        <span class="period-card-label">${label}</span>
+      const ativo = mesSelecionado === key;
+      const pct = totalGeralBRL > 0 ? (info.totalBRL / totalGeralBRL * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0';
+      return `<button type="button" class="period-card ${ativo ? 'active' : ''}" data-mes="${key}">
+        <span class="period-card-label">${label} <span class="currency-tag ${CUR_CLASS[info.moeda]||''}" style="font-size:9.5px;padding:1px 5px;vertical-align:1px;">${info.moeda}</span></span>
         <span class="period-card-count">${info.count} tít.</span>
-        <span class="period-card-total">${fmtBRL(info.total)}</span>
+        <span class="period-card-total">${(CUR_SYM[info.moeda]||'')}${info.totalMoeda.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
+        <span class="period-card-brl">${fmtBRL(info.totalBRL)}</span>
+        <span class="period-card-pct">${pct}% do total geral</span>
       </button>`;
     }).join('');
     wrap.querySelectorAll('.period-card').forEach(btn => {
       btn.addEventListener('click', () => {
-        const mes = btn.dataset.mes;
-        mesSelecionado = mesSelecionado === mes ? null : mes;
+        const key = btn.dataset.mes;
+        mesSelecionado = mesSelecionado === key ? null : key;
         wrap.querySelectorAll('.period-card').forEach(b => b.classList.toggle('active', b.dataset.mes === mesSelecionado));
         aplicarFiltrosAvancados();
       });
@@ -696,7 +708,10 @@
       if (dataFim && r.dataset.data && r.dataset.data > dataFim) ok = false;
       if (!isNaN(valorMin) && Number(r.dataset.valor) < valorMin) ok = false;
       if (!isNaN(valorMax) && Number(r.dataset.valor) > valorMax) ok = false;
-      if (mesSelecionado && r.dataset.mes !== mesSelecionado) ok = false;
+      if (mesSelecionado) {
+        const [mesSel, moedaSel] = mesSelecionado.split('|');
+        if (r.dataset.mes !== mesSel || r.dataset.moeda !== moedaSel) ok = false;
+      }
       if (busca && !(r.dataset.busca || '').toLowerCase().includes(busca)) ok = false;
       r.style.display = ok ? '' : 'none';
       if (ok) visiveis++;
@@ -712,6 +727,9 @@
     ['flt-fornecedor','flt-status','flt-moeda','flt-data-ini','flt-data-fim','flt-valor-min','flt-valor-max','flt-busca'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
+    // "Limpar" precisa reativar também os chips de Setor/Local — senão um
+    // chip desmarcado continuava escondendo pedidos mesmo depois de limpar.
+    document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
     mesSelecionado = null;
     document.querySelectorAll('.period-card').forEach(b => b.classList.remove('active'));
     aplicarFiltrosAvancados();

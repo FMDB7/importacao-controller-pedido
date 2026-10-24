@@ -708,7 +708,9 @@ td.code, td.date {
 .period-card.active { border-color: var(--cyan); background: rgba(37,99,235,0.05); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
 .period-card-label { font-size: 12px; font-weight: 700; color: var(--ink-1); }
 .period-card-count { font-size: 10.5px; color: var(--ink-3); }
-.period-card-total { font-size: 12px; font-weight: 600; color: var(--cyan); font-family: var(--ff-mono); }
+.period-card-total { font-size: 16px; font-weight: 800; color: var(--cyan); font-family: var(--ff-mono); }
+.period-card-brl { font-size: 11.5px; font-weight: 600; color: var(--ink-2); font-family: var(--ff-mono); }
+.period-card-pct { font-size: 10px; color: var(--ink-3); }
 
 /* ─── Painel de filtros avançados ───────────────────────────────── */
 .filter-panel {
