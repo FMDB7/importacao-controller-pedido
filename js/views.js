@@ -182,7 +182,7 @@
     try {
       rows = await DB.list('faturas', 'select=*,pedidos(numero_pedido,taxa_cambio,valor_brl,fornecedores(razao_social))&order=data_vencimento.asc.nullslast');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
       return;
     }
 
@@ -202,7 +202,7 @@
     set('fat-kpi-pendente', fmtBRL(pendenteBRL));
     set('fat-kpi-pendente-sub', `${pct(pendenteBRL, totalBRL)}% do total faturado`);
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhuma invoice lançada ainda.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhuma invoice lançada ainda.</td></tr>`;
       ferramentasFat.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('fat-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
@@ -224,7 +224,8 @@
       return `
         <tr data-row data-mes="${(f.data_vencimento||'').slice(0,7)}" data-fornecedor="${forn}" data-status="${f.status||''}"
             data-moeda="${f.moeda||''}" data-vencimento="${f.data_vencimento||''}" data-valor="${valorBrl}" data-busca="${busca}">
-          <td><span class="mono">${f.numero_invoice}</span>${f.arquivo_url ? `<a href="${f.arquivo_url}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}${f.pedidos ? `<div style="font-size:10px;color:var(--ink-3);">📋 ${f.pedidos.numero_pedido}</div>` : ''}</td>
+          <td><span class="mono">${f.numero_invoice}</span>${f.arquivo_url ? `<a href="${f.arquivo_url}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}</td>
+          <td>${f.pedidos ? `<span class="mono" style="font-size:11.5px;">${f.pedidos.numero_pedido}</span>` : '—'}</td>
           <td>${forn}</td>
           <td class="ta-c"><span class="currency-tag ${CUR_CLASS[f.moeda]||''}">${f.moeda}</span></td>
           <td class="num">${fmtMoeda(f.valor, f.moeda)}</td>
@@ -258,7 +259,7 @@
     try {
       rows = await DB.list('embarques', 'select=*,pedidos(numero_pedido,fornecedores(razao_social))&order=data_embarque.desc.nullslast');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
       return;
     }
 
@@ -281,7 +282,7 @@
     set('emb-kpi-entregues', entreguesMes);
     set('emb-kpi-entregues-sub', `${pct(entreguesMes, rows.length)}% do total`);
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
       ferramentasEmb.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('emb-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
@@ -302,7 +303,8 @@
       return `
         <tr data-row data-mes="${(e.data_embarque||'').slice(0,7)}" data-fornecedor="${forn}" data-status="${e.status||''}"
             data-tipo="${e.tipo||''}" data-embarque="${e.data_embarque||''}" data-busca="${busca}">
-          <td>${e.pedidos ? `<span class="mono">${e.pedidos.numero_pedido}</span>` : '—'}${e.arquivo_bl_url ? `<a href="${e.arquivo_bl_url}" target="_blank" rel="noopener" title="Ver arquivo do BL" style="margin-left:6px;">📎</a>` : ''}<div style="font-size:10px;color:var(--ink-3);">${forn}</div></td>
+          <td>${e.pedidos ? `<span class="mono">${e.pedidos.numero_pedido}</span>` : '—'}${e.arquivo_bl_url ? `<a href="${e.arquivo_bl_url}" target="_blank" rel="noopener" title="Ver arquivo do BL" style="margin-left:6px;">📎</a>` : ''}</td>
+          <td>${forn}</td>
           <td class="ta-c" style="font-size:18px;">${MODAL_ICON[e.tipo] || '📦'}</td>
           <td class="code">${navio}</td>
           <td class="code">${e.numero_container || '—'}</td>
@@ -334,7 +336,7 @@
     try {
       rows = await DB.list('pagamentos', 'select=*,faturas(numero_invoice),pedidos(numero_pedido,fornecedores(razao_social))&order=data_vencimento.asc.nullslast');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
       return;
     }
 
@@ -363,7 +365,7 @@
     set('pag-kpi-liquidados-sub', `${pct(liquidadosMesBRL, totalLiquidadoBRL)}% do total já liquidado`);
     set('pag-kpi-taxa', taxasUSD.length ? (taxasUSD.reduce((a,b)=>a+b,0)/taxasUSD.length).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—');
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pagamento registrado ainda.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pagamento registrado ainda.</td></tr>`;
       ferramentasPag.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('pag-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
@@ -382,7 +384,8 @@
       return `
         <tr data-row data-mes="${(p.data_vencimento||'').slice(0,7)}" data-fornecedor="${forn}" data-status="${p.status||''}"
             data-moeda="${p.moeda||''}" data-vencimento="${p.data_vencimento||''}" data-valor="${valorBrl}" data-busca="${busca}">
-          <td>${p.pedidos ? `<span class="mono">${p.pedidos.numero_pedido}</span>` : '—'}${p.arquivo_cambio_url ? `<a href="${p.arquivo_cambio_url}" target="_blank" rel="noopener" title="Ver comprovante de câmbio" style="margin-left:6px;">📎</a>` : ''}${p.faturas ? `<div style="font-size:10px;color:var(--ink-3);">${p.faturas.numero_invoice}</div>` : ''}</td>
+          <td>${p.pedidos ? `<span class="mono">${p.pedidos.numero_pedido}</span>` : '—'}${p.arquivo_cambio_url ? `<a href="${p.arquivo_cambio_url}" target="_blank" rel="noopener" title="Ver comprovante de câmbio" style="margin-left:6px;">📎</a>` : ''}</td>
+          <td>${p.faturas ? `<span class="mono" style="font-size:11.5px;">${p.faturas.numero_invoice}</span>` : '—'}</td>
           <td>${forn}</td>
           <td class="code">${p.banco || '—'}</td>
           <td class="ta-c"><span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span></td>

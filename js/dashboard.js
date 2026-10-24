@@ -30,12 +30,19 @@
     const [y, m, d] = iso.split('-');
     return `${d}/${m}/${y}`;
   }
+  // Marca não tem coluna própria em `pedidos` — vive concatenada em
+  // `descricao` (mesmo formato usado em js/lancamento.js).
+  function parseMarca(desc) {
+    if (!desc) return null;
+    const m = desc.split(' · ').find(part => /^Marca:/.test(part));
+    return m ? m.replace(/^Marca:\s*/, '') : null;
+  }
 
   /* ---------- Dashboard ---------- */
   async function renderDashboard() {
     let rows;
     try {
-      rows = await DB.list('pedidos', 'select=numero_pedido,numero_pi,moeda,valor_total,valor_brl,data_pedido,status,fornecedores(razao_social),colaboradores(nome,cargo),faturas(data_vencimento)&order=data_pedido.desc&limit=500');
+      rows = await DB.list('pedidos', 'select=numero_pedido,numero_pi,moeda,valor_total,valor_brl,data_pedido,status,descricao,fornecedores(razao_social),colaboradores(nome,cargo),faturas(data_vencimento)&order=data_pedido.desc&limit=500');
     } catch (e) {
       console.error('Erro ao carregar dashboard:', e);
       return;
@@ -157,7 +164,7 @@
     if (tbody) {
       const recentes = rows.slice(0, 6);
       if (!recentes.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum lançamento ainda. Use "Novo Lançamento" para registrar o primeiro pedido.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum lançamento ainda. Use "Novo Lançamento" para registrar o primeiro pedido.</td></tr>`;
       } else {
         tbody.innerHTML = recentes.map(p => {
           const forn = p.fornecedores ? p.fornecedores.razao_social : '—';
@@ -165,15 +172,18 @@
           const cargo = p.colaboradores ? p.colaboradores.cargo : '';
           const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
           const vencimento = (p.faturas && p.faturas[0] && p.faturas[0].data_vencimento) ? toBR(p.faturas[0].data_vencimento) : '—';
+          const marca = parseMarca(p.descricao) || '—';
           return `
             <tr>
-              <td><span class="mono">${p.numero_pedido}</span>${p.numero_pi ? `<div style="font-size:10px;color:var(--ink-3);">📁 ${p.numero_pi}</div>` : ''}</td>
+              <td>${p.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${p.numero_pi}</span>` : '—'}</td>
+              <td><span class="mono" style="color:var(--cyan);font-weight:700;">${p.numero_pedido}</span></td>
               <td>${forn}</td>
-              <td>${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
-              <td class="mono">${fmtMoeda(p.valor_total, p.moeda)}</td>
-              <td style="font-family:var(--ff-mono);font-size:12px;color:var(--ink-2);">${vencimento}</td>
+              <td>${marca}</td>
+              <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
+              <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
+              <td class="ta-c" style="font-family:var(--ff-mono);font-size:12px;color:var(--ink-2);">${vencimento}</td>
               <td>${colab}<div style="font-size:9px;color:var(--ink-3);">${cargo}</div></td>
-              <td><span class="status-badge ${statusCls}">${p.status}</span></td>
+              <td class="ta-c"><span class="status-badge ${statusCls}">${p.status}</span></td>
             </tr>`;
         }).join('');
       }
