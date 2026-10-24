@@ -587,7 +587,7 @@
         'select=*,fornecedores(razao_social),colaboradores(nome,cargo)&order=created_at.desc&limit=100');
       PEDIDOS_CACHE = rows;
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pedido lançado ainda. Clique em "Novo Lançamento" para começar.</td></tr>`;
         renderPeriodCards([]);
         popularFiltros([]);
         atualizarContagem(0, 0);
@@ -612,6 +612,7 @@
               data-valor="${p.valor_brl || 0}" data-data="${p.data_pedido || ''}"
               data-busca="${(p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + forn + ' ' + marca}">
             <td><span class="mono" style="font-size:11.5px;color:var(--cyan);font-weight:700;">${p.numero_pedido || '—'}</span>${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI (${p.numero_pi||''})" style="margin-left:6px;">📎</a>` : ''}</td>
+            <td>${colab}</td>
             <td>${forn}</td>
             <td>${marca}</td>
             <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
@@ -620,7 +621,7 @@
             <td class="num">${qtdePedida ? Number(qtdePedida).toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
             <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
             <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
-            <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span><div style="font-size:10px;color:var(--ink-3);margin-top:2px;">${cargo} · ${colab}</div></td>
+            <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span>${cargo ? `<div style="font-size:10px;color:var(--ink-3);margin-top:2px;">${cargo}</div>` : ''}</td>
             <td class="date">—</td>
             <td class="ta-c cell-editable" data-inline-status="${p.id}" title="Clique para alterar o status">
               <span class="status-badge ${statusCls}">${p.status}</span>
@@ -633,7 +634,7 @@
       document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
       aplicarFiltrosAvancados();
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
     }
   }
 
