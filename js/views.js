@@ -255,6 +255,94 @@
     ferramentasFat.aplicar();
   }
 
+  /* ---------- EMBARQUE: Rastreamento Inteligente (funil + insights) ----------
+     O status (Aguardando/Embarcado/Em Trânsito/No Porto/Desembaraçando/Entregue)
+     não distingue "chegou na cidade de destino" de "deu entrada física no
+     depósito/estoque" — são dois marcos diferentes (data_chegada x
+     data_entrada_deposito). Este painel cruza os dois pra mostrar onde o
+     processo está represado. */
+  let chartEmbFunil = null;
+  function renderEmbarqueInsights(rows) {
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const diasEntre = (iso1, iso2) => Math.round((new Date(iso2 + 'T00:00:00') - new Date(iso1 + 'T00:00:00')) / 86400000);
+
+    const total = rows.length;
+    const nEmbarcado = rows.filter(r => r.data_embarque).length;
+    const nChegou = rows.filter(r => r.data_chegada).length;
+    const nDeposito = rows.filter(r => r.data_entrada_deposito).length;
+
+    const canvas = document.getElementById('chart-emb-funil');
+    if (canvas && typeof Chart !== 'undefined') {
+      if (chartEmbFunil) chartEmbFunil.destroy();
+      chartEmbFunil = new Chart(canvas, {
+        type: 'bar',
+        data: {
+          labels: ['Lançados', 'Embarcados', 'Chegaram no destino', 'Entrada no depósito'],
+          datasets: [{
+            data: [total, nEmbarcado, nChegou, nDeposito],
+            backgroundColor: ['#2563EB', '#7C5CE0', '#B9740A', '#0D9666'],
+            borderRadius: 6,
+            maxBarThickness: 30
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.x} embarque${ctx.parsed.x === 1 ? '' : 's'}` } }
+          },
+          scales: {
+            x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(15,23,42,0.06)' } },
+            y: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    const wrap = document.getElementById('emb-insight-tiles');
+    if (!wrap) return;
+    if (!total) {
+      wrap.innerHTML = `<div class="emb-insight-tile"><span class="emb-insight-icon">ℹ️</span><span class="emb-insight-text">Nenhum embarque lançado ainda — os insights aparecem aqui conforme você for registrando embarques.</span></div>`;
+      return;
+    }
+
+    const pendentesDeposito = rows.filter(r => r.data_chegada && !r.data_entrada_deposito);
+    const concluidos = rows.filter(r => r.data_chegada && r.data_entrada_deposito);
+    const tiles = [];
+
+    if (pendentesDeposito.length) {
+      const maxDias = Math.max(...pendentesDeposito.map(r => diasEntre(r.data_chegada, hoje.toISOString().slice(0, 10))));
+      const pl = pendentesDeposito.length === 1;
+      tiles.push(`<div class="emb-insight-tile alert">
+        <span class="emb-insight-icon">⚠️</span>
+        <span class="emb-insight-text"><strong>${pendentesDeposito.length} embarque${pl ? '' : 's'}</strong> ${pl ? 'chegou' : 'chegaram'} no destino mas ainda não ${pl ? 'deu' : 'deram'} entrada no depósito${maxDias > 0 ? ` — o mais antigo está esperando há <strong>${maxDias} dia${maxDias === 1 ? '' : 's'}</strong>` : ''}.</span>
+      </div>`);
+    } else {
+      tiles.push(`<div class="emb-insight-tile ok">
+        <span class="emb-insight-icon">✅</span>
+        <span class="emb-insight-text">Nenhum embarque com pendência entre a chegada no destino e a entrada no depósito.</span>
+      </div>`);
+    }
+
+    if (concluidos.length) {
+      const media = concluidos.reduce((s, r) => s + diasEntre(r.data_chegada, r.data_entrada_deposito), 0) / concluidos.length;
+      tiles.push(`<div class="emb-insight-tile">
+        <span class="emb-insight-icon">⏱️</span>
+        <span class="emb-insight-text">Tempo médio entre a chegada e a entrada no depósito: <strong>${media.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} dia${media.toFixed(1) === '1.0' ? '' : 's'}</strong>, com base em ${concluidos.length} embarque${concluidos.length === 1 ? '' : 's'} já concluído${concluidos.length === 1 ? '' : 's'}.</span>
+      </div>`);
+    }
+
+    const pctCompleto = total ? (nDeposito / total * 100) : 0;
+    tiles.push(`<div class="emb-insight-tile">
+      <span class="emb-insight-icon">📦</span>
+      <span class="emb-insight-text"><strong>${pctCompleto.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}%</strong> dos embarques já completaram o fluxo até a entrada no depósito (${nDeposito} de ${total}).</span>
+    </div>`);
+
+    wrap.innerHTML = tiles.join('');
+  }
+
   /* ---------- EMBARQUE ---------- */
   async function renderEmbarque() {
     const tbody = document.getElementById('tbl-embarque');
@@ -285,6 +373,7 @@
     set('emb-kpi-entregues-label', `Entregues — ${mesAtual}`);
     set('emb-kpi-entregues', entreguesMes);
     set('emb-kpi-entregues-sub', `${pct(entreguesMes, rows.length)}% do total`);
+    renderEmbarqueInsights(rows);
     if (!rows.length) {
       tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
       ferramentasEmb.renderPeriodCards([], () => null);

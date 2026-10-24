@@ -524,6 +524,22 @@
         <!-- Cards de período (data de embarque) -->
         <div class="period-cards" id="emb-period-cards"></div>
 
+        <!-- Rastreamento inteligente: funil do processo + insights -->
+        <div class="chart-card" style="margin-bottom:20px;">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">📊 Rastreamento Inteligente do Processo</div>
+              <div class="chart-subtitle">Funil do embarque até a entrada no depósito, com alertas de atraso</div>
+            </div>
+          </div>
+          <div class="emb-insights-grid">
+            <div class="chart-canvas-wrap" style="height:220px;">
+              <canvas id="chart-emb-funil"></canvas>
+            </div>
+            <div class="emb-insight-tiles" id="emb-insight-tiles"></div>
+          </div>
+        </div>
+
         <!-- Painel de filtros avançados -->
         <div class="filter-panel">
           <div class="filter-panel-head">
