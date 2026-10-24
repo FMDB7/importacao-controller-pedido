@@ -190,15 +190,17 @@
     const abertas = rows.filter(f => f.status === 'Pendente').length;
     const pagas = rows.filter(f => f.status === 'Paga').length;
     const pendenteBRL = rows.filter(f => f.status === 'Pendente').reduce((s, f) => s + (f.pedidos?.valor_brl ? Number(f.pedidos.valor_brl) : 0), 0);
+    const pct = (n, total) => total > 0 ? (n / total * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0';
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
     set('fat-kpi-total', fmtBRL(totalBRL));
     set('fat-kpi-total-sub', `${rows.length} invoice${rows.length === 1 ? '' : 's'} no total`);
     set('fat-kpi-abertas', abertas);
-    set('fat-kpi-abertas-sub', 'aguardando pagamento');
+    set('fat-kpi-abertas-sub', `${pct(abertas, rows.length)}% das invoices`);
     set('fat-kpi-pagas', pagas);
+    set('fat-kpi-pagas-sub', `${pct(pagas, rows.length)}% das invoices`);
     set('fat-kpi-pendente', fmtBRL(pendenteBRL));
-    set('fat-kpi-pendente-sub', `${abertas} invoice${abertas === 1 ? '' : 's'} pendente${abertas === 1 ? '' : 's'}`);
+    set('fat-kpi-pendente-sub', `${pct(pendenteBRL, totalBRL)}% do total faturado`);
     if (!rows.length) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhuma invoice lançada ainda.</td></tr>`;
       ferramentasFat.renderPeriodCards([], () => null);
@@ -266,13 +268,18 @@
     const noPorto = rows.filter(e => e.status === 'No Porto' || e.status === 'Desembaraçando').length;
     const semanaQue = rows.filter(e => { const d = diasAte(e.data_previsao_chegada); return d != null && d >= 0 && d <= 7; }).length;
     const entreguesMes = rows.filter(e => e.status === 'Entregue' && e.data_chegada && e.data_chegada.slice(0,7) === now.toISOString().slice(0,7)).length;
+    const pct = (n, total) => total > 0 ? (n / total * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0';
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
     set('emb-kpi-transito', emTransito);
+    set('emb-kpi-transito-sub', `${pct(emTransito, rows.length)}% do total · cargas no mar/ar`);
     set('emb-kpi-porto', noPorto);
+    set('emb-kpi-porto-sub', `${pct(noPorto, rows.length)}% do total · aguardando liberação`);
     set('emb-kpi-eta', semanaQue);
+    set('emb-kpi-eta-sub', `${pct(semanaQue, rows.length)}% do total · ⚓ chegando em breve`);
     set('emb-kpi-entregues-label', `Entregues — ${mesAtual}`);
     set('emb-kpi-entregues', entreguesMes);
+    set('emb-kpi-entregues-sub', `${pct(entreguesMes, rows.length)}% do total`);
     if (!rows.length) {
       tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
       ferramentasEmb.renderPeriodCards([], () => null);
@@ -335,16 +342,25 @@
     const pendentes = rows.filter(p => p.status === 'Pendente');
     const aVencer30 = pendentes.filter(p => { const d = diasAte(p.data_vencimento); return d != null && d >= 0 && d <= 30; });
     const vencendoSemana = pendentes.filter(p => { const d = diasAte(p.data_vencimento); return d != null && d >= 0 && d <= 7; });
-    const liquidadosMes = rows.filter(p => p.status === 'Liquidado' && p.data_pagamento && p.data_pagamento.slice(0,7) === now.toISOString().slice(0,7));
+    const liquidados = rows.filter(p => p.status === 'Liquidado');
+    const liquidadosMes = liquidados.filter(p => p.data_pagamento && p.data_pagamento.slice(0,7) === now.toISOString().slice(0,7));
     const taxasUSD = rows.filter(p => p.moeda === 'USD' && p.taxa_cambio).map(p => Number(p.taxa_cambio));
+    const pct = (n, total) => total > 0 ? (n / total * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0';
+
+    const totalPendenteBRL = pendentes.reduce((s,p)=>s+(Number(p.valor_brl)||0),0);
+    const totalLiquidadoBRL = liquidados.reduce((s,p)=>s+(Number(p.valor_brl)||0),0);
+    const aVencer30BRL = aVencer30.reduce((s,p)=>s+(Number(p.valor_brl)||0),0);
+    const vencendoSemanaBRL = vencendoSemana.reduce((s,p)=>s+(Number(p.valor_brl)||0),0);
+    const liquidadosMesBRL = liquidadosMes.reduce((s,p)=>s+(Number(p.valor_brl)||0),0);
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-    set('pag-kpi-avencer', fmtBRLCompacto(aVencer30.reduce((s,p)=>s+(Number(p.valor_brl)||0),0)));
-    set('pag-kpi-avencer-sub', `⚠ ${aVencer30.length} pagamento${aVencer30.length===1?'':'s'}`);
-    set('pag-kpi-semana', fmtBRLCompacto(vencendoSemana.reduce((s,p)=>s+(Number(p.valor_brl)||0),0)));
-    set('pag-kpi-semana-sub', `🔔 ${vencendoSemana.length} contrato${vencendoSemana.length===1?'':'s'}`);
+    set('pag-kpi-avencer', fmtBRLCompacto(aVencer30BRL));
+    set('pag-kpi-avencer-sub', `⚠ ${aVencer30.length} pagto · ${pct(aVencer30BRL, totalPendenteBRL)}% do pendente`);
+    set('pag-kpi-semana', fmtBRLCompacto(vencendoSemanaBRL));
+    set('pag-kpi-semana-sub', `🔔 ${vencendoSemana.length} contrato${vencendoSemana.length===1?'':'s'} · ${pct(vencendoSemanaBRL, totalPendenteBRL)}% do pendente`);
     set('pag-kpi-liquidados-label', `Liquidados — ${MES_NOMES[now.getMonth()]}`);
-    set('pag-kpi-liquidados', fmtBRLCompacto(liquidadosMes.reduce((s,p)=>s+(Number(p.valor_brl)||0),0)));
+    set('pag-kpi-liquidados', fmtBRLCompacto(liquidadosMesBRL));
+    set('pag-kpi-liquidados-sub', `${pct(liquidadosMesBRL, totalLiquidadoBRL)}% do total já liquidado`);
     set('pag-kpi-taxa', taxasUSD.length ? (taxasUSD.reduce((a,b)=>a+b,0)/taxasUSD.length).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—');
     if (!rows.length) {
       tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum pagamento registrado ainda.</td></tr>`;

@@ -71,6 +71,10 @@
       }
     });
 
+    // % de participação de cada moeda no total geral (base: valor convertido em
+    // BRL, já que é a única unidade comum entre moedas diferentes).
+    const totalBRLGeral = MOEDAS.reduce((s, m) => s + totalBRLporMoeda[m], 0);
+
     // KPI cards
     MOEDAS.forEach(m => {
       const valEl = document.getElementById(`kpi-${m.toLowerCase()}-valor`);
@@ -82,7 +86,8 @@
       }
       if (subEl) {
         if (temDados) {
-          subEl.textContent = `${countGeral[m]} pedido${countGeral[m] === 1 ? '' : 's'} no total`;
+          const participacao = totalBRLGeral > 0 ? (totalBRLporMoeda[m] / totalBRLGeral * 100) : 0;
+          subEl.innerHTML = `${countGeral[m]} pedido${countGeral[m] === 1 ? '' : 's'} · <strong>${participacao.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%</strong> do total`;
         } else {
           subEl.innerHTML = '<span class="kpi-empty">nenhum pedido lançado ainda</span>';
         }
