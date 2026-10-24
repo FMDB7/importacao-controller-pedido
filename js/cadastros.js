@@ -138,7 +138,10 @@
         grid.innerHTML = `<div style="color:var(--ink-3);padding:24px;">Nenhum colaborador cadastrado ainda.</div>` + addCard;
         return;
       }
-      grid.innerHTML = rows.map((c, i) => `
+      const porId = {}; rows.forEach(c => { porId[c.id] = c; });
+      grid.innerHTML = rows.map((c, i) => {
+        const coord = c.coordenador_id ? porId[c.coordenador_id] : null;
+        return `
         <div class="person-card">
           <div class="person-header">
             <div class="person-avatar" style="background:${gradient(i)}">${initials(c.nome)}</div>
@@ -147,9 +150,11 @@
           <div class="person-tags">
             ${c.setor ? `<span class="tag tag-cyan">${c.setor}: ${SETOR_NOME[c.setor] || c.setor}</span>` : ''}
             ${c.localizacao ? `<span class="tag">${c.localizacao}</span>` : ''}
+            ${coord ? `<span class="tag" title="Coordenador(a) responsável">👤 Coord.: ${coord.nome}</span>` : ''}
           </div>
           ${rowActions('colaboradores', c.id)}
-        </div>`).join('') + addCard;
+        </div>`;
+      }).join('') + addCard;
     } catch (e) {
       grid.innerHTML = `<div style="color:var(--rose);padding:24px;">${e.message}</div>`;
     }
@@ -232,7 +237,11 @@
           { value: 'PUB', label: 'PUB: PUBLICIDADE' },
           { value: 'R', label: 'R: RELÓGIOS' }
         ] },
-        { name: 'localizacao', label: 'Localização', type: 'select', options: ['ZF','SP'] }
+        { name: 'localizacao', label: 'Localização', type: 'select', options: ['ZF','SP'] },
+        { name: 'coordenador_id', label: 'Coordenador(a) Responsável', type: 'select',
+          options: () => CACHE.colaboradores
+            .filter(c => c.id !== editingId)
+            .map(c => ({ value: c.id, label: `${c.nome} — ${c.cargo}${c.localizacao ? ' · ' + c.localizacao : ''}` })) }
       ]
     },
     cidades: {
@@ -267,7 +276,7 @@
         ${f.type === 'select'
           ? `<select class="form-select" data-field="${f.name}">
                <option value="">Selecionar...</option>
-               ${f.options.map(o => {
+               ${(typeof f.options === 'function' ? f.options() : f.options).map(o => {
                  const val = (o && typeof o === 'object') ? o.value : o;
                  const lbl = (o && typeof o === 'object') ? o.label : o;
                  return `<option value="${val}"${record && record[f.name] === val ? ' selected' : ''}>${lbl}</option>`;
