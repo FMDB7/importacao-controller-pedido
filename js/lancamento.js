@@ -408,10 +408,35 @@
       return;
     }
 
+    // Esvaziar o nº da invoice, os dados de embarque ou a taxa de câmbio
+    // numa edição faz a fatura/embarque/pagamento correspondente ser
+    // EXCLUÍDO ao salvar (comportamento documentado desde a Fase 10) — mas
+    // isso pode acontecer sem a pessoa notar (ex.: apagar o campo por
+    // engano enquanto só queria corrigir outra aba). Por isso, confirma
+    // explicitamente antes de qualquer exclusão silenciosa.
+    const avisos = [];
+    if (editingFaturaId && !val('f-invoice')) avisos.push('a invoice/fatura já lançada');
+    const embTipoChk = val('f-emb-tipo');
+    const embPreenchidoChk = embTipoChk && (val('f-emb-porto') || val('f-emb-data') || val('f-emb-cidade-destino') || val('f-emb-container'));
+    if (editingEmbarqueId && !embPreenchidoChk) avisos.push('o embarque já lançado');
+    if (editingPagamentoId && parseBRNumber(val('f-pag-taxa')) == null) avisos.push('o pagamento/câmbio já lançado');
+    if (avisos.length) {
+      const confirmado = confirm(
+        `Atenção: ao salvar, ${avisos.join(', ')} será EXCLUÍDO (o campo correspondente ficou vazio).\n\n` +
+        `Se isso não era sua intenção, clique em Cancelar e confira os dados antes de salvar novamente.\n\n` +
+        `Deseja continuar e excluir mesmo assim?`
+      );
+      if (!confirmado) return;
+    }
+
     const btn = document.getElementById('modal-confirm');
     btn.disabled = true;
     btn.textContent = 'Salvando...';
 
+    // Declarado fora do try para que o catch, se um passo depois do pedido
+    // falhar, ainda saiba se esta tentativa COMEÇOU como edição ou como
+    // lançamento novo (editingPedidoId já terá sido sobrescrito a essa altura).
+    const isEditAoEntrar = !!editingPedidoId;
     try {
       const moeda = val('f-fat-moeda') || 'USD';
       const valorFatura = parseBRNumber(val('f-fat-valor'));
@@ -428,7 +453,7 @@
       if (val('f-fat-incoterm')) obsParts.push('Incoterm: ' + val('f-fat-incoterm'));
       if (val('f-pag-obs')) obsParts.push(val('f-pag-obs'));
 
-      const isEdit = !!editingPedidoId;
+      const isEdit = isEditAoEntrar;
 
       // 1) PEDIDO
       const dadosPedido = {
@@ -455,8 +480,17 @@
       // A partir daqui o pedido já existe no banco — se um passo seguinte
       // falhar (fatura/embarque/pagamento) e a pessoa clicar em salvar de
       // novo, isso precisa virar um UPDATE no mesmo pedido, não um INSERT
-      // novo (que colidiria com o nº de pedido já gravado).
+      // novo (que colidiria com o nº de pedido já gravado). Por isso o
+      // modal já muda para "modo edição" (título/subtítulo/botão) aqui,
+      // antes dos passos seguintes — se um deles falhar, a tela não fica
+      // mostrando "Novo Lançamento" enquanto o pedido já existe no banco.
       editingPedidoId = pedido.id;
+      if (!isEdit) {
+        const tituloEl = document.querySelector('#modal-backdrop .modal-title');
+        const subtituloEl = document.querySelector('#modal-backdrop .modal-subtitle');
+        if (tituloEl) tituloEl.textContent = '✏️ Editar Lançamento';
+        if (subtituloEl) subtituloEl.textContent = `Editando ${numeroPedido}`;
+      }
 
       // 2) FATURA (se houver nº de invoice)
       let fatura = null;
@@ -577,10 +611,19 @@
     } catch (e) {
       console.error(e);
       let msg = e.message || 'Não foi possível gravar o lançamento.';
+      const pedidoJaGravadoNestaTentativa = !isEditAoEntrar && !!editingPedidoId;
       if (/duplicate key|unique constraint/i.test(msg) && /numero_pedido/i.test(msg)) {
         msg = `Já existe um pedido cadastrado com o número "${numeroPedido}". Use outro número de PO ou verifique na tela de Pedidos se este lançamento já foi salvo.`;
       } else if (/duplicate key|unique constraint/i.test(msg)) {
         msg = 'Já existe um registro com esses mesmos dados (nº de invoice, por exemplo). Verifique os valores informados.';
+      }
+      // O pedido (aba Pedido) grava ANTES de fatura/embarque/pagamento — se um
+      // desses passos falhar, o pedido já existe no banco mesmo que a pessoa
+      // veja só o erro do passo seguinte. Sem avisar isso, ela pode clicar em
+      // "Novo Lançamento" de novo e duplicar o pedido. O modal já foi trocado
+      // para "modo edição" acima, então só falta deixar claro o que aconteceu.
+      if (pedidoJaGravadoNestaTentativa) {
+        msg += ` ATENÇÃO: o pedido "${numeroPedido}" já foi salvo no banco antes deste erro. Corrija o problema acima e clique em "💾 Salvar Alterações" de novo para completar o lançamento — não abra "Novo Lançamento", isso criaria um pedido duplicado.`;
       }
       showToast('Erro ao salvar', msg, false);
     } finally {
