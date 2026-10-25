@@ -648,6 +648,31 @@ Pergunta do usuário: anexar PDF/imagem de invoice consome espaço no banco?
 **Acompanhar**: reavaliar esse número depois de algumas semanas de uso real com
 anexos de verdade (hoje é só 1 arquivo de teste).
 
+### Decisão: upload de anexo removido do modal (manter plano Free)
+
+Depois da projeção acima, o usuário decidiu **manter o plano gratuito** do
+Supabase Storage por ora e **removeu a opção de anexar PDF/imagem** (PI, NF,
+BL, comprovante de câmbio) do modal de Novo Lançamento/Edição — assim nenhum
+upload novo acontece, e o uso do bucket fica parado no que já existe (1
+arquivo de teste, 41 KB).
+
+- Removido de `index.html`: os 4 campos "📎 Escolher arquivo" nas abas
+  Pedido/Fatura/Embarque/Pagamento do modal.
+- Removido de `js/lancamento.js`: o wiring de upload (click/change nos
+  inputs de arquivo, chamadas a `Storage.upload()`).
+- Removido de `css/styles.css`: as classes exclusivas desses campos
+  (`.file-upload-field` e afins).
+- **Mantido sem alteração** (não grava arquivo novo, só lê/remove o que já
+  existe): o link de um anexo já salvo antes dessa mudança é preservado ao
+  editar um pedido antigo e salvar de novo; o ícone 📎 nas tabelas continua
+  abrindo anexos já existentes; a limpeza automática de anexos órfãos no
+  bucket ao excluir um registro continua funcionando.
+- As colunas `arquivo_pi_url`/`arquivo_url`/`arquivo_bl_url`/
+  `arquivo_cambio_url` continuam existindo no Neon (não removidas) — se o
+  usuário quiser reativar o upload no futuro, é só reverter esse commit
+  (`js/storage.js` e a Edge Function `anexos-gateway` da Fase 12 continuam no
+  lugar, intactos).
+
 ---
 
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
