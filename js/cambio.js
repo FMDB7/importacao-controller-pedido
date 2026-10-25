@@ -41,8 +41,17 @@
   /* ---------- Carrega quantos pedidos de cada moeda serão afetados ----------
      Antes só contava pedidos com câmbio pendente (taxa_cambio IS NULL). Como a
      taxa já é preenchida logo no lançamento, praticamente nenhum pedido ficava
-     "pendente" — por isso "Aplicar Taxas" parecia não fazer nada. Agora conta
-     (e, ao aplicar, recalcula) TODOS os pedidos da moeda, contratados ou não. */
+     "pendente" — por isso "Aplicar Taxas" parecia não fazer nada. Por isso conta
+     (e, ao aplicar, recalcula) todos os pedidos da moeda que AINDA NÃO foram
+     liquidados — mas nunca um pedido cujo pagamento já está "Liquidado": esse
+     câmbio já foi fechado/pago de fato, e sobrescrevê-lo mudaria um valor que
+     já saiu da empresa, sem deixar rastro do valor original. Ver
+     pedidoElegivel() abaixo — mesmo filtro usado aqui e em "Aplicar Taxas". */
+  function pedidoElegivel(p) {
+    const pagamentos = p.pagamentos || [];
+    return !pagamentos.some(pg => pg.status === 'Liquidado');
+  }
+
   async function carregarExposicao() {
     for (const m of MOEDAS) {
       const inp = document.getElementById('nova-taxa-' + m.id);
@@ -50,13 +59,17 @@
       if (!inp) continue;
       try {
         const rows = await DB.list('pedidos',
-          `select=valor_total&moeda=eq.${m.sigla}`);
-        const total = rows.reduce((s, r) => s + (parseFloat(r.valor_total) || 0), 0);
-        const count = rows.length;
+          `select=valor_total,pagamentos(status)&moeda=eq.${m.sigla}`);
+        const elegiveis = rows.filter(pedidoElegivel);
+        const total = elegiveis.reduce((s, r) => s + (parseFloat(r.valor_total) || 0), 0);
+        const count = elegiveis.length;
+        const liquidados = rows.length - count;
         inp.dataset.total = total.toFixed(2);
         inp.dataset.count = String(count);
         if (badge) {
-          badge.textContent = `${count} pedido(s)`;
+          badge.textContent = liquidados
+            ? `${count} pedido(s) · ${liquidados} já liquidado(s) (não será alterado)`
+            : `${count} pedido(s)`;
           badge.classList.toggle('warn', count > 0);
         }
       } catch (e) {
@@ -116,18 +129,25 @@
     const textoOriginal = btnAplicar.textContent;
     btnAplicar.textContent = 'Aplicando...';
 
+    // Declaradas fora do try para que o catch, em caso de falha no meio do
+    // loop, consiga informar exatamente quantos pedidos já tinham sido
+    // atualizados — em vez de perder essa contagem junto com o escopo do try.
+    let pedidosAtualizados = 0;
+    let pedidosMantidos = 0; // já liquidados — não entram no recálculo
     try {
-      let pedidosAtualizados = 0;
       for (const { m, taxa } of aplicacoes) {
         // 1) grava no histórico de câmbio
         await DB.create('taxas_cambio', {
           moeda: m.sigla, taxa_compra: taxa, taxa_venda: taxa, fonte: 'Manual'
         });
 
-        // 2) recalcula TODOS os pedidos dessa moeda com a nova taxa
-        //    (inclusive os que já tinham câmbio contratado)
-        const pendentes = await DB.list('pedidos',
-          `select=id,valor_total&moeda=eq.${m.sigla}`);
+        // 2) recalcula os pedidos dessa moeda com a nova taxa — exceto os que
+        //    já têm pagamento "Liquidado" (câmbio já fechado/pago de fato,
+        //    não pode ser sobrescrito silenciosamente). Ver pedidoElegivel().
+        const todos = await DB.list('pedidos',
+          `select=id,valor_total,pagamentos(status)&moeda=eq.${m.sigla}`);
+        const pendentes = todos.filter(pedidoElegivel);
+        pedidosMantidos += todos.length - pendentes.length;
         for (const p of pendentes) {
           const valorBRL = (parseFloat(p.valor_total) || 0) * taxa;
           await DB.update('pedidos', p.id, { taxa_cambio: taxa, valor_brl: valorBRL });
@@ -140,10 +160,10 @@
       }
 
       window.closeCambioModal && window.closeCambioModal();
-      toast('💱 Taxas atualizadas!',
-        pedidosAtualizados
-          ? `${pedidosAtualizados} pedido(s) recalculado(s) com a nova cotação.`
-          : 'Taxas de câmbio registradas no histórico.');
+      const partes = [];
+      if (pedidosAtualizados) partes.push(`${pedidosAtualizados} pedido(s) recalculado(s) com a nova cotação`);
+      if (pedidosMantidos) partes.push(`${pedidosMantidos} já liquidado(s) mantido(s) sem alteração`);
+      toast('💱 Taxas atualizadas!', partes.length ? partes.join(' · ') + '.' : 'Taxas de câmbio registradas no histórico.');
 
       // Recarrega telas afetadas pelo recálculo de valor_brl / taxa_cambio
       if (window.renderPedidos) window.renderPedidos();
@@ -152,7 +172,9 @@
       if (window.checkNotificacoes) window.checkNotificacoes();
       refreshCambioExposicao();
     } catch (e) {
-      toast('❌ Erro ao aplicar taxas', e.message || 'Tente novamente.');
+      const msg = e.message || 'Tente novamente.';
+      toast('❌ Erro ao aplicar taxas',
+        `${msg} — ${pedidosAtualizados} pedido(s) já foram atualizados com a nova taxa antes da falha; o restante ficou com a taxa anterior. Reabra "Taxas de Câmbio" para tentar de novo.`);
     } finally {
       btnAplicar.disabled = false;
       btnAplicar.textContent = textoOriginal;
