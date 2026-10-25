@@ -15,7 +15,16 @@ window.TOPIMPORT_CONFIG = {
 
   // Supabase Storage — apenas para anexos (PI, NF, BL, comprovantes de câmbio).
   // Não é usado para dados/autenticação — isso continua 100% no Neon acima.
+  // A LEITURA (download/visualização) continua direto no bucket, que é
+  // público para leitura por design. O UPLOAD e a EXCLUSÃO, porém, não vão
+  // mais direto pro bucket com a anon key — isso bastava pra qualquer pessoa
+  // com essa chave escrever/apagar qualquer anexo, sem nunca ter logado no
+  // app (ver Fase 12 e Fase 17 no histórico do projeto). Agora passam pela
+  // Edge Function STORAGE_GATEWAY_URL, que confirma o login da pessoa no
+  // Neon Auth antes de gravar no bucket (com uma chave que só existe no
+  // servidor, nunca enviada ao navegador).
   STORAGE_URL: 'https://xgzhvsovzxtcdhfkesgd.supabase.co',
   STORAGE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhnemh2c292enh0Y2RoZmtlc2dkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNTY5NTksImV4cCI6MjA5NzczMjk1OX0.o3NXqGskkOTaWw8Zn7ofGeLKAXB7mNK5IzhNVuhZiUY',
-  STORAGE_BUCKET: 'importacao-anexos'
+  STORAGE_BUCKET: 'importacao-anexos',
+  STORAGE_GATEWAY_URL: 'https://xgzhvsovzxtcdhfkesgd.supabase.co/functions/v1/anexos-gateway'
 };
