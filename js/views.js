@@ -444,6 +444,8 @@
     const pct = (n, total) => total > 0 ? (n / total * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0';
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+    set('emb-kpi-total', rows.length);
+    set('emb-kpi-total-sub', rows.length ? `${rows.length} registro${rows.length === 1 ? '' : 's'} no total` : 'nenhum embarque ainda');
     set('emb-kpi-transito', emTransito);
     set('emb-kpi-transito-sub', `${pct(emTransito, rows.length)}% do total · cargas no mar/ar`);
     set('emb-kpi-porto', noPorto);
