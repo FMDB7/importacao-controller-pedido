@@ -1,7 +1,9 @@
 /* ══════════════════════════════════════════════════════════
    TopImport Pro — Exportação para Excel (.xlsx) e PDF
    - Tabelas operacionais (Pedidos, Faturamento, Embarque, Pagamento):
-     exporta exatamente as linhas visíveis em tela (respeita filtros).
+     exporta pra Excel exatamente as linhas visíveis em tela (respeita
+     filtros). Pedidos e Faturamento também exportam pra PDF (tabela
+     em paisagem, mesmas linhas visíveis).
    - Relatório da Diretoria: PDF com KPIs + comparativo anual + top
      fornecedores, e Excel com as mesmas duas tabelas.
    ══════════════════════════════════════════════════════════ */
@@ -63,6 +65,49 @@
     () => exportarXLSX('#view-embarque table', `Embarque_${hoje()}.xlsx`, 'Embarque'));
   document.getElementById('btn-export-pagamento')?.addEventListener('click',
     () => exportarXLSX('#view-pagamento table', `Pagamento_${hoje()}.xlsx`, 'Pagamento'));
+
+  /* Exporta uma tabela operacional pra PDF (paisagem, 1 página larga) —
+     mesmas linhas visíveis em tela (respeita filtros), igual ao Excel acima. */
+  function exportarPDF(tableSelector, titulo, nomeArquivo) {
+    if (typeof window.jspdf === 'undefined') { avisar('Biblioteca de exportação de PDF não carregou. Verifique sua conexão e tente novamente.'); return; }
+    const aoa = tabelaParaAOA(tableSelector);
+    if (!aoa || aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const margemX = 10;
+    let y = 14;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
+    doc.text('Importação - Controller Pedido', margemX, y);
+    y += 6;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+    doc.text(titulo, margemX, y);
+    y += 5;
+    doc.setFontSize(8); doc.setTextColor(120);
+    const nReg = aoa.length - 1;
+    doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} · ${nReg} registro${nReg === 1 ? '' : 's'}`, margemX, y);
+    doc.setTextColor(0);
+    y += 5;
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: margemX, right: margemX },
+      head: [aoa[0]],
+      body: aoa.slice(1),
+      theme: 'grid',
+      headStyles: { fillColor: [13, 27, 46], fontSize: 7 },
+      styles: { fontSize: 6.5, cellPadding: 1.5, overflow: 'linebreak' },
+      tableWidth: 'auto'
+    });
+
+    doc.save(nomeArquivo);
+  }
+
+  document.getElementById('btn-export-pedidos-pdf')?.addEventListener('click',
+    () => exportarPDF('#view-lancamentos table', 'Pedidos', `Pedidos_${hoje()}.pdf`));
+  document.getElementById('btn-export-faturamento-pdf')?.addEventListener('click',
+    () => exportarPDF('#view-faturamento table', 'Faturamento', `Faturamento_${hoje()}.pdf`));
 
   /* ---------- Relatório da Diretoria ---------- */
   function fmtBRL(n) {
