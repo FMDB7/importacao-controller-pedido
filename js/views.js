@@ -363,65 +363,6 @@
     wrap.innerHTML = tiles.join('');
   }
 
-  /* ---------- EMBARQUE: Tempo médio por etapa — quebrado por modal e por rota ----------
-     Mostra, pra cada modal (Marítimo/Aéreo/...) e pra cada rota (porto origem → porto
-     destino), quanto tempo em média leva "embarque → chegada" e "chegada → depósito",
-     pra identificar onde o processo mais trava (não só uma média geral). */
-  function mediaDias(valores) {
-    if (!valores.length) return null;
-    return valores.reduce((s, v) => s + v, 0) / valores.length;
-  }
-  function fmtDias(media) {
-    if (media == null) return '—';
-    return media.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'd';
-  }
-  function renderEmbarqueEtapas(rows) {
-    const tbody = document.getElementById('tbl-emb-etapas');
-    if (!tbody) return;
-
-    function agrupar(chaveFn) {
-      const grupos = {};
-      rows.forEach(e => {
-        const chave = chaveFn(e);
-        if (!chave) return;
-        if (!grupos[chave]) grupos[chave] = { total: 0, transito: [], armazem: [] };
-        grupos[chave].total++;
-        if (e.data_embarque && e.data_chegada) grupos[chave].transito.push(diasEntre(e.data_embarque, e.data_chegada));
-        if (e.data_chegada && e.data_entrada_deposito) grupos[chave].armazem.push(diasEntre(e.data_chegada, e.data_entrada_deposito));
-      });
-      return grupos;
-    }
-
-    const porModal = agrupar(e => e.tipo);
-    const porRota = agrupar(e => (e.porto_origem && e.porto_destino) ? `${e.porto_origem} → ${e.porto_destino}` : null);
-
-    function linhas(grupos, iconFn) {
-      return Object.keys(grupos).sort((a, b) => grupos[b].total - grupos[a].total).map(chave => {
-        const g = grupos[chave];
-        return `<tr>
-          <td>${iconFn ? iconFn(chave) + ' ' : ''}${escapeHtml(chave)}</td>
-          <td class="num">${g.total}</td>
-          <td class="num">${fmtDias(mediaDias(g.transito))}</td>
-          <td class="num">${fmtDias(mediaDias(g.armazem))}</td>
-        </tr>`;
-      }).join('');
-    }
-
-    const linhasModal = linhas(porModal, m => MODAL_ICON[m] || '📦');
-    const linhasRota = linhas(porRota);
-
-    if (!linhasModal && !linhasRota) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--ink-3);padding:20px;">Sem dados suficientes ainda — preencha porto de origem/destino e as datas de embarque/chegada/depósito nos lançamentos.</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = `
-      <tr class="emb-etapas-sep"><td colspan="4">Por modal</td></tr>
-      ${linhasModal || `<tr><td colspan="4" style="color:var(--ink-3);">Sem dados por modal ainda.</td></tr>`}
-      <tr class="emb-etapas-sep"><td colspan="4">Por rota (porto origem → destino)</td></tr>
-      ${linhasRota || `<tr><td colspan="4" style="color:var(--ink-3);">Cadastre porto de origem/destino no lançamento pra ver este recorte.</td></tr>`}
-    `;
-  }
-
   /* ---------- EMBARQUE ---------- */
   async function renderEmbarque() {
     const tbody = document.getElementById('tbl-embarque');
@@ -458,7 +399,6 @@
     set('emb-kpi-atrasados', atrasados);
     set('emb-kpi-atrasados-sub', atrasados ? `${pct(atrasados, rows.length)}% do total · requer atenção agora` : 'nenhum embarque atrasado agora');
     renderEmbarqueInsights(rows);
-    renderEmbarqueEtapas(rows);
     if (!rows.length) {
       tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
       ferramentasEmb.renderPeriodCards([], () => null);
