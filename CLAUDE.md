@@ -578,4 +578,49 @@ oficial `adm.financeiro@topinternacional.com.br`; usuários devem entrar com con
 
 ---
 
+## Fase 17 — Planejamento de capacidade do Neon (fase de teste → produção)
+
+Pedido do usuário: ainda em fase de teste, mas o volume mensal real será grande —
+checar se o **plano Free da Neon** aguenta antes de ir pra produção. Dados
+informados: **~80 pedidos/mês, 2 usuários, 12h/dia, só dias úteis**.
+
+### Limites do plano Free da Neon (checados em 25/10/2026, neon.com/pricing)
+- **Armazenamento**: 1 GB por projeto (20 GB no total da conta) — acima disso
+  **bloqueia novas escritas** (não apaga dado nenhum).
+- **Compute**: 100 CU-horas/mês — ao esgotar, **o banco fica suspenso até o início
+  do próximo período de cobrança** (indisponibilidade temporária, sem perda de dado).
+- Projeto hoje: `topimport-pro` (`plain-math-38332499`), plano `free_v3`, compute
+  fixo em 0,25 CU (sem autoscaling configurado).
+
+### Projeção com os números informados
+- **Armazenamento**: hoje as 4 tabelas principais de negócio (`pedidos`, `faturas`,
+  `embarques`, `pagamentos`) somam só 488 KB com 2 registros de teste — base
+  pequena demais pra extrapolar com precisão, mas por serem só texto/data/UUID
+  (os anexos/PDFs ficam no Supabase Storage, não no Neon) o crescimento projetado
+  fica na casa de poucas dezenas de MB por ano, mesmo em cenário conservador. **Não
+  é um fator limitante no horizonte de alguns anos.**
+- **Compute — fator que realmente limita aqui**: o heartbeat de sessão (Fase 15,
+  `js/usuarios.js`) grava em `sessoes_ativas` a cada 60s enquanto alguém está
+  logado, o que impede o banco de suspender sozinho (timeout de 5 min de
+  ociosidade) durante o expediente. Com 12h/dia × ~21,7 dias úteis/mês ≈ 261h de
+  banco "acordado"/mês × 0,25 CU fixo ≈ **~65 CU-horas/mês consumidas, de 100
+  disponíveis (~35% de margem livre)**.
+
+### Conclusão / recomendação
+Com os números atuais, **o plano Free aguenta**, mas sem muita folga no compute —
+um 3º usuário, jornada maior que 12h, alguém deixando aba aberta fora do
+expediente, ou uso mais pesado de relatórios/exportações pode empurrar acima do
+limite mensal de CU-horas (consequência: banco suspenso até o mês seguinte, não
+perda de dado). Quando isso apertar, o caminho é migrar pro plano **Launch**
+(pay-as-you-go, sem teto fixo de storage/compute) — custo estimado pra esse mesmo
+volume de uso: **~US\$ 6,90/mês** só de compute (US\$ 0,106/CU-hora), storage
+irrelevante no preço. Upgrade é só trocar o plano no painel da Neon, não exige
+mudança de código.
+
+**Acompanhar**: se o uso real (nº de pedidos/mês, horas de operação, nº de
+usuários) crescer além do informado aqui, vale refazer essa conta antes que o
+compute estoure no meio de um mês.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
