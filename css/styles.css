@@ -471,6 +471,15 @@ td.code, td.date {
   background: rgba(155,122,255,0.14); color: var(--violet);
   border-color: rgba(155,122,255,0.4);
 }
+.chip-clear-btn {
+  margin-left: auto; align-self: center;
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  font-family: var(--ff-body); color: var(--ink-3);
+  background: transparent; border: 1.5px solid var(--border-md);
+  cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.chip-clear-btn:hover { background: var(--bg-hover); color: var(--ink-1); border-color: var(--ink-3); }
 
 /* ── RESUMO TOTAL COMPRAS card ──────────────────────────── */
 .resumo-card {

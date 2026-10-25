@@ -129,6 +129,15 @@ function buildReportCharts() {}
     c.classList.toggle('active');
     if (window.applyPedidosFilter) window.applyPedidosFilter();
   }));
+
+  // Botão "✕ Limpar" junto à própria linha de chips — reativa só os
+  // chips de Setor/Local (sem tocar nos filtros de Fornecedor/Status/
+  // Moeda nem no card de período selecionado, diferente do "Limpar"
+  // do painel FILTROS mais abaixo, que reseta tudo).
+  document.getElementById('chips-limpar')?.addEventListener('click', () => {
+    [...grpChips, ...locChips].forEach(c => c.classList.add('active'));
+    if (window.applyPedidosFilter) window.applyPedidosFilter();
+  });
 })();
 
 /* ─── Modal: Taxas de Câmbio ────────────────────────────────────── */
