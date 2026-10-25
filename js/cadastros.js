@@ -70,11 +70,27 @@
 
   async function aposLoginOk(metodo) {
     let email = '';
+    let falhaAoConsultar = false;
     try {
       const who = await DB.rpc('app_whoami', {});
       email = (Array.isArray(who) && who[0] && who[0].email) || '';
-    } catch (e) { console.warn('Não foi possível confirmar o e-mail autenticado:', e.message); }
+    } catch (e) {
+      console.warn('Não foi possível confirmar o e-mail autenticado:', e.message);
+      falhaAoConsultar = true;
+    }
 
+    // Antes, se a consulta do e-mail falhasse (rede instável, RPC fora do ar),
+    // `email` ficava vazio e a condição abaixo (`email && !dominioPermitido`)
+    // era falsa só por `email` ser vazio — ou seja, a checagem de domínio era
+    // pulada de forma silenciosa e o login seguia adiante ("fail-open"). Como
+    // essa checagem é a única barreira de domínio feita no app (a RLS do
+    // banco não sabe nada sobre domínio de e-mail), o certo é bloquear
+    // sempre que não for possível confirmar o e-mail ("fail-closed").
+    if (falhaAoConsultar) {
+      if (errEl) errEl.textContent = 'Não foi possível confirmar sua conta agora. Verifique sua conexão e tente entrar de novo.';
+      Auth.signOut(false);
+      return;
+    }
     if (email && !dominioPermitido(email)) {
       if (errEl) errEl.textContent = `O e-mail ${email} não é uma conta corporativa autorizada (use @topinternacional.com.br ou @tfs.com.br).`;
       Auth.signOut(false); // limpa a sessão sem recarregar, pra pessoa ver a mensagem de erro
