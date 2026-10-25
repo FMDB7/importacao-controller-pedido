@@ -156,10 +156,10 @@
       }
       tbody.innerHTML = usuarios.map(u => `
         <tr>
-          <td>${u.nome || '—'}</td>
-          <td class="code" style="text-align:left;">${u.email}</td>
+          <td>${escapeHtml(u.nome || '—')}</td>
+          <td class="code" style="text-align:left;">${escapeHtml(u.email)}</td>
           <td class="ta-c">
-            <select class="form-select" style="padding:4px 8px;font-size:12px;width:auto;" data-perfil-change="${u.email}">
+            <select class="form-select" style="padding:4px 8px;font-size:12px;width:auto;" data-perfil-change="${escapeHtml(u.email)}">
               <option value="Usuario"${u.perfil === 'Usuario' ? ' selected' : ''}>Usuário</option>
               <option value="Administrador"${u.perfil === 'Administrador' ? ' selected' : ''}>Administrador</option>
             </select>
@@ -168,14 +168,14 @@
           <td class="date">${ultimoLogin[u.email] ? new Date(ultimoLogin[u.email]).toLocaleString('pt-BR') : 'nunca'}</td>
           <td>
             <div class="row-actions">
-              <button type="button" data-toggle-ativo-usuario="${u.email}" title="${u.ativo ? 'Desativar' : 'Ativar'}">${u.ativo ? '⛔' : '✅'}</button>
-              <button type="button" class="danger" data-remove-usuario="${u.email}" title="Remover">🗑️</button>
+              <button type="button" data-toggle-ativo-usuario="${escapeHtml(u.email)}" title="${u.ativo ? 'Desativar' : 'Ativar'}">${u.ativo ? '⛔' : '✅'}</button>
+              <button type="button" class="danger" data-remove-usuario="${escapeHtml(u.email)}" title="Remover">🗑️</button>
             </div>
           </td>
         </tr>`).join('');
       if (window.Paginacao) window.Paginacao.paginar('tbl-usuarios', { reset: true });
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--rose);padding:24px;">Erro ao carregar usuários: ${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--rose);padding:24px;">Erro ao carregar usuários: ${escapeHtml(e.message)}</td></tr>`;
       if (window.Paginacao) window.Paginacao.paginar('tbl-usuarios', { reset: true });
     }
   }
@@ -198,8 +198,8 @@
         const online = minutosAtras < 5;
         return `
         <tr>
-          <td class="mono" style="font-size:12px;">${s.email}</td>
-          <td>${resumoDispositivo(s.dispositivo)}</td>
+          <td class="mono" style="font-size:12px;">${escapeHtml(s.email)}</td>
+          <td>${escapeHtml(resumoDispositivo(s.dispositivo))}</td>
           <td style="font-size:12px;color:var(--ink-3);">${new Date(s.iniciado_em).toLocaleString('pt-BR')}</td>
           <td><span class="status-badge ${online ? 's-entregue' : 's-aguardando'}">${online ? 'Online' : 'Inativa'}</span></td>
           <td><button type="button" class="btn btn-ghost" style="font-size:11px;padding:5px 10px;" data-encerrar-sessao="${s.id}">Encerrar sessão</button></td>
@@ -207,7 +207,7 @@
       }).join('');
       if (window.Paginacao) window.Paginacao.paginar('tbl-sessoes', { reset: true });
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--rose);padding:24px;">Erro ao carregar sessões: ${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--rose);padding:24px;">Erro ao carregar sessões: ${escapeHtml(e.message)}</td></tr>`;
       if (window.Paginacao) window.Paginacao.paginar('tbl-sessoes', { reset: true });
     }
   }
@@ -229,12 +229,12 @@
       tbody.innerHTML = rows.map(l => `
         <tr>
           <td style="font-size:12px;">${new Date(l.data_hora).toLocaleString('pt-BR')}</td>
-          <td class="mono" style="font-size:12px;">${l.email}</td>
+          <td class="mono" style="font-size:12px;">${escapeHtml(l.email)}</td>
           <td>${l.metodo === 'microsoft' ? 'Microsoft' : 'E-mail/senha'}</td>
-          <td style="font-size:12px;color:var(--ink-3);">${resumoDispositivo(l.dispositivo)}</td>
+          <td style="font-size:12px;color:var(--ink-3);">${escapeHtml(resumoDispositivo(l.dispositivo))}</td>
         </tr>`).join('');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--rose);padding:24px;">Erro ao carregar log: ${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--rose);padding:24px;">Erro ao carregar log: ${escapeHtml(e.message)}</td></tr>`;
     }
   }
   document.getElementById('btn-ver-log')?.addEventListener('click', abrirLog);

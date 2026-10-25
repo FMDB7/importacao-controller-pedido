@@ -83,8 +83,8 @@
           <div class="notif-item" data-goto="${it.view}">
             <div class="notif-item-icon">${icone}</div>
             <div>
-              <div class="notif-item-title">${it.titulo}</div>
-              <div class="notif-item-sub">${it.sub} · ${texto}</div>
+              <div class="notif-item-title">${escapeHtml(it.titulo)}</div>
+              <div class="notif-item-sub">${escapeHtml(it.sub)} · ${texto}</div>
             </div>
           </div>`;
       }).join('');

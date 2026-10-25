@@ -85,9 +85,9 @@
         DB.list('colaboradores', 'ativo=eq.true&order=nome.asc')
       ]);
       selForn.innerHTML = '<option value="">Selecionar fornecedor...</option>' +
-        fornecedores.map(f => `<option value="${f.id}">${f.razao_social} — ${f.pais}</option>`).join('');
+        fornecedores.map(f => `<option value="${f.id}">${escapeHtml(f.razao_social)} — ${escapeHtml(f.pais)}</option>`).join('');
       selColab.innerHTML = '<option value="">Selecionar colaborador...</option>' +
-        colaboradores.map(c => `<option value="${c.id}">${c.nome} — ${c.localizacao || '—'} · ${c.cargo}</option>`).join('');
+        colaboradores.map(c => `<option value="${c.id}">${escapeHtml(c.nome)} — ${escapeHtml(c.localizacao || '—')} · ${escapeHtml(c.cargo)}</option>`).join('');
       catalogLoaded = true;
     } catch (e) {
       console.error('Erro ao carregar fornecedores/colaboradores:', e);
@@ -610,38 +610,38 @@
         return;
       }
       tbody.innerHTML = rows.map(p => {
-        const forn = p.fornecedores ? p.fornecedores.razao_social : '—';
-        const colab = p.colaboradores ? p.colaboradores.nome : '—';
-        const coord = p.colaboradores ? p.colaboradores.coordenador_nome : '';
+        const forn = escapeHtml(p.fornecedores ? p.fornecedores.razao_social : '—');
+        const colab = escapeHtml(p.colaboradores ? p.colaboradores.nome : '—');
+        const coord = escapeHtml(p.colaboradores ? p.colaboradores.coordenador_nome : '');
         const setorNome = SETOR_NOME[p.setor] || p.setor || '—';
         const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
         const LOC_CLASS = { 'Manaus': 'loc-manaus', 'Macapá': 'loc-macapa', 'Extrema': 'loc-extrema', 'Guajará': 'loc-guajara' };
         const locCls = LOC_CLASS[p.localizacao] || 'loc-manaus';
         const mesRef = p.data_pedido ? p.data_pedido.slice(0, 7) : '';
         const descInfo = parseDescricao(p.descricao);
-        const marca = descInfo.marca || '—';
+        const marca = escapeHtml(descInfo.marca || '—');
         const qtdePedidaNum = parseBRNumber(descInfo.qtde);
         return `
-          <tr data-grp="${p.setor || ''}" data-loc="${p.localizacao || 'Manaus'}" data-mes="${mesRef}"
-              data-status="${p.status || ''}" data-moeda="${p.moeda || ''}" data-fornecedor="${forn}"
-              data-valor="${p.valor_brl || 0}" data-data="${p.data_pedido || ''}"
-              data-busca="${(p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + forn + ' ' + marca}">
-            <td><span class="mono" style="font-size:11.5px;color:var(--cyan);font-weight:700;">${p.numero_pedido || '—'}</span>${p.arquivo_pi_url ? `<a href="${p.arquivo_pi_url}" target="_blank" rel="noopener" title="Ver arquivo da PI (${p.numero_pi||''})" style="margin-left:6px;">📎</a>` : ''}</td>
+          <tr data-grp="${escapeHtml(p.setor || '')}" data-loc="${escapeHtml(p.localizacao || 'Manaus')}" data-mes="${escapeHtml(mesRef)}"
+              data-status="${escapeHtml(p.status || '')}" data-moeda="${escapeHtml(p.moeda || '')}" data-fornecedor="${forn}"
+              data-valor="${p.valor_brl || 0}" data-data="${escapeHtml(p.data_pedido || '')}"
+              data-busca="${escapeHtml((p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + (p.fornecedores ? p.fornecedores.razao_social : '') + ' ' + (descInfo.marca||''))}">
+            <td><span class="mono" style="font-size:11.5px;color:var(--cyan);font-weight:700;">${escapeHtml(p.numero_pedido || '—')}</span>${p.arquivo_pi_url ? `<a href="${escapeHtml(p.arquivo_pi_url)}" target="_blank" rel="noopener" title="Ver arquivo da PI (${escapeHtml(p.numero_pi||'')})" style="margin-left:6px;">📎</a>` : ''}</td>
             <td>${colab}${coord ? `<div style="font-size:10px;color:var(--ink-3);margin-top:2px;">👤 Coord.: ${coord}</div>` : ''}</td>
             <td>${forn}</td>
             <td>${marca}</td>
             <td class="ta-c date">${toBRDate(p.data_pedido)}</td>
             <td class="ta-c date">${toBRDate(p.data_previsao_entrega)}</td>
-            <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${setorNome}">${p.setor}: ${setorNome}</span>` : '—'}</td>
-            <td class="ta-c"><span class="loc-tag ${locCls}">${p.localizacao||'—'}</span></td>
-            <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
+            <td class="ta-c">${p.setor ? `<span class="grp-tag" title="${escapeHtml(setorNome)}">${escapeHtml(p.setor)}: ${escapeHtml(setorNome)}</span>` : '—'}</td>
+            <td class="ta-c"><span class="loc-tag ${locCls}">${escapeHtml(p.localizacao||'—')}</span></td>
+            <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${escapeHtml(p.moeda)}</span>` : '—'}</td>
             <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
             <td class="num">${qtdePedidaNum != null ? qtdePedidaNum.toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
             <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
             <td class="num">${p.valor_brl ? fmtBRL(Number(p.valor_brl)) : '—'}</td>
             <td class="date">—</td>
             <td class="ta-c cell-editable" data-inline-status="${p.id}" title="Clique para alterar o status">
-              <span class="status-badge ${statusCls}">${p.status}</span>
+              <span class="status-badge ${statusCls}">${escapeHtml(p.status)}</span>
             </td>
             <td><div class="row-actions"><button type="button" data-edit-pedido="${p.id}" title="Editar pedido">✏️</button><button type="button" class="danger" data-delete-pedido="${p.id}" title="Excluir pedido">🗑️</button></div></td>
           </tr>`;
@@ -651,7 +651,7 @@
       document.querySelectorAll('.grp-chip, .grp-chip.loc-chip').forEach(c => c.classList.add('active'));
       aplicarFiltrosAvancados();
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="16" style="text-align:center;color:var(--rose);padding:24px;">${escapeHtml(e.message)}</td></tr>`;
     }
   }
 
@@ -715,7 +715,7 @@
     if (selForn) {
       const nomes = [...new Set(rows.map(p => p.fornecedores ? p.fornecedores.razao_social : null).filter(Boolean))].sort();
       const atual = selForn.value;
-      selForn.innerHTML = '<option value="">Todos os fornecedores</option>' + nomes.map(n => `<option>${n}</option>`).join('');
+      selForn.innerHTML = '<option value="">Todos os fornecedores</option>' + nomes.map(n => `<option>${escapeHtml(n)}</option>`).join('');
       selForn.value = atual;
     }
   }

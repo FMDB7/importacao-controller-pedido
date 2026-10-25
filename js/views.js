@@ -84,7 +84,7 @@
       const atual = sel.value;
       const nomes = [...new Set(rows.map(campoNome).filter(Boolean))].sort();
       const primeiraOpcao = sel.querySelector('option[value=""]')?.outerHTML || '<option value="">Todos</option>';
-      sel.innerHTML = primeiraOpcao + nomes.map(n => `<option>${n}</option>`).join('');
+      sel.innerHTML = primeiraOpcao + nomes.map(n => `<option>${escapeHtml(n)}</option>`).join('');
       sel.value = atual;
     }
 
@@ -217,26 +217,27 @@
       'Cancelada': '<span class="status-badge s-aguardando">Cancelada</span>'
     };
     tbody.innerHTML = rows.map(f => {
-      const forn = f.pedidos?.fornecedores?.razao_social || '—';
+      const fornRaw = f.pedidos?.fornecedores?.razao_social || '—';
+      const forn = escapeHtml(fornRaw);
       const dias = diasAte(f.data_vencimento);
       const vencCor = dias != null && dias < 0 ? 'var(--rose)' : (dias != null && dias <= 7 ? 'var(--amber)' : 'var(--ink-2)');
       const vencIcon = dias != null && dias < 0 ? '⚠ ' : '';
       const valorBrl = f.pedidos?.valor_brl ? Number(f.pedidos.valor_brl) : 0;
-      const busca = `${f.numero_invoice||''} ${f.pedidos?.numero_pedido||''} ${f.pedidos?.numero_pi||''} ${forn}`;
+      const busca = escapeHtml(`${f.numero_invoice||''} ${f.pedidos?.numero_pedido||''} ${f.pedidos?.numero_pi||''} ${fornRaw}`);
       return `
-        <tr data-row data-mes="${(f.data_vencimento||'').slice(0,7)}" data-fornecedor="${forn}" data-status="${f.status||''}"
-            data-moeda="${f.moeda||''}" data-vencimento="${f.data_vencimento||''}" data-valor="${valorBrl}" data-busca="${busca}">
-          <td>${f.pedidos?.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${f.pedidos.numero_pi}</span>` : '—'}</td>
-          <td><span class="mono">${f.numero_invoice}</span>${f.arquivo_url ? `<a href="${f.arquivo_url}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}</td>
-          <td>${f.pedidos ? `<span class="mono" style="font-size:11.5px;">${f.pedidos.numero_pedido}</span>` : '—'}</td>
+        <tr data-row data-mes="${escapeHtml((f.data_vencimento||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(f.status||'')}"
+            data-moeda="${escapeHtml(f.moeda||'')}" data-vencimento="${escapeHtml(f.data_vencimento||'')}" data-valor="${valorBrl}" data-busca="${busca}">
+          <td>${f.pedidos?.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pi)}</span>` : '—'}</td>
+          <td><span class="mono">${escapeHtml(f.numero_invoice)}</span>${f.arquivo_url ? `<a href="${escapeHtml(f.arquivo_url)}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}</td>
+          <td>${f.pedidos ? `<span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pedido)}</span>` : '—'}</td>
           <td>${forn}</td>
-          <td class="ta-c"><span class="currency-tag ${CUR_CLASS[f.moeda]||''}">${f.moeda}</span></td>
+          <td class="ta-c"><span class="currency-tag ${CUR_CLASS[f.moeda]||''}">${escapeHtml(f.moeda)}</span></td>
           <td class="num">${fmtMoeda(f.valor, f.moeda)}</td>
           <td class="num">${f.qtd_pecas != null ? Number(f.qtd_pecas).toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
           <td class="num" style="font-size:11px;">${f.pedidos?.taxa_cambio ? Number(f.pedidos.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${f.pedidos?.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
           <td class="date" style="color:${vencCor};">${vencIcon}${toBR(f.data_vencimento)}</td>
-          <td class="ta-c cell-editable" data-inline-status-table="faturas" data-inline-status-id="${f.id}" title="Clique para alterar o status">${STATUS_BADGE[f.status] || f.status}</td>
+          <td class="ta-c cell-editable" data-inline-status-table="faturas" data-inline-status-id="${f.id}" title="Clique para alterar o status">${STATUS_BADGE[f.status] || escapeHtml(f.status)}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${f.pedido_id}:fatura" title="Editar invoice">✏️</button><button type="button" class="danger" data-delete-rec="faturas:${f.id}" title="Excluir invoice">🗑️</button></div></td>
         </tr>`;
     }).join('');
@@ -391,22 +392,24 @@
       'Entregue': '<span class="status-badge s-entregue">Entregue</span>'
     };
     tbody.innerHTML = rows.map(e => {
-      const forn = e.pedidos?.fornecedores?.razao_social || '—';
-      const navio = (e.observacoes || '').replace('Navio/AWB: ', '') || '—';
-      const busca = `${e.pedidos?.numero_pedido||''} ${forn} ${navio} ${e.numero_container||''}`;
+      const fornRaw = e.pedidos?.fornecedores?.razao_social || '—';
+      const forn = escapeHtml(fornRaw);
+      const navioRaw = (e.observacoes || '').replace('Navio/AWB: ', '') || '—';
+      const navio = escapeHtml(navioRaw);
+      const busca = escapeHtml(`${e.pedidos?.numero_pedido||''} ${fornRaw} ${navioRaw} ${e.numero_container||''}`);
       return `
-        <tr data-row data-mes="${(e.data_embarque||'').slice(0,7)}" data-fornecedor="${forn}" data-status="${e.status||''}"
-            data-tipo="${e.tipo||''}" data-embarque="${e.data_embarque||''}" data-busca="${busca}">
-          <td>${e.pedidos ? `<span class="mono">${e.pedidos.numero_pedido}</span>` : '—'}${e.arquivo_bl_url ? `<a href="${e.arquivo_bl_url}" target="_blank" rel="noopener" title="Ver arquivo do BL" style="margin-left:6px;">📎</a>` : ''}</td>
+        <tr data-row data-mes="${escapeHtml((e.data_embarque||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(e.status||'')}"
+            data-tipo="${escapeHtml(e.tipo||'')}" data-embarque="${escapeHtml(e.data_embarque||'')}" data-busca="${busca}">
+          <td>${e.pedidos ? `<span class="mono">${escapeHtml(e.pedidos.numero_pedido)}</span>` : '—'}${e.arquivo_bl_url ? `<a href="${escapeHtml(e.arquivo_bl_url)}" target="_blank" rel="noopener" title="Ver arquivo do BL" style="margin-left:6px;">📎</a>` : ''}</td>
           <td>${forn}</td>
           <td class="ta-c" style="font-size:18px;">${MODAL_ICON[e.tipo] || '📦'}</td>
           <td class="code">${navio}</td>
-          <td class="code">${e.numero_container || '—'}</td>
+          <td class="code">${escapeHtml(e.numero_container || '—')}</td>
           <td class="date">${toBR(e.data_embarque)}</td>
           <td class="date">${toBR(e.data_previsao_chegada)}</td>
           <td class="date">${toBR(e.data_chegada)}</td>
           <td class="date">${toBR(e.data_entrada_deposito)}</td>
-          <td class="ta-c cell-editable" data-inline-status-table="embarques" data-inline-status-id="${e.id}" title="Clique para alterar o status">${STATUS_BADGE[e.status] || e.status}</td>
+          <td class="ta-c cell-editable" data-inline-status-table="embarques" data-inline-status-id="${e.id}" title="Clique para alterar o status">${STATUS_BADGE[e.status] || escapeHtml(e.status)}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${e.pedido_id}:embarque" title="Editar embarque">✏️</button><button type="button" class="danger" data-delete-rec="embarques:${e.id}" title="Excluir embarque">🗑️</button></div></td>
         </tr>`;
     }).join('');
@@ -467,7 +470,8 @@
       return;
     }
     tbody.innerHTML = rows.map(p => {
-      const forn = p.pedidos?.fornecedores?.razao_social || '—';
+      const fornRaw = p.pedidos?.fornecedores?.razao_social || '—';
+      const forn = escapeHtml(fornRaw);
       const dias = diasAte(p.data_vencimento);
       let badge;
       if (p.status === 'Liquidado') badge = '<span class="status-badge s-câmbio-liquidado">Liquidado</span>';
@@ -475,15 +479,15 @@
       else if (dias != null && dias <= 7) badge = `<span class="status-badge" style="background:rgba(185,116,10,0.12);color:var(--amber);">Vence em ${dias}d</span>`;
       else badge = '<span class="status-badge" style="background:rgba(37,99,235,0.1);color:var(--cyan);">A Vencer</span>';
       const valorBrl = Number(p.valor_brl) || 0;
-      const busca = `${p.pedidos?.numero_pedido||''} ${forn} ${p.banco||''} ${p.faturas?.numero_invoice||''}`;
+      const busca = escapeHtml(`${p.pedidos?.numero_pedido||''} ${fornRaw} ${p.banco||''} ${p.faturas?.numero_invoice||''}`);
       return `
-        <tr data-row data-mes="${(p.data_vencimento||'').slice(0,7)}" data-fornecedor="${forn}" data-status="${p.status||''}"
-            data-moeda="${p.moeda||''}" data-vencimento="${p.data_vencimento||''}" data-valor="${valorBrl}" data-busca="${busca}">
-          <td>${p.pedidos ? `<span class="mono">${p.pedidos.numero_pedido}</span>` : '—'}${p.arquivo_cambio_url ? `<a href="${p.arquivo_cambio_url}" target="_blank" rel="noopener" title="Ver comprovante de câmbio" style="margin-left:6px;">📎</a>` : ''}</td>
-          <td>${p.faturas ? `<span class="mono" style="font-size:11.5px;">${p.faturas.numero_invoice}</span>` : '—'}</td>
+        <tr data-row data-mes="${escapeHtml((p.data_vencimento||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(p.status||'')}"
+            data-moeda="${escapeHtml(p.moeda||'')}" data-vencimento="${escapeHtml(p.data_vencimento||'')}" data-valor="${valorBrl}" data-busca="${busca}">
+          <td>${p.pedidos ? `<span class="mono">${escapeHtml(p.pedidos.numero_pedido)}</span>` : '—'}${p.arquivo_cambio_url ? `<a href="${escapeHtml(p.arquivo_cambio_url)}" target="_blank" rel="noopener" title="Ver comprovante de câmbio" style="margin-left:6px;">📎</a>` : ''}</td>
+          <td>${p.faturas ? `<span class="mono" style="font-size:11.5px;">${escapeHtml(p.faturas.numero_invoice)}</span>` : '—'}</td>
           <td>${forn}</td>
-          <td class="code">${p.banco || '—'}</td>
-          <td class="ta-c"><span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span></td>
+          <td class="code">${escapeHtml(p.banco || '—')}</td>
+          <td class="ta-c"><span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${escapeHtml(p.moeda)}</span></td>
           <td class="num">${fmtMoeda(p.valor, p.moeda)}</td>
           <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${p.valor_brl ? fmtBRL(valorBrl) : '—'}</td>

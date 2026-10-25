@@ -14,7 +14,7 @@
     BOL:'BOLSAS, MALAS', C:'COSMETIC', 'C&D':'CASA & DECORAÇÃO', O:'ÓCULOS',
     P:'PERFUMARIA', PUB:'PUBLICIDADE', R:'RELÓGIOS'
   };
-  const curTag = (m) => `<span class="currency-tag cur-${(m||'usd').toLowerCase()}">${m||'—'}</span>`;
+  const curTag = (m) => `<span class="currency-tag cur-${escapeHtml((m||'usd').toLowerCase())}">${escapeHtml(m||'—')}</span>`;
   const initials = (nome) => (nome || '??').trim().split(/\s+/).slice(0,2).map(w=>w[0]).join('').toUpperCase();
   const GRADIENTS = ['#0099CC,#0EA5E9','#00A878,#10B981','#C4880A,#F5A623','#6D4FC2,#9B7AFF','#B03060,#FF4D6D'];
   const gradient = (i) => `linear-gradient(135deg,${GRADIENTS[i % GRADIENTS.length]})`;
@@ -112,15 +112,15 @@
       }
       tbody.innerHTML = rows.map(f => `
         <tr>
-          <td>${f.razao_social}${f.nome_fantasia ? ` <span style="color:var(--ink-3);">(${f.nome_fantasia})</span>` : ''}</td>
-          <td>${flag(f.pais)} ${f.pais}</td>
+          <td>${escapeHtml(f.razao_social)}${f.nome_fantasia ? ` <span style="color:var(--ink-3);">(${escapeHtml(f.nome_fantasia)})</span>` : ''}</td>
+          <td>${flag(f.pais)} ${escapeHtml(f.pais)}</td>
           <td>${curTag(f.moeda)}</td>
-          <td>${f.contato_email || '—'}</td>
+          <td>${escapeHtml(f.contato_email || '—')}</td>
           <td><span class="status-badge ${f.ativo ? 's-entregue' : 's-aguardando'}">${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
           <td>${rowActions('fornecedores', f.id)}</td>
         </tr>`).join('');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--rose);padding:24px;">${escapeHtml(e.message)}</td></tr>`;
     }
   }
 
@@ -141,18 +141,18 @@
       grid.innerHTML = rows.map((c, i) => `
         <div class="person-card">
           <div class="person-header">
-            <div class="person-avatar" style="background:${gradient(i)}">${initials(c.nome)}</div>
-            <div><div class="person-name">${c.nome}</div><div class="person-role">${c.cargo}</div></div>
+            <div class="person-avatar" style="background:${gradient(i)}">${escapeHtml(initials(c.nome))}</div>
+            <div><div class="person-name">${escapeHtml(c.nome)}</div><div class="person-role">${escapeHtml(c.cargo)}</div></div>
           </div>
           <div class="person-tags">
-            ${c.setor ? `<span class="tag tag-cyan">${c.setor}: ${SETOR_NOME[c.setor] || c.setor}</span>` : ''}
-            ${c.localizacao ? `<span class="tag">${c.localizacao}</span>` : ''}
-            ${c.coordenador_nome ? `<span class="tag" title="Coordenador(a) responsável">👤 Coord.: ${c.coordenador_nome}</span>` : ''}
+            ${c.setor ? `<span class="tag tag-cyan">${escapeHtml(c.setor)}: ${escapeHtml(SETOR_NOME[c.setor] || c.setor)}</span>` : ''}
+            ${c.localizacao ? `<span class="tag">${escapeHtml(c.localizacao)}</span>` : ''}
+            ${c.coordenador_nome ? `<span class="tag" title="Coordenador(a) responsável">👤 Coord.: ${escapeHtml(c.coordenador_nome)}</span>` : ''}
           </div>
           ${rowActions('colaboradores', c.id)}
         </div>`).join('') + addCard;
     } catch (e) {
-      grid.innerHTML = `<div style="color:var(--rose);padding:24px;">${e.message}</div>`;
+      grid.innerHTML = `<div style="color:var(--rose);padding:24px;">${escapeHtml(e.message)}</div>`;
     }
   }
 
@@ -175,14 +175,14 @@
       rows.forEach(c => {
         list.insertAdjacentHTML('beforeend', `
           <div class="city-row">
-            <div><div class="city-name">${c.nome}</div>${c.estado ? `<div class="city-country">${c.estado}</div>` : ''}</div>
-            <div>${flag(c.pais)} ${c.pais}</div>
-            <div style="text-align:right;font-family:var(--ff-mono);font-size:13px;">${c.codigo_porto || c.codigo_aeroporto || '—'}</div>
+            <div><div class="city-name">${escapeHtml(c.nome)}</div>${c.estado ? `<div class="city-country">${escapeHtml(c.estado)}</div>` : ''}</div>
+            <div>${flag(c.pais)} ${escapeHtml(c.pais)}</div>
+            <div style="text-align:right;font-family:var(--ff-mono);font-size:13px;">${escapeHtml(c.codigo_porto || c.codigo_aeroporto || '—')}</div>
             <div>${rowActions('cidades', c.id)}</div>
           </div>`);
       });
     } catch (e) {
-      list.insertAdjacentHTML('beforeend', `<div style="color:var(--rose);padding:24px;">${e.message}</div>`);
+      list.insertAdjacentHTML('beforeend', `<div style="color:var(--rose);padding:24px;">${escapeHtml(e.message)}</div>`);
     }
   }
 

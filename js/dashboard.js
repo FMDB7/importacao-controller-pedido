@@ -167,23 +167,23 @@
         tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum lançamento ainda. Use "Novo Lançamento" para registrar o primeiro pedido.</td></tr>`;
       } else {
         tbody.innerHTML = recentes.map(p => {
-          const forn = p.fornecedores ? p.fornecedores.razao_social : '—';
-          const colab = p.colaboradores ? p.colaboradores.nome : '—';
-          const cargo = p.colaboradores ? p.colaboradores.cargo : '';
+          const forn = escapeHtml(p.fornecedores ? p.fornecedores.razao_social : '—');
+          const colab = escapeHtml(p.colaboradores ? p.colaboradores.nome : '—');
+          const cargo = escapeHtml(p.colaboradores ? p.colaboradores.cargo : '');
           const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
           const vencimento = (p.faturas && p.faturas[0] && p.faturas[0].data_vencimento) ? toBR(p.faturas[0].data_vencimento) : '—';
-          const marca = parseMarca(p.descricao) || '—';
+          const marca = escapeHtml(parseMarca(p.descricao) || '—');
           return `
             <tr>
-              <td>${p.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${p.numero_pi}</span>` : '—'}</td>
-              <td><span class="mono" style="color:var(--cyan);font-weight:700;">${p.numero_pedido}</span></td>
+              <td>${p.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${escapeHtml(p.numero_pi)}</span>` : '—'}</td>
+              <td><span class="mono" style="color:var(--cyan);font-weight:700;">${escapeHtml(p.numero_pedido)}</span></td>
               <td>${forn}</td>
               <td>${marca}</td>
-              <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${p.moeda}</span>` : '—'}</td>
+              <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${escapeHtml(p.moeda)}</span>` : '—'}</td>
               <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
               <td class="ta-c" style="font-family:var(--ff-mono);font-size:12px;color:var(--ink-2);">${vencimento}</td>
               <td>${colab}<div style="font-size:9px;color:var(--ink-3);">${cargo}</div></td>
-              <td class="ta-c"><span class="status-badge ${statusCls}">${p.status}</span></td>
+              <td class="ta-c"><span class="status-badge ${statusCls}">${escapeHtml(p.status)}</span></td>
             </tr>`;
         }).join('');
       }

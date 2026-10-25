@@ -6,6 +6,24 @@
         await DB.update('fornecedores', id, {ativo:false})
         await DB.remove('fornecedores', id)
    ══════════════════════════════════════════════════════════ */
+/* Escapa texto para uso seguro dentro de HTML (innerHTML) e dentro de
+   atributos HTML (ex. data-fornecedor="${esc(valor)}"). Qualquer texto
+   livre digitado por um usuário (fornecedor, colaborador, marca, banco,
+   observações, nome etc.) DEVE passar por aqui antes de entrar em um
+   template string que vai para innerHTML — sem isso, um usuário comum
+   consegue gravar HTML/JS que executa na sessão de outro usuário
+   (inclusive administrador) assim que a tela é aberta. */
+function escapeHtml(valor) {
+  if (valor === null || valor === undefined) return '';
+  return String(valor)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+window.escapeHtml = escapeHtml;
+
 (function () {
   const cfg = window.TOPIMPORT_CONFIG;
 
