@@ -212,10 +212,13 @@
       setVal('f-pag-obs', desc._obs || p.observacoes);
       recalcValorBRL();
 
-      anexos.pi = p.arquivo_pi_url || null; renderAnexoStatus('pi');
-      anexos.nf = (fatura && fatura.arquivo_url) || null; renderAnexoStatus('nf');
-      anexos.bl = (embarque && embarque.arquivo_bl_url) || null; renderAnexoStatus('bl');
-      anexos.cambio = (pagamento && pagamento.arquivo_cambio_url) || null; renderAnexoStatus('cambio');
+      // Upload de novo anexo foi removido do modal, mas um pedido antigo pode já
+      // ter um arquivo salvo de antes — preserva o link pra não apagá-lo ao
+      // editar e salvar de novo.
+      anexos.pi = p.arquivo_pi_url || null;
+      anexos.nf = (fatura && fatura.arquivo_url) || null;
+      anexos.bl = (embarque && embarque.arquivo_bl_url) || null;
+      anexos.cambio = (pagamento && pagamento.arquivo_cambio_url) || null;
 
       const embarqueDataVal = (embarque && embarque.data_embarque) || p.data_pedido;
       setVal('pay-data-embarque', embarqueDataVal);
@@ -277,65 +280,20 @@
     resetAnexos();
   }
 
-  /* ---------- Upload de anexos (PI / NF / BL / Câmbio) ---------- */
+  /* ---------- Anexos (PI / NF / BL / Câmbio) ----------
+     O upload de novo anexo foi removido do modal a pedido do usuário (decisão
+     de manter o plano gratuito do Supabase Storage sem consumo adicional).
+     `anexos` continua existindo só pra preservar, ao editar um pedido antigo,
+     o link de um arquivo que já tinha sido anexado antes dessa mudança — sem
+     isso, salvar uma edição apagaria esse link do banco. A limpeza de anexos
+     órfãos ao excluir um registro (Storage.remove) continua normalmente mais
+     abaixo, pra não deixar lixo no bucket dos arquivos que já existem. */
   const ANEXO_CHAVES = ['pi', 'nf', 'bl', 'cambio'];
   const anexos = { pi: null, nf: null, bl: null, cambio: null };
 
-  function renderAnexoStatus(chave) {
-    const status = document.getElementById(`f-${chave}-status`);
-    const removeBtn = document.getElementById(`f-${chave}-remove`);
-    if (!status) return;
-    const url = anexos[chave];
-    if (url) {
-      status.innerHTML = `<a href="${url}" target="_blank" rel="noopener">📄 ${window.Storage ? Storage.nomeArquivo(url) : 'arquivo'}</a>`;
-      status.className = 'file-upload-status ok';
-      if (removeBtn) removeBtn.style.display = '';
-    } else {
-      status.textContent = 'Nenhum arquivo';
-      status.className = 'file-upload-status';
-      if (removeBtn) removeBtn.style.display = 'none';
-    }
-  }
-
   function resetAnexos() {
-    ANEXO_CHAVES.forEach(chave => {
-      anexos[chave] = null;
-      const input = document.getElementById(`f-${chave}-arquivo`);
-      if (input) input.value = '';
-      renderAnexoStatus(chave);
-    });
+    ANEXO_CHAVES.forEach(chave => { anexos[chave] = null; });
   }
-
-  ANEXO_CHAVES.forEach(chave => {
-    const input = document.getElementById(`f-${chave}-arquivo`);
-    const trigger = document.querySelector(`[data-upload-trigger="${chave}"]`);
-    const removeBtn = document.getElementById(`f-${chave}-remove`);
-    trigger?.addEventListener('click', () => input?.click());
-    input?.addEventListener('change', async () => {
-      const file = input.files[0];
-      if (!file) return;
-      const status = document.getElementById(`f-${chave}-status`);
-      if (status) { status.textContent = 'Enviando...'; status.className = 'file-upload-status'; }
-      const urlAnterior = anexos[chave];
-      try {
-        if (!window.Storage) throw new Error('Upload indisponível (biblioteca não carregou).');
-        const resultado = await Storage.upload(file, chave);
-        anexos[chave] = resultado.url;
-        renderAnexoStatus(chave);
-        if (urlAnterior) Storage.remove(urlAnterior); // substitui — remove o arquivo antigo do bucket
-      } catch (e) {
-        if (status) { status.textContent = 'Erro: ' + (e.message || 'falha no envio'); status.className = 'file-upload-status err'; }
-        input.value = '';
-      }
-    });
-    removeBtn?.addEventListener('click', () => {
-      const urlAnterior = anexos[chave];
-      anexos[chave] = null;
-      if (input) input.value = '';
-      renderAnexoStatus(chave);
-      if (urlAnterior && window.Storage) Storage.remove(urlAnterior);
-    });
-  });
 
   /* ---------- Máscara automática nos campos de valor/taxa ---------- */
   attachMoneyMask('f-fat-valor', 2);

@@ -228,20 +228,6 @@ body {
 .notif-item-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
 .notif-empty { padding: 28px 16px; text-align: center; color: var(--ink-3); font-size: 12.5px; }
 
-/* ─── Upload de anexos (PI / NF / BL / Câmbio) ──────────────────── */
-.file-upload-field { display: flex; align-items: center; gap: 10px; }
-.file-upload-status { font-size: 12px; color: var(--ink-3); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.file-upload-status.ok { color: var(--green); }
-.file-upload-status.err { color: var(--rose); }
-.file-upload-status a { color: var(--cyan); text-decoration: none; }
-.file-upload-status a:hover { text-decoration: underline; }
-.file-upload-remove {
-  background: transparent; border: 1px solid var(--border); border-radius: 6px;
-  width: 24px; height: 24px; color: var(--ink-3); cursor: pointer; font-size: 12px;
-  flex-shrink: 0; transition: border-color .15s, color .15s;
-}
-.file-upload-remove:hover { color: var(--rose); border-color: rgba(255,77,109,.4); }
-
 /* ─── Content ───────────────────────────────────────────────────── */
 .content {
   flex: 1; overflow-y: auto; overflow-x: hidden;
