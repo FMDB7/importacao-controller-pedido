@@ -34,6 +34,29 @@
     const alvo = new Date(iso + 'T00:00:00');
     return Math.round((alvo - hoje) / 86400000);
   }
+  function diasEntre(iso1, iso2) {
+    return Math.round((new Date(iso2 + 'T00:00:00') - new Date(iso1 + 'T00:00:00')) / 86400000);
+  }
+  /* Situação em tempo real de 1 embarque — cruza status/datas com hoje pra dizer,
+     linha a linha, se está "No prazo", "Atenção" ou "Atrasado" (não só no agregado). */
+  function situacaoEmbarque(e) {
+    if (e.status === 'Entregue' || e.data_entrada_deposito) {
+      return { key: 'concluido', label: 'Concluído', cls: 's-sit-ok' };
+    }
+    if (e.data_chegada) {
+      const dias = diasEntre(e.data_chegada, new Date().toISOString().slice(0, 10));
+      if (dias > 7) return { key: 'atrasado', label: `Atrasado · ${dias}d no depósito`, cls: 's-sit-atrasado' };
+      if (dias > 3) return { key: 'atencao', label: `Atenção · ${dias}d parado`, cls: 's-sit-atencao' };
+      return { key: 'ok', label: 'No prazo', cls: 's-sit-ok' };
+    }
+    if (e.data_previsao_chegada) {
+      const d = diasAte(e.data_previsao_chegada);
+      if (d < 0) return { key: 'atrasado', label: `Atrasado · ${Math.abs(d)}d`, cls: 's-sit-atrasado' };
+      if (d <= 3) return { key: 'atencao', label: `Chegando em ${d}d`, cls: 's-sit-atencao' };
+      return { key: 'ok', label: 'No prazo', cls: 's-sit-ok' };
+    }
+    return { key: 'sem-previsao', label: 'Sem previsão', cls: 's-sit-neutro' };
+  }
   const MES_NOMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const MES_ABREV = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -262,7 +285,6 @@
   let chartEmbFunil = null;
   function renderEmbarqueInsights(rows) {
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-    const diasEntre = (iso1, iso2) => Math.round((new Date(iso2 + 'T00:00:00') - new Date(iso1 + 'T00:00:00')) / 86400000);
 
     const total = rows.length;
     const nEmbarcado = rows.filter(r => r.data_embarque).length;
@@ -341,6 +363,65 @@
     wrap.innerHTML = tiles.join('');
   }
 
+  /* ---------- EMBARQUE: Tempo médio por etapa — quebrado por modal e por rota ----------
+     Mostra, pra cada modal (Marítimo/Aéreo/...) e pra cada rota (porto origem → porto
+     destino), quanto tempo em média leva "embarque → chegada" e "chegada → depósito",
+     pra identificar onde o processo mais trava (não só uma média geral). */
+  function mediaDias(valores) {
+    if (!valores.length) return null;
+    return valores.reduce((s, v) => s + v, 0) / valores.length;
+  }
+  function fmtDias(media) {
+    if (media == null) return '—';
+    return media.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'd';
+  }
+  function renderEmbarqueEtapas(rows) {
+    const tbody = document.getElementById('tbl-emb-etapas');
+    if (!tbody) return;
+
+    function agrupar(chaveFn) {
+      const grupos = {};
+      rows.forEach(e => {
+        const chave = chaveFn(e);
+        if (!chave) return;
+        if (!grupos[chave]) grupos[chave] = { total: 0, transito: [], armazem: [] };
+        grupos[chave].total++;
+        if (e.data_embarque && e.data_chegada) grupos[chave].transito.push(diasEntre(e.data_embarque, e.data_chegada));
+        if (e.data_chegada && e.data_entrada_deposito) grupos[chave].armazem.push(diasEntre(e.data_chegada, e.data_entrada_deposito));
+      });
+      return grupos;
+    }
+
+    const porModal = agrupar(e => e.tipo);
+    const porRota = agrupar(e => (e.porto_origem && e.porto_destino) ? `${e.porto_origem} → ${e.porto_destino}` : null);
+
+    function linhas(grupos, iconFn) {
+      return Object.keys(grupos).sort((a, b) => grupos[b].total - grupos[a].total).map(chave => {
+        const g = grupos[chave];
+        return `<tr>
+          <td>${iconFn ? iconFn(chave) + ' ' : ''}${escapeHtml(chave)}</td>
+          <td class="num">${g.total}</td>
+          <td class="num">${fmtDias(mediaDias(g.transito))}</td>
+          <td class="num">${fmtDias(mediaDias(g.armazem))}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    const linhasModal = linhas(porModal, m => MODAL_ICON[m] || '📦');
+    const linhasRota = linhas(porRota);
+
+    if (!linhasModal && !linhasRota) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--ink-3);padding:20px;">Sem dados suficientes ainda — preencha porto de origem/destino e as datas de embarque/chegada/depósito nos lançamentos.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = `
+      <tr class="emb-etapas-sep"><td colspan="4">Por modal</td></tr>
+      ${linhasModal || `<tr><td colspan="4" style="color:var(--ink-3);">Sem dados por modal ainda.</td></tr>`}
+      <tr class="emb-etapas-sep"><td colspan="4">Por rota (porto origem → destino)</td></tr>
+      ${linhasRota || `<tr><td colspan="4" style="color:var(--ink-3);">Cadastre porto de origem/destino no lançamento pra ver este recorte.</td></tr>`}
+    `;
+  }
+
   /* ---------- EMBARQUE ---------- */
   async function renderEmbarque() {
     const tbody = document.getElementById('tbl-embarque');
@@ -349,7 +430,7 @@
     try {
       rows = await DB.list('embarques', 'select=*,pedidos(numero_pedido,fornecedores(razao_social))&order=data_embarque.desc.nullslast');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
       return;
     }
 
@@ -359,6 +440,7 @@
     const noPorto = rows.filter(e => e.status === 'No Porto' || e.status === 'Desembaraçando').length;
     const semanaQue = rows.filter(e => { const d = diasAte(e.data_previsao_chegada); return d != null && d >= 0 && d <= 7; }).length;
     const entreguesMes = rows.filter(e => e.status === 'Entregue' && e.data_chegada && e.data_chegada.slice(0,7) === now.toISOString().slice(0,7)).length;
+    const atrasados = rows.filter(e => situacaoEmbarque(e).key === 'atrasado').length;
     const pct = (n, total) => total > 0 ? (n / total * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0';
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
@@ -371,9 +453,12 @@
     set('emb-kpi-entregues-label', `Entregues — ${mesAtual}`);
     set('emb-kpi-entregues', entreguesMes);
     set('emb-kpi-entregues-sub', `${pct(entreguesMes, rows.length)}% do total`);
+    set('emb-kpi-atrasados', atrasados);
+    set('emb-kpi-atrasados-sub', atrasados ? `${pct(atrasados, rows.length)}% do total · requer atenção agora` : 'nenhum embarque atrasado agora');
     renderEmbarqueInsights(rows);
+    renderEmbarqueEtapas(rows);
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum embarque registrado ainda.</td></tr>`;
       ferramentasEmb.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('emb-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
@@ -394,9 +479,10 @@
       const navioRaw = (e.observacoes || '').replace('Navio/AWB: ', '') || '—';
       const navio = escapeHtml(navioRaw);
       const busca = escapeHtml(`${e.pedidos?.numero_pedido||''} ${fornRaw} ${navioRaw} ${e.numero_container||''}`);
+      const sit = situacaoEmbarque(e);
       return `
         <tr data-row data-mes="${escapeHtml((e.data_embarque||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(e.status||'')}"
-            data-tipo="${escapeHtml(e.tipo||'')}" data-embarque="${escapeHtml(e.data_embarque||'')}" data-busca="${busca}">
+            data-tipo="${escapeHtml(e.tipo||'')}" data-embarque="${escapeHtml(e.data_embarque||'')}" data-busca="${busca}" data-situacao="${sit.key}">
           <td>${e.pedidos ? `<span class="mono">${escapeHtml(e.pedidos.numero_pedido)}</span>` : '—'}${e.arquivo_bl_url ? `<a href="${escapeHtml(e.arquivo_bl_url)}" target="_blank" rel="noopener" title="Ver arquivo do BL" style="margin-left:6px;">📎</a>` : ''}</td>
           <td>${forn}</td>
           <td class="ta-c" style="font-size:18px;">${MODAL_ICON[e.tipo] || '📦'}</td>
@@ -407,6 +493,7 @@
           <td class="date">${toBR(e.data_chegada)}</td>
           <td class="date">${toBR(e.data_entrada_deposito)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="embarques" data-inline-status-id="${e.id}" title="Clique para alterar o status">${STATUS_BADGE[e.status] || escapeHtml(e.status)}</td>
+          <td class="ta-c"><span class="status-badge ${sit.cls}" title="Calculado a partir das datas e do status">${escapeHtml(sit.label)}</span></td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${e.pedido_id}:embarque" title="Editar embarque">✏️</button><button type="button" class="danger" data-delete-rec="embarques:${e.id}" title="Excluir embarque">🗑️</button></div></td>
         </tr>`;
     }).join('');
@@ -416,6 +503,7 @@
       { id: 'emb-flt-fornecedor', attr: 'fornecedor', type: 'select' },
       { id: 'emb-flt-status', attr: 'status', type: 'select' },
       { id: 'emb-flt-tipo', attr: 'tipo', type: 'select' },
+      { id: 'emb-flt-situacao', attr: 'situacao', type: 'select' },
       { id: 'emb-flt-data-ini', attr: 'embarque', type: 'dateMin' },
       { id: 'emb-flt-data-fim', attr: 'embarque', type: 'dateMax' }
     ]);

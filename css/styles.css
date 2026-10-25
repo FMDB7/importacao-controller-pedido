@@ -566,6 +566,22 @@ td.code, td.date {
 .s-desembara-o { background: rgba(245,158,11,0.14); color: var(--amber); }
 .s-desembara-o::before { background: var(--amber); }
 
+/* Situação em tempo real (Embarque) — ver situacaoEmbarque() em js/views.js */
+.s-sit-ok       { background: rgba(0,214,143,0.1); color: var(--status-ok); border-color: rgba(0,214,143,0.22); }
+.s-sit-ok::before { background: var(--status-ok); }
+.s-sit-atencao  { background: rgba(245,166,35,0.12); color: var(--status-warn); border-color: rgba(245,166,35,0.26); }
+.s-sit-atencao::before { background: var(--status-warn); }
+.s-sit-atrasado { background: rgba(255,77,109,0.12); color: var(--rose); border-color: rgba(255,77,109,0.28); }
+.s-sit-atrasado::before { background: var(--rose); }
+.s-sit-neutro   { background: rgba(15,23,42,0.045); color: var(--ink-3); border-color: var(--border-md); }
+.s-sit-neutro::before { background: var(--ink-3); }
+
+.emb-etapas-sep td {
+  background: var(--bg-card2); font-size: 10.5px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase; color: var(--ink-3);
+  padding: 7px 16px;
+}
+
 .mono { font-family: var(--ff-mono); font-size: 12px; }
 .currency-tag {
   display: inline-block; padding: 2px 8px;
