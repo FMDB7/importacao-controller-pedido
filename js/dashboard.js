@@ -40,6 +40,14 @@
     }
     const seriesPorMoeda = {}; MOEDAS.forEach(m => seriesPorMoeda[m] = monthKeys.map(() => 0));
 
+    // Série de Janeiro a Dezembro do ano atual (gráfico "Compras por Mês") —
+    // guarda tanto o valor em moeda estrangeira quanto o equivalente em BRL,
+    // pra montar o tooltip com as duas moedas + % de representação no mês.
+    const anoAtual = now.getFullYear();
+    const monthKeysAno = Array.from({ length: 12 }, (_, i) => `${anoAtual}-${String(i + 1).padStart(2, '0')}`);
+    const seriesPorMoedaAno = {}; const seriesBRLPorMoedaAno = {};
+    MOEDAS.forEach(m => { seriesPorMoedaAno[m] = monthKeysAno.map(() => 0); seriesBRLPorMoedaAno[m] = monthKeysAno.map(() => 0); });
+
     // Totais GERAIS por moeda — somam TODOS os pedidos cadastrados, sem filtro
     // de data (nem do pedido, nem do vencimento): um pedido feito agora com
     // vencimento só em 2027, ou um pedido antigo de anos atrás, contam do
@@ -57,8 +65,16 @@
         const key = p.data_pedido.slice(0, 7);
         const idx = monthKeys.indexOf(key);
         if (idx >= 0 && seriesPorMoeda[p.moeda]) seriesPorMoeda[p.moeda][idx] += valor;
+        const idxAno = monthKeysAno.indexOf(key);
+        if (idxAno >= 0 && seriesPorMoedaAno[p.moeda]) {
+          seriesPorMoedaAno[p.moeda][idxAno] += valor;
+          seriesBRLPorMoedaAno[p.moeda][idxAno] += Number(p.valor_brl) || 0;
+        }
       }
     });
+
+    // Total em BRL de cada mês (soma das 4 moedas) — base do "% do mês" no tooltip
+    const totalBRLPorMesAno = monthKeysAno.map((_, i) => MOEDAS.reduce((s, m) => s + seriesBRLPorMoedaAno[m][i], 0));
 
     // % de participação de cada moeda no total geral (base: valor convertido em
     // BRL, já que é a única unidade comum entre moedas diferentes).
@@ -89,13 +105,15 @@
       }
     });
 
-    // Gráfico "Compras por Mês"
-    const monthLabels = monthKeys.map(k => {
-      const [y, mo] = k.split('-');
-      return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][parseInt(mo, 10) - 1];
+    // Gráfico "Compras por Mês" — colunas de Janeiro a Dezembro do ano atual.
+    // Tooltip mostra, por moeda, o valor em moeda estrangeira + o equivalente em
+    // BRL + o % que aquela moeda representa do volume total (BRL) daquele mês.
+    const monthLabels = monthKeysAno.map(k => {
+      const mo = parseInt(k.split('-')[1], 10);
+      return ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mo - 1];
     });
     const title = document.getElementById('dash-mensal-title');
-    if (title) title.textContent = `Compras por Mês — ${now.getFullYear()}`;
+    if (title) title.textContent = `Compras por Mês — ${anoAtual}`;
     const ctxMensal = document.getElementById('chart-mensal')?.getContext('2d');
     if (ctxMensal && typeof Chart !== 'undefined') {
       if (chartMensal) chartMensal.destroy();
@@ -104,15 +122,37 @@
         data: {
           labels: monthLabels,
           datasets: [
-            { label: 'USD', data: seriesPorMoeda.USD, backgroundColor: 'rgba(0,207,255,0.75)', borderRadius: { topLeft: 3, topRight: 3 }, borderSkipped: false },
-            { label: 'EUR', data: seriesPorMoeda.EUR, backgroundColor: 'rgba(0,214,143,0.75)', borderRadius: { topLeft: 3, topRight: 3 }, borderSkipped: false },
-            { label: 'GBP', data: seriesPorMoeda.GBP, backgroundColor: 'rgba(245,166,35,0.75)', borderRadius: { topLeft: 3, topRight: 3 }, borderSkipped: false },
-            { label: 'CHF', data: seriesPorMoeda.CHF, backgroundColor: 'rgba(155,122,255,0.75)', borderRadius: { topLeft: 3, topRight: 3 }, borderSkipped: false }
+            { label: 'USD', data: seriesPorMoedaAno.USD, backgroundColor: 'rgba(0,207,255,0.75)', borderRadius: { topLeft: 3, topRight: 3 }, borderSkipped: false },
+            { label: 'EUR', data: seriesPorMoedaAno.EUR, backgroundColor: 'rgba(0,214,143,0.75)', borderRadius: { topLeft: 3, topRight: 3 }, borderSkipped: false },
+            { label: 'GBP', data: seriesPorMoedaAno.GBP, backgroundColor: 'rgba(245,166,35,0.75)', borderRadius: { topLeft: 3, topRight: 3 }, borderSkipped: false },
+            { label: 'CHF', data: seriesPorMoedaAno.CHF, backgroundColor: 'rgba(155,122,255,0.75)', borderRadius: { topLeft: 3, topRight: 3 }, borderSkipped: false }
           ]
         },
         options: {
           responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { mode: 'index', backgroundColor: '#0F172A', titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(15,23,42,0.1)', borderWidth: 1, padding: 10 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              mode: 'index', intersect: false,
+              backgroundColor: '#0F172A', titleColor: '#fff', bodyColor: '#fff', borderColor: 'rgba(15,23,42,0.1)', borderWidth: 1, padding: 10,
+              filter: (ctx) => ctx.parsed.y > 0,
+              callbacks: {
+                label: (ctx) => {
+                  const moeda = ctx.dataset.label;
+                  const idx = ctx.dataIndex;
+                  const valorMoeda = ctx.parsed.y;
+                  const valorBRL = seriesBRLPorMoedaAno[moeda][idx];
+                  const totalMes = totalBRLPorMesAno[idx];
+                  const pct = totalMes > 0 ? (valorBRL / totalMes * 100) : 0;
+                  return ` ${moeda}: ${fmtMoeda(valorMoeda, moeda)}  ·  ${fmtBRLCompacto(valorBRL)}  ·  ${pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}% do mês`;
+                },
+                footer: (items) => {
+                  const idx = items[0]?.dataIndex;
+                  return idx == null ? '' : `Total do mês: ${fmtBRLCompacto(totalBRLPorMesAno[idx])}`;
+                }
+              }
+            }
+          },
           scales: { x: { grid: { display: false }, ticks: { color: '#64748B' } }, y: { grid: { color: 'rgba(15,23,42,0.06)' }, ticks: { color: '#64748B' } } },
           animation: { duration: 600 }
         }
