@@ -699,7 +699,9 @@
       porGrupo[key].totalMoeda += Number(p.valor_total) || 0;
       porGrupo[key].totalBRL += Number(p.valor_brl) || 0;
     });
-    const chaves = Object.keys(porGrupo).sort().reverse();
+    // Ordem cronológica crescente (Jan → Dez, e dentro do mesmo mês por
+    // moeda) — a chave "AAAA-MM|MOEDA" já ordena certo como string.
+    const chaves = Object.keys(porGrupo).sort();
     if (!chaves.length) { wrap.innerHTML = ''; return; }
     wrap.innerHTML = chaves.map(key => {
       const info = porGrupo[key];
