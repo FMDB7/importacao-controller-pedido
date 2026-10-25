@@ -408,6 +408,19 @@
       return;
     }
 
+    // Lançar uma invoice com valor 0 (campo em branco ou "0") não dá erro
+    // nenhum hoje — a fatura é salva, mas os totais de Faturamento e os
+    // Relatórios da Diretoria somam valor_brl, então um valor zerado some
+    // dos indicadores sem ninguém notar. Avisa antes de deixar passar.
+    if (val('f-invoice') && !(parseBRNumber(val('f-fat-valor')) > 0)) {
+      const confirmarValorZero = confirm(
+        `A invoice "${val('f-invoice')}" está sendo salva sem valor (ou com valor 0).\n\n` +
+        `Isso vai fazer esse pedido não entrar nos totais de Faturamento e nos Relatórios da Diretoria.\n\n` +
+        `Deseja continuar assim mesmo? Clique em Cancelar para voltar e preencher o valor.`
+      );
+      if (!confirmarValorZero) return;
+    }
+
     // Esvaziar o nº da invoice, os dados de embarque ou a taxa de câmbio
     // numa edição faz a fatura/embarque/pagamento correspondente ser
     // EXCLUÍDO ao salvar (comportamento documentado desde a Fase 10) — mas
@@ -444,11 +457,19 @@
       const valorBRL = (valorFatura != null && taxa != null) ? valorFatura * taxa : null;
       const status = val('f-pag-status') || 'Em Análise';
 
+      // Marca/SKU/Navio-AWB são campos de texto livre que entram concatenados
+      // em `pedidos.descricao`, separados por " · " (parseDescricao() faz o
+      // caminho inverso ao reabrir para edição). Se o próprio texto digitado
+      // contiver essa sequência exata, o parser quebraria o campo em dois
+      // pedaços e misturaria o resto com as Observações do Pagamento. Como
+      // não há como diferenciar depois, a sequência é trocada por " - " já
+      // na gravação (visualmente quase idêntica, nunca ambígua para o parser).
+      const semSeparador = (v) => v.replace(/ · /g, ' - ');
       const obsParts = [];
-      if (val('f-marca')) obsParts.push('Marca: ' + val('f-marca'));
-      if (val('f-sku')) obsParts.push('SKU: ' + val('f-sku'));
+      if (val('f-marca')) obsParts.push('Marca: ' + semSeparador(val('f-marca')));
+      if (val('f-sku')) obsParts.push('SKU: ' + semSeparador(val('f-sku')));
       if (val('f-qtde')) obsParts.push('Qtde pedido: ' + val('f-qtde'));
-      if (val('f-emb-navio')) obsParts.push('Navio/AWB: ' + val('f-emb-navio'));
+      if (val('f-emb-navio')) obsParts.push('Navio/AWB: ' + semSeparador(val('f-emb-navio')));
       if (val('f-emb-peso')) obsParts.push('Peso bruto: ' + val('f-emb-peso') + ' kg');
       if (val('f-fat-incoterm')) obsParts.push('Incoterm: ' + val('f-fat-incoterm'));
       if (val('f-pag-obs')) obsParts.push(val('f-pag-obs'));
