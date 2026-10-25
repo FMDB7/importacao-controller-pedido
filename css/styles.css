@@ -741,10 +741,19 @@ td.code, td.date {
 .person-card .row-actions { margin-top: 12px; }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+/* Mais larga e com mais contraste que antes — a versão anterior (6px,
+   15% de opacidade) quase não aparecia em cima do fundo claro do app,
+   dificultando identificar que a página rolava pelo lado direito. */
+::-webkit-scrollbar { width: 12px; height: 12px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(15,23,42,0.15); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.25); }
+::-webkit-scrollbar-thumb {
+  background: rgba(15,23,42,0.35); border-radius: 99px;
+  border: 3px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(15,23,42,0.55); background-clip: padding-box; }
+/* Firefox */
+html { scrollbar-width: auto; scrollbar-color: rgba(15,23,42,0.35) transparent; }
+.content { scrollbar-width: auto; scrollbar-color: rgba(15,23,42,0.35) transparent; }
 
 /* ─── Cards de período (mês em aberto) ──────────────────────────── */
 .period-cards { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
