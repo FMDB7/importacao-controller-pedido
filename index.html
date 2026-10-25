@@ -199,37 +199,6 @@
           </div>
         </div>
 
-        <!-- Recent Transactions Table -->
-        <div class="table-card">
-          <div class="table-head">
-            <div class="table-title">Últimos Lançamentos</div>
-            <div style="display:flex;gap:8px;align-items:center;">
-              <div class="search-box">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input placeholder="Buscar pedido, fornecedor...">
-              </div>
-              <button class="btn btn-ghost" style="font-size:12px;padding:6px 11px;">Filtros</button>
-            </div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>Pasta</th>
-                <th>Nº Pedido</th>
-                <th>Fornecedor</th>
-                <th>Marca</th>
-                <th class="ta-c">Moeda</th>
-                <th class="ta-r">Valor</th>
-                <th class="ta-c">Vencimento</th>
-                <th>BM</th>
-                <th class="ta-c">Status</th>
-              </tr>
-            </thead>
-            <tbody id="tbl-dashboard-recentes">
-              <tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Carregando...</td></tr>
-            </tbody>
-          </table>
-        </div>
       </div>
 
       <!-- ══════════════════════════════════════════════════ -->
@@ -410,18 +379,6 @@
             <div class="form-group">
               <label class="form-label">Vencimento final</label>
               <input type="date" class="form-input" id="fat-flt-data-fim">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Valor BRL mín</label>
-              <input type="number" step="0.01" class="form-input" id="fat-flt-valor-min" placeholder="0,00">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Valor BRL máx</label>
-              <input type="number" step="0.01" class="form-input" id="fat-flt-valor-max" placeholder="0,00">
-            </div>
-            <div class="form-group form-full">
-              <label class="form-label">Buscar</label>
-              <input type="text" class="form-input" id="fat-flt-busca" placeholder="Invoice, PO, fornecedor...">
             </div>
           </div>
           <div class="filter-panel-actions">

@@ -7,12 +7,6 @@
 
   const MOEDAS = ['USD', 'EUR', 'GBP', 'CHF'];
   const CUR_SYM = { USD: '$', EUR: '€', GBP: '£', CHF: 'CHF ' };
-  const CUR_CLASS = { USD: 'cur-usd', EUR: 'cur-eur', GBP: 'cur-gbp', CHF: 'cur-chf' };
-  const STATUS_CLASS = {
-    'Em Análise': 's-pedido-enviado', 'Aprovado': 's-pedido-enviado', 'Faturado': 's-faturado',
-    'Embarcado': 's-bl-recebido', 'Em Trânsito': 's-em-trânsito', 'Desembaraçado': 's-desembara-o',
-    'Entregue': 's-entregue', 'Cancelado': 's-aguardando'
-  };
   let chartMensal = null, chartDonut = null, chartAnual = null, chartFornecedores = null;
 
   function fmtMoeda(n, moeda) {
@@ -25,24 +19,12 @@
     if (Math.abs(n) >= 1e3) return 'R$ ' + (n / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'K';
     return 'R$ ' + n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
   }
-  function toBR(iso) {
-    if (!iso) return '—';
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  }
-  // Marca não tem coluna própria em `pedidos` — vive concatenada em
-  // `descricao` (mesmo formato usado em js/lancamento.js).
-  function parseMarca(desc) {
-    if (!desc) return null;
-    const m = desc.split(' · ').find(part => /^Marca:/.test(part));
-    return m ? m.replace(/^Marca:\s*/, '') : null;
-  }
 
   /* ---------- Dashboard ---------- */
   async function renderDashboard() {
     let rows;
     try {
-      rows = await DB.list('pedidos', 'select=numero_pedido,numero_pi,moeda,valor_total,valor_brl,data_pedido,status,descricao,fornecedores(razao_social),colaboradores(nome,cargo),faturas(data_vencimento)&order=data_pedido.desc&limit=500');
+      rows = await DB.list('pedidos', 'select=numero_pedido,numero_pi,moeda,valor_total,valor_brl,data_pedido,status&order=data_pedido.desc&limit=500');
     } catch (e) {
       console.error('Erro ao carregar dashboard:', e);
       return;
@@ -157,36 +139,6 @@
           }
         }
       });
-    }
-
-    // Tabela "Últimos Lançamentos"
-    const tbody = document.getElementById('tbl-dashboard-recentes');
-    if (tbody) {
-      const recentes = rows.slice(0, 6);
-      if (!recentes.length) {
-        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhum lançamento ainda. Use "Novo Lançamento" para registrar o primeiro pedido.</td></tr>`;
-      } else {
-        tbody.innerHTML = recentes.map(p => {
-          const forn = escapeHtml(p.fornecedores ? p.fornecedores.razao_social : '—');
-          const colab = escapeHtml(p.colaboradores ? p.colaboradores.nome : '—');
-          const cargo = escapeHtml(p.colaboradores ? p.colaboradores.cargo : '');
-          const statusCls = STATUS_CLASS[p.status] || 's-pedido-enviado';
-          const vencimento = (p.faturas && p.faturas[0] && p.faturas[0].data_vencimento) ? toBR(p.faturas[0].data_vencimento) : '—';
-          const marca = escapeHtml(parseMarca(p.descricao) || '—');
-          return `
-            <tr>
-              <td>${p.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${escapeHtml(p.numero_pi)}</span>` : '—'}</td>
-              <td><span class="mono" style="color:var(--cyan);font-weight:700;">${escapeHtml(p.numero_pedido)}</span></td>
-              <td>${forn}</td>
-              <td>${marca}</td>
-              <td class="ta-c">${p.moeda ? `<span class="currency-tag ${CUR_CLASS[p.moeda]||''}">${escapeHtml(p.moeda)}</span>` : '—'}</td>
-              <td class="num">${fmtMoeda(p.valor_total, p.moeda)}</td>
-              <td class="ta-c" style="font-family:var(--ff-mono);font-size:12px;color:var(--ink-2);">${vencimento}</td>
-              <td>${colab}<div style="font-size:9px;color:var(--ink-3);">${cargo}</div></td>
-              <td class="ta-c"><span class="status-badge ${statusCls}">${escapeHtml(p.status)}</span></td>
-            </tr>`;
-        }).join('');
-      }
     }
   }
 

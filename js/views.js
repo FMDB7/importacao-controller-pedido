@@ -248,10 +248,7 @@
       { id: 'fat-flt-status', attr: 'status', type: 'select' },
       { id: 'fat-flt-moeda', attr: 'moeda', type: 'select' },
       { id: 'fat-flt-data-ini', attr: 'vencimento', type: 'dateMin' },
-      { id: 'fat-flt-data-fim', attr: 'vencimento', type: 'dateMax' },
-      { id: 'fat-flt-valor-min', attr: 'valor', type: 'numMin' },
-      { id: 'fat-flt-valor-max', attr: 'valor', type: 'numMax' },
-      { id: 'fat-flt-busca', attr: 'busca', type: 'text' }
+      { id: 'fat-flt-data-fim', attr: 'vencimento', type: 'dateMax' }
     ]);
     ferramentasFat.aplicar();
   }
