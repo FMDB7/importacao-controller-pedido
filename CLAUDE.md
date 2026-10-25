@@ -621,6 +621,33 @@ mudança de código.
 usuários) crescer além do informado aqui, vale refazer essa conta antes que o
 compute estoure no meio de um mês.
 
+### Anexos (PI/NF/BL/câmbio) NÃO contam no limite de espaço do Neon acima
+
+Pergunta do usuário: anexar PDF/imagem de invoice consome espaço no banco?
+
+**Não no Neon.** Os anexos (Fase 11) não ficam no Postgres — só o **link** (URL)
+é gravado nas colunas `*_url`, poucos bytes de texto. O arquivo em si vive no
+**Supabase Storage** (bucket `importacao-anexos`, projeto `gestao-alugueis`,
+`xgzhvsovzxtcdhfkesgd`), que é a conta/limite que realmente importa aqui:
+
+- Uso real checado em 25/10/2026: **1 arquivo, 41 KB**.
+- Limite do plano Free do Supabase Storage: **1 GB** (fonte:
+  [jetadmin.io](https://www.jetadmin.io/blog/supabase-pricing-2026-guide-to-plans-limits-and-real-world-costs/),
+  [makerkit.dev](https://makerkit.dev/blog/md/saas/supabase-pricing)). Limite por
+  arquivo configurado no app: 20 MB.
+- **Projeção pro volume da Fase 17** (80 pedidos/mês × até 4 anexos/pedido — PI,
+  Invoice/NF, BL, comprovante de câmbio): com PDFs escaneados leves (~0,3–0,5 MB
+  cada) o 1 GB dura uns 6–10 meses; com fotos de celular/PDFs pesados (2–5 MB
+  cada) pode estourar já no 1º mês. **O que decide é o tamanho médio dos
+  arquivos anexados, não o nº de pedidos.**
+- Se/quando estourar: plano Pro do Supabase, US\$ 25/mês (já inclui 8 GB de
+  Storage, depois US\$ 0,125/GB extra) — nota: esse projeto Supabase é
+  compartilhado com outro app do usuário (`gestao-alugueis`), então o upgrade
+  valeria pros dois.
+
+**Acompanhar**: reavaliar esse número depois de algumas semanas de uso real com
+anexos de verdade (hoje é só 1 arquivo de teste).
+
 ---
 
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
