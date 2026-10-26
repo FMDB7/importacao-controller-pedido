@@ -18,6 +18,21 @@ function showView(id) {
   if (id === 'usuarios' && window.Usuarios) {
     setTimeout(() => { window.Usuarios.renderUsuarios(); window.Usuarios.renderSessoesAtivas(); }, 50);
   }
+  // Pedidos/Faturamento/Embarque/Pagamento só eram recarregados do banco
+  // no load da página (ou logo após salvar/excluir um lançamento nesta
+  // mesma aba do navegador) — trocar de tela pelo menu não buscava dados
+  // novos. Resultado: se o lançamento foi feito em outra aba/dispositivo
+  // (ou a página ficou aberta por um tempo), a tela parecia "sem
+  // informação" mesmo com os dados já salvos no banco. Agora cada clique
+  // no menu força um recarregamento, igual já acontecia em Dashboard e
+  // Relatórios.
+  const RELOAD_ON_VIEW = {
+    lancamentos: () => window.renderPedidos && window.renderPedidos(),
+    faturamento: () => window.renderFaturamento && window.renderFaturamento(),
+    embarque: () => window.renderEmbarque && window.renderEmbarque(),
+    pagamento: () => window.renderPagamento && window.renderPagamento(),
+  };
+  if (RELOAD_ON_VIEW[id]) setTimeout(RELOAD_ON_VIEW[id], 50);
 }
 
 navItems.forEach(n => n.addEventListener('click', () => showView(n.dataset.view)));
