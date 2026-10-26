@@ -29,11 +29,18 @@
   /* Lê uma tabela HTML renderizada e devolve um array-de-arrays (AOA),
      ignorando linhas ocultas por filtro (display:none) e a última coluna
      (sempre a de ações ✏️/🗑️, sem valor para exportar). */
-  function tabelaParaAOA(tableSelector) {
+  function tabelaParaAOA(tableSelector, excluirColunas) {
     const table = document.querySelector(tableSelector);
     if (!table) return null;
     const headCells = Array.from(table.querySelectorAll('thead tr th'));
-    const headers = headCells.slice(0, -1).map(th => th.textContent.trim());
+    const headersTodos = headCells.slice(0, -1).map(th => th.textContent.trim());
+    // Índices (dentro das colunas já sem a de ações) a remover do export —
+    // ex.: Status na Faturamento, pedido pela Diretoria pra não sair no
+    // relatório impresso (continua normalmente na tela).
+    const idxExcluir = new Set(
+      (excluirColunas || []).map(nome => headersTodos.indexOf(nome)).filter(i => i >= 0)
+    );
+    const headers = headersTodos.filter((_, i) => !idxExcluir.has(i));
     const linhas = Array.from(table.querySelectorAll('tbody tr')).filter(tr => {
       if (tr.style.display === 'none') return false;
       if (tr.querySelector('td[colspan]')) return false; // "Carregando..." / "Nenhum registro"
@@ -48,7 +55,7 @@
     // o conteúdo original em vez de exportar a célula vazia.
     const EMOJI_RE = /[\u{1F000}-\u{1FFFF}\u{2190}-\u{2BFF}\u{2600}-\u{27BF}️]/gu;
     const dados = linhas.map(tr => {
-      const tds = Array.from(tr.children).slice(0, -1);
+      const tds = Array.from(tr.children).slice(0, -1).filter((_, i) => !idxExcluir.has(i));
       return tds.map(td => {
         const bruto = td.textContent.replace(/\s+/g, ' ').trim();
         const semEmoji = bruto.replace(EMOJI_RE, '').replace(/\s+/g, ' ').trim();
@@ -58,9 +65,9 @@
     return [headers, ...dados];
   }
 
-  function exportarXLSX(tableSelector, nomeArquivo, nomeAba) {
+  function exportarXLSX(tableSelector, nomeArquivo, nomeAba, excluirColunas) {
     if (typeof XLSX === 'undefined') { avisar('Biblioteca de exportação não carregou. Verifique sua conexão e tente novamente.'); return; }
-    const aoa = tabelaParaAOA(tableSelector);
+    const aoa = tabelaParaAOA(tableSelector, excluirColunas);
     if (!aoa || aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
     const ws = XLSX.utils.aoa_to_sheet(aoa);
     ws['!cols'] = aoa[0].map((_, i) => ({ wch: Math.max(12, ...aoa.map(r => String(r[i] ?? '').length)) + 2 }));
@@ -72,7 +79,7 @@
   document.getElementById('btn-export-pedidos')?.addEventListener('click',
     () => exportarXLSX('#view-lancamentos table', `Pedidos_${hoje()}.xlsx`, 'Pedidos'));
   document.getElementById('btn-export-faturamento')?.addEventListener('click',
-    () => exportarXLSX('#view-faturamento table', `Faturamento_${hoje()}.xlsx`, 'Faturamento'));
+    () => exportarXLSX('#view-faturamento table', `Faturamento_${hoje()}.xlsx`, 'Faturamento', ['Status']));
   document.getElementById('btn-export-embarque')?.addEventListener('click',
     () => exportarXLSX('#view-embarque table', `Embarque_${hoje()}.xlsx`, 'Embarque'));
   document.getElementById('btn-export-pagamento')?.addEventListener('click',
@@ -80,9 +87,9 @@
 
   /* Exporta uma tabela operacional pra PDF (paisagem, 1 página larga) —
      mesmas linhas visíveis em tela (respeita filtros), igual ao Excel acima. */
-  function exportarPDF(tableSelector, titulo, nomeArquivo) {
+  function exportarPDF(tableSelector, titulo, nomeArquivo, excluirColunas) {
     if (typeof window.jspdf === 'undefined') { avisar('Biblioteca de exportação de PDF não carregou. Verifique sua conexão e tente novamente.'); return; }
-    const aoa = tabelaParaAOA(tableSelector);
+    const aoa = tabelaParaAOA(tableSelector, excluirColunas);
     if (!aoa || aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
 
     const { jsPDF } = window.jspdf;
@@ -119,7 +126,7 @@
   document.getElementById('btn-export-pedidos-pdf')?.addEventListener('click',
     () => exportarPDF('#view-lancamentos table', 'Pedidos', `Pedidos_${hoje()}.pdf`));
   document.getElementById('btn-export-faturamento-pdf')?.addEventListener('click',
-    () => exportarPDF('#view-faturamento table', 'Faturamento', `Faturamento_${hoje()}.pdf`));
+    () => exportarPDF('#view-faturamento table', 'Faturamento', `Faturamento_${hoje()}.pdf`, ['Status']));
 
   /* ---------- Relatório da Diretoria ---------- */
   function fmtBRL(n) {
