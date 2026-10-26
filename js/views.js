@@ -244,13 +244,12 @@
       const forn = escapeHtml(fornRaw);
       const dias = diasAte(f.data_vencimento);
       const vencCor = dias != null && dias < 0 ? 'var(--rose)' : (dias != null && dias <= 7 ? 'var(--amber)' : 'var(--ink-2)');
-      const vencIcon = dias != null && dias < 0 ? '⚠ ' : '';
       const valorBrl = f.pedidos?.valor_brl ? Number(f.pedidos.valor_brl) : 0;
       const busca = escapeHtml(`${f.numero_invoice||''} ${f.pedidos?.numero_pedido||''} ${f.pedidos?.numero_pi||''} ${fornRaw}`);
       return `
         <tr data-row data-mes="${escapeHtml((f.data_vencimento||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(f.status||'')}"
             data-moeda="${escapeHtml(f.moeda||'')}" data-vencimento="${escapeHtml(f.data_vencimento||'')}" data-valor="${valorBrl}" data-busca="${busca}">
-          <td>${f.pedidos?.numero_pi ? `📁 <span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pi)}</span>` : '—'}</td>
+          <td>${f.pedidos?.numero_pi ? `<span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pi)}</span>` : '—'}</td>
           <td><span class="mono">${escapeHtml(f.numero_invoice)}</span>${f.arquivo_url ? `<a href="${escapeHtml(f.arquivo_url)}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}</td>
           <td>${f.pedidos ? `<span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pedido)}</span>` : '—'}</td>
           <td>${forn}</td>
@@ -259,7 +258,7 @@
           <td class="num">${f.qtd_pecas != null ? Number(f.qtd_pecas).toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
           <td class="num" style="font-size:11px;">${f.pedidos?.taxa_cambio ? Number(f.pedidos.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${f.pedidos?.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
-          <td class="date" style="color:${vencCor};">${vencIcon}${toBR(f.data_vencimento)}</td>
+          <td class="date" style="color:${vencCor};">${toBR(f.data_vencimento)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="faturas" data-inline-status-id="${f.id}" title="Clique para alterar o status">${STATUS_BADGE[f.status] || escapeHtml(f.status)}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${f.pedido_id}:fatura" title="Editar invoice">✏️</button><button type="button" class="danger" data-delete-rec="faturas:${f.id}" title="Excluir invoice">🗑️</button></div></td>
         </tr>`;

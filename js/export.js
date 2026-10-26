@@ -39,9 +39,21 @@
       if (tr.querySelector('td[colspan]')) return false; // "Carregando..." / "Nenhum registro"
       return true;
     });
+    // Emojis decorativos (ex.: 📁 antes do nº da pasta, ⚠ antes de uma data,
+    // 📎 ao lado de um link de anexo) viram caracteres ilegíveis no PDF —
+    // o jsPDF usa uma fonte sem esses glifos (ex.: "📁" virou "Ø=ÜÁ"). O
+    // Excel não quebra, mas o emoji também não acrescenta nada numa
+    // planilha. Removemos qualquer emoji do texto exportado; se a célula
+    // for só o emoji (ex.: ícone de modal de transporte sem texto), mantém
+    // o conteúdo original em vez de exportar a célula vazia.
+    const EMOJI_RE = /[\u{1F000}-\u{1FFFF}\u{2190}-\u{2BFF}\u{2600}-\u{27BF}️]/gu;
     const dados = linhas.map(tr => {
       const tds = Array.from(tr.children).slice(0, -1);
-      return tds.map(td => td.textContent.replace(/\s+/g, ' ').trim());
+      return tds.map(td => {
+        const bruto = td.textContent.replace(/\s+/g, ' ').trim();
+        const semEmoji = bruto.replace(EMOJI_RE, '').replace(/\s+/g, ' ').trim();
+        return semEmoji || bruto;
+      });
     });
     return [headers, ...dados];
   }
