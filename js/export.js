@@ -26,14 +26,29 @@
     }
   }
 
-  /* Lê uma tabela HTML renderizada e devolve um array-de-arrays (AOA),
-     ignorando linhas ocultas por filtro (display:none) e a última coluna
-     (sempre a de ações ✏️/🗑️, sem valor para exportar). */
+  // Lê "R$ 16.281,24", "€2.760,00", "2.400 pçs", "5,8990" etc. (formato
+  // pt-BR, com símbolo/sufixo opcional) e devolve o Number equivalente, ou
+  // null se a célula não for numérica (ex.: "—", texto, datas).
+  function parseNumeroBR(texto) {
+    if (!texto) return null;
+    const m = String(texto).match(/-?\d{1,3}(?:\.\d{3})*(?:,\d+)?|-?\d+(?:,\d+)?/);
+    if (!m) return null;
+    const n = parseFloat(m[0].replace(/\./g, '').replace(',', '.'));
+    return isNaN(n) ? null : n;
+  }
+
+  /* Lê uma tabela HTML renderizada e devolve o cabeçalho, os dados (AOA) e
+     o alinhamento de cada coluna (a partir das classes ta-c/ta-r já usadas
+     nos <th> pra alinhar a própria tela), ignorando linhas ocultas por
+     filtro (display:none) e a última coluna (sempre a de ações ✏️/🗑️,
+     sem valor para exportar). */
   function tabelaParaAOA(tableSelector, excluirColunas) {
     const table = document.querySelector(tableSelector);
     if (!table) return null;
     const headCells = Array.from(table.querySelectorAll('thead tr th'));
     const headersTodos = headCells.slice(0, -1).map(th => th.textContent.trim());
+    const alinhamentosTodos = headCells.slice(0, -1).map(th =>
+      th.classList.contains('ta-r') ? 'right' : th.classList.contains('ta-c') ? 'center' : 'left');
     // Índices (dentro das colunas já sem a de ações) a remover do export —
     // ex.: Status na Faturamento, pedido pela Diretoria pra não sair no
     // relatório impresso (continua normalmente na tela).
@@ -41,6 +56,7 @@
       (excluirColunas || []).map(nome => headersTodos.indexOf(nome)).filter(i => i >= 0)
     );
     const headers = headersTodos.filter((_, i) => !idxExcluir.has(i));
+    const alinhamentos = alinhamentosTodos.filter((_, i) => !idxExcluir.has(i));
     const linhas = Array.from(table.querySelectorAll('tbody tr')).filter(tr => {
       if (tr.style.display === 'none') return false;
       if (tr.querySelector('td[colspan]')) return false; // "Carregando..." / "Nenhum registro"
@@ -62,15 +78,25 @@
         return semEmoji || bruto;
       });
     });
-    return [headers, ...dados];
+    return { aoa: [headers, ...dados], alinhamentos };
   }
 
   function exportarXLSX(tableSelector, nomeArquivo, nomeAba, excluirColunas) {
     if (typeof XLSX === 'undefined') { avisar('Biblioteca de exportação não carregou. Verifique sua conexão e tente novamente.'); return; }
-    const aoa = tabelaParaAOA(tableSelector, excluirColunas);
-    if (!aoa || aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
-    const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = aoa[0].map((_, i) => ({ wch: Math.max(12, ...aoa.map(r => String(r[i] ?? '').length)) + 2 }));
+    const resultado = tabelaParaAOA(tableSelector, excluirColunas);
+    if (!resultado || resultado.aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
+    const { aoa, alinhamentos } = resultado;
+    // Coluna numérica (alinhada à direita na tela, ex.: Valor/Taxa/Total):
+    // grava como número de verdade na planilha, não como texto — é isso que
+    // faz o Excel alinhar a coluna à direita e tratar como número de fato
+    // (soma/ordena), em vez de ficar torto à esquerda junto do texto.
+    const aoaExcel = [aoa[0], ...aoa.slice(1).map(linha => linha.map((val, i) => {
+      if (alinhamentos[i] !== 'right') return val;
+      const n = parseNumeroBR(val);
+      return n != null ? n : val;
+    }))];
+    const ws = XLSX.utils.aoa_to_sheet(aoaExcel);
+    ws['!cols'] = aoaExcel[0].map((_, i) => ({ wch: Math.max(12, ...aoaExcel.map(r => String(r[i] ?? '').length)) + 2 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, nomeAba);
     XLSX.writeFile(wb, nomeArquivo);
@@ -89,8 +115,15 @@
      mesmas linhas visíveis em tela (respeita filtros), igual ao Excel acima. */
   function exportarPDF(tableSelector, titulo, nomeArquivo, excluirColunas) {
     if (typeof window.jspdf === 'undefined') { avisar('Biblioteca de exportação de PDF não carregou. Verifique sua conexão e tente novamente.'); return; }
-    const aoa = tabelaParaAOA(tableSelector, excluirColunas);
-    if (!aoa || aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
+    const resultado = tabelaParaAOA(tableSelector, excluirColunas);
+    if (!resultado || resultado.aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
+    const { aoa, alinhamentos } = resultado;
+    // Mesmo alinhamento de cada coluna que já é usado na tela (ta-c/ta-r nos
+    // <th>) — sem isso o autoTable alinha tudo à esquerda por padrão, e uma
+    // coluna de valores com tamanhos diferentes (R$ 16.281,24 / R$ 639.032,85)
+    // fica com os dígitos tortos, sem "bater" uma linha embaixo da outra.
+    const columnStyles = {};
+    alinhamentos.forEach((al, i) => { if (al !== 'left') columnStyles[i] = { halign: al }; });
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
@@ -117,6 +150,7 @@
       theme: 'grid',
       headStyles: { fillColor: [13, 27, 46], fontSize: 7 },
       styles: { fontSize: 6.5, cellPadding: 1.5, overflow: 'linebreak' },
+      columnStyles,
       tableWidth: 'auto'
     });
 
@@ -183,7 +217,8 @@
           d.pedidosAnoAnterior > 0 ? `${(((d.pedidosAno - d.pedidosAnoAnterior) / d.pedidosAnoAnterior) * 100).toFixed(1)}%` : '—'],
         ['Câmbio médio USD', d.cambioMedioUSD ? d.cambioMedioUSD.toFixed(4) : '—', '—', '—']
       ],
-      theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 }
+      theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 },
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } }
     });
     y = doc.lastAutoTable.finalY + 10;
 
@@ -195,7 +230,8 @@
       margin: { left: margemX },
       head: [['Trimestre', String(d.anoAnterior), String(d.anoAtual)]],
       body: linhasTrimestre,
-      theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 }
+      theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 },
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } }
     });
     y = doc.lastAutoTable.finalY + 10;
 
@@ -207,7 +243,8 @@
       margin: { left: margemX },
       head: [['Fornecedor', 'Volume']],
       body: linhasFornecedores,
-      theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 }
+      theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 },
+      columnStyles: { 1: { halign: 'right' } }
     });
 
     doc.save(`Relatorio_Diretoria_${hoje()}.pdf`);
