@@ -204,9 +204,9 @@
     if (!tbody) return;
     let rows;
     try {
-      rows = await DB.list('faturas', 'select=*,pedidos(numero_pedido,numero_pi,taxa_cambio,valor_brl,fornecedores(razao_social))&order=data_vencimento.asc.nullslast');
+      rows = await DB.list('faturas', 'select=*,pedidos(numero_pedido,numero_pi,taxa_cambio,valor_brl,descricao,fornecedores(razao_social))&order=data_vencimento.asc.nullslast');
     } catch (e) {
-      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
       return;
     }
 
@@ -226,7 +226,7 @@
     set('fat-kpi-pendente', fmtBRL(pendenteBRL));
     set('fat-kpi-pendente-sub', `${pct(pendenteBRL, totalBRL)}% do total faturado`);
     if (!rows.length) {
-      tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhuma invoice lançada ainda.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--ink-3);padding:24px;">Nenhuma invoice lançada ainda.</td></tr>`;
       ferramentasFat.renderPeriodCards([], () => null);
       const contagem0 = document.getElementById('fat-contagem');
       if (contagem0) contagem0.textContent = 'Nenhum registro';
@@ -244,7 +244,18 @@
       const forn = escapeHtml(fornRaw);
       const dias = diasAte(f.data_vencimento);
       const vencCor = dias != null && dias < 0 ? 'var(--rose)' : (dias != null && dias <= 7 ? 'var(--amber)' : 'var(--ink-2)');
+      // Prazo (dias) não tem coluna própria no banco — é sempre derivável
+      // da diferença entre emissão e vencimento (mesma conta que o modal
+      // de lançamento já faz para reabrir o campo "Prazo" na edição).
+      const prazoDias = (f.data_emissao && f.data_vencimento)
+        ? Math.round((new Date(f.data_vencimento + 'T00:00:00') - new Date(f.data_emissao + 'T00:00:00')) / 86400000)
+        : null;
       const valorBrl = f.pedidos?.valor_brl ? Number(f.pedidos.valor_brl) : 0;
+      // Marca não tem coluna própria no banco — vem concatenada em
+      // `pedidos.descricao` (ex.: "Marca: Nike · SKU: ...") junto com
+      // SKU/Qtde/Navio/Peso/Incoterm; extraímos só o trecho da Marca aqui.
+      const marcaMatch = f.pedidos?.descricao ? f.pedidos.descricao.match(/Marca:\s*([^·]+)/) : null;
+      const marca = marcaMatch ? escapeHtml(marcaMatch[1].trim()) : '—';
       const busca = escapeHtml(`${f.numero_invoice||''} ${f.pedidos?.numero_pedido||''} ${f.pedidos?.numero_pi||''} ${fornRaw}`);
       return `
         <tr data-row data-mes="${escapeHtml((f.data_vencimento||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(f.status||'')}"
@@ -253,11 +264,13 @@
           <td><span class="mono">${escapeHtml(f.numero_invoice)}</span>${f.arquivo_url ? `<a href="${escapeHtml(f.arquivo_url)}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}</td>
           <td>${f.pedidos ? `<span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pedido)}</span>` : '—'}</td>
           <td>${forn}</td>
+          <td>${marca}</td>
           <td class="ta-c"><span class="currency-tag ${CUR_CLASS[f.moeda]||''}">${escapeHtml(f.moeda)}</span></td>
           <td class="num">${fmtMoeda(f.valor, f.moeda)}</td>
           <td class="num">${f.qtd_pecas != null ? Number(f.qtd_pecas).toLocaleString('pt-BR', { maximumFractionDigits: 20 }) + ' pçs' : '—'}</td>
           <td class="num" style="font-size:11px;">${f.pedidos?.taxa_cambio ? Number(f.pedidos.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${f.pedidos?.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
+          <td class="ta-c">${prazoDias != null ? prazoDias + ' dias' : '—'}</td>
           <td class="date" style="color:${vencCor};">${toBR(f.data_vencimento)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="faturas" data-inline-status-id="${f.id}" title="Clique para alterar o status">${STATUS_BADGE[f.status] || escapeHtml(f.status)}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${f.pedido_id}:fatura" title="Editar invoice">✏️</button><button type="button" class="danger" data-delete-rec="faturas:${f.id}" title="Excluir invoice">🗑️</button></div></td>
