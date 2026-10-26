@@ -215,17 +215,32 @@ body {
 .notif-dropdown-header {
   padding: 14px 16px; font-size: 13px; font-weight: 700;
   border-bottom: 1px solid var(--border); color: var(--ink-1);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
 }
+.notif-clear-all {
+  background: none; border: none; cursor: pointer; padding: 2px 4px;
+  font-size: 11px; font-weight: 600; color: var(--cyan); white-space: nowrap;
+}
+.notif-clear-all:hover { text-decoration: underline; }
 .notif-item {
   display: flex; gap: 10px; padding: 12px 16px;
   border-bottom: 1px solid var(--border); cursor: pointer;
-  transition: background .15s;
+  transition: background .15s; position: relative;
 }
 .notif-item:last-child { border-bottom: none; }
 .notif-item:hover { background: var(--bg-hover); }
+.notif-item:hover .notif-item-close { opacity: 1; }
 .notif-item-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.notif-item-body { flex: 1; min-width: 0; padding-right: 18px; }
 .notif-item-title { font-size: 12.5px; font-weight: 600; color: var(--ink-1); }
 .notif-item-sub { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+.notif-item-close {
+  position: absolute; top: 10px; right: 10px;
+  background: none; border: none; cursor: pointer; line-height: 1;
+  font-size: 13px; color: var(--ink-3); padding: 2px 4px; border-radius: 4px;
+  opacity: 0; transition: opacity .15s, color .15s, background .15s;
+}
+.notif-item-close:hover { color: var(--rose); background: rgba(220,60,94,0.1); }
 .notif-empty { padding: 28px 16px; text-align: center; color: var(--ink-3); font-size: 12.5px; }
 
 /* ─── Content ───────────────────────────────────────────────────── */
