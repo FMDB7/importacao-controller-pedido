@@ -13,6 +13,10 @@
     n = Number(n) || 0;
     return (CUR_SYM[moeda] || '') + n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
+  function fmtBRL(n) {
+    n = Number(n) || 0;
+    return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
   function fmtBRLCompacto(n) {
     n = Number(n) || 0;
     if (Math.abs(n) >= 1e6) return 'R$ ' + (n / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + 'M';
@@ -83,11 +87,18 @@
     // KPI cards
     MOEDAS.forEach(m => {
       const valEl = document.getElementById(`kpi-${m.toLowerCase()}-valor`);
+      const brlEl = document.getElementById(`kpi-${m.toLowerCase()}-brl`);
       const subEl = document.getElementById(`kpi-${m.toLowerCase()}-sub`);
       const temDados = totalGeral[m] > 0;
       if (valEl) {
         valEl.textContent = temDados ? fmtMoeda(totalGeral[m], m) : '—';
         valEl.classList.toggle('is-empty', !temDados);
+      }
+      if (brlEl) {
+        // Equivalente em reais do total da moeda — câmbio já aplicado por
+        // pedido (valor_brl), então pedidos com taxa diferente num mesmo
+        // mês somam certo, sem precisar de uma taxa "média" aproximada.
+        brlEl.textContent = temDados ? `≈ ${fmtBRL(totalBRLporMoeda[m])}` : '';
       }
       if (subEl) {
         if (temDados) {
@@ -153,7 +164,16 @@
               }
             }
           },
-          scales: { x: { grid: { display: false }, ticks: { color: '#64748B' } }, y: { grid: { color: 'rgba(15,23,42,0.06)' }, ticks: { color: '#64748B' } } },
+          // "stacked" nos dois eixos: cada mês tem só 1 coluna (as 4 moedas
+          // empilhadas dentro dela, em vez de 4 colunas lado a lado). Sem
+          // isso, como a maioria dos meses só tem 1 moeda com valor > 0, o
+          // Chart.js ainda reservava o espaço das outras 3 barras invisíveis
+          // do grupo, e a única barra visível ficava desalinhada do rótulo
+          // do mês (deslocada pro canto do slot que calhou de ocupar).
+          scales: {
+            x: { stacked: true, grid: { display: false }, ticks: { color: '#64748B' } },
+            y: { stacked: true, grid: { color: 'rgba(15,23,42,0.06)' }, ticks: { color: '#64748B' } }
+          },
           animation: { duration: 600 }
         }
       });
