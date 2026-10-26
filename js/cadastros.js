@@ -51,8 +51,14 @@
   // @topinternacional.com.br nem @tfs.com.br, a pessoa é deslogada com um
   // aviso claro em vez de só cair numa tela vazia por falta de permissão.
   const DOMINIOS_PERMITIDOS = ['topinternacional.com.br', 'tfs.com.br'];
+  // Exceção pontual: e-mails liberados para teste mesmo fora dos domínios
+  // corporativos acima (sempre além do já exigido: a conta também precisa
+  // estar ativa em `usuarios_permitidos`, checado pela RLS do banco).
+  const EMAILS_TESTE_PERMITIDOS = ['marquesfb7@gmail.com'];
   function dominioPermitido(email) {
-    const dominio = (email || '').split('@')[1]?.toLowerCase();
+    const e = (email || '').toLowerCase();
+    if (EMAILS_TESTE_PERMITIDOS.includes(e)) return true;
+    const dominio = e.split('@')[1];
     return !!dominio && DOMINIOS_PERMITIDOS.includes(dominio);
   }
 

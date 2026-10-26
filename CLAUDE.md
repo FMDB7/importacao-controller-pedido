@@ -720,4 +720,32 @@ vencido, ⚠️ âmbar para vencendo em breve).
 
 ---
 
+## Fase 20 — Exceção de domínio para teste (marquesfb7@gmail.com)
+
+Pedido do usuário: *"permita que o e-mail marquesfb7@gmail.com acesse o app para
+testes"*.
+
+- No banco, `marquesfb7@gmail.com` **já estava** em `usuarios_permitidos`, ativo,
+  perfil `Usuario` (adicionado desde a Fase 12) — então o bloqueio real era só a
+  checagem de domínio feita no app (Fase 16), que rejeita qualquer e-mail fora de
+  `@topinternacional.com.br`/`@tfs.com.br` antes mesmo de chegar na regra do banco.
+- `js/cadastros.js`: `dominioPermitido()` ganhou uma lista extra
+  `EMAILS_TESTE_PERMITIDOS = ['marquesfb7@gmail.com']` — um e-mail nessa lista passa
+  na checagem de domínio independentemente do domínio real, mas **continua**
+  precisando estar ativo em `usuarios_permitidos` (a RLS do banco não foi alterada).
+- **Importante — ressalva sobre o login com a Microsoft**: o app registrado no Azure
+  (Fase 13) é **single-tenant** (só contas `@topinternacional.com.br`/Azure AD da
+  empresa) — ver nota já existente na Fase 16. Isso significa que, mesmo com essa
+  exceção liberada no app, clicar em "Entrar com a Microsoft" usando uma conta
+  pessoal da Microsoft associada a `marquesfb7@gmail.com` pode falhar **já na tela
+  de login da própria Microsoft** (erro AADSTS de tenant), antes de o app sequer
+  entrar em ação — isso depende de configuração do Azure AD / Entra ID (painel do
+  Azure, fora do alcance das ferramentas Neon desta sessão) e não foi verificado
+  aqui. Se o login falhar nesse ponto, o próximo passo (fora do alcance desta
+  sessão) é tornar o app registration **multi-tenant + contas pessoais da
+  Microsoft** no Azure, para que uma conta Microsoft pessoal vinculada a um e-mail
+  Gmail consiga autenticar.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
