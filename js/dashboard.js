@@ -6,12 +6,15 @@
 (function () {
 
   const MOEDAS = ['USD', 'EUR', 'GBP', 'CHF'];
-  const CUR_SYM = { USD: '$', EUR: '€', GBP: '£', CHF: 'CHF ' };
+  const CUR_SYM = { USD: 'US$ ', EUR: '€', GBP: '£', CHF: 'CHF ' };
   let chartMensal = null, chartDonut = null, chartAnual = null, chartFornecedores = null;
 
   function fmtMoeda(n, moeda) {
     n = Number(n) || 0;
-    return (CUR_SYM[moeda] || '') + n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    // Dólar no padrão "US$ 108.701,00" (com casas decimais); as demais
+    // moedas do dashboard continuam sem casas decimais, como já eram.
+    const casas = moeda === 'USD' ? 2 : 0;
+    return (CUR_SYM[moeda] || '') + n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
   }
   function fmtBRL(n) {
     n = Number(n) || 0;
