@@ -151,6 +151,15 @@
       headStyles: { fillColor: [13, 27, 46], fontSize: 7 },
       styles: { fontSize: 6.5, cellPadding: 1.5, overflow: 'linebreak' },
       columnStyles,
+      // headStyles tem prioridade sobre columnStyles na seção do cabeçalho
+      // nesta versão do autoTable — sem isso o título da coluna fica preso
+      // à esquerda mesmo com os dados da coluna alinhados à direita/centro
+      // logo abaixo. didParseCell roda pra head e body e força o mesmo
+      // alinhamento nas duas seções, coluna por coluna.
+      didParseCell: (data) => {
+        const al = alinhamentos[data.column.index];
+        if (al && al !== 'left') data.cell.styles.halign = al;
+      },
       tableWidth: 'auto'
     });
 
@@ -163,6 +172,14 @@
     () => exportarPDF('#view-faturamento table', 'Faturamento', `Faturamento_${hoje()}.pdf`, ['Status']));
 
   /* ---------- Relatório da Diretoria ---------- */
+  // headStyles tem prioridade sobre columnStyles na seção do cabeçalho nesta
+  // versão do autoTable (mesmo problema das tabelas operacionais acima) —
+  // devolve um didParseCell que força a direita tanto no título da coluna
+  // quanto nos valores logo abaixo, pros índices de coluna informados.
+  function alinharDireita(indices) {
+    return (data) => { if (indices.includes(data.column.index)) data.cell.styles.halign = 'right'; };
+  }
+
   function fmtBRL(n) {
     n = Number(n) || 0;
     return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -218,7 +235,8 @@
         ['Câmbio médio USD', d.cambioMedioUSD ? d.cambioMedioUSD.toFixed(4) : '—', '—', '—']
       ],
       theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 },
-      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } }
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right' } },
+      didParseCell: alinharDireita([1, 2, 3])
     });
     y = doc.lastAutoTable.finalY + 10;
 
@@ -231,7 +249,8 @@
       head: [['Trimestre', String(d.anoAnterior), String(d.anoAtual)]],
       body: linhasTrimestre,
       theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 },
-      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } }
+      columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' } },
+      didParseCell: alinharDireita([1, 2])
     });
     y = doc.lastAutoTable.finalY + 10;
 
@@ -244,7 +263,8 @@
       head: [['Fornecedor', 'Volume']],
       body: linhasFornecedores,
       theme: 'grid', headStyles: { fillColor: [13, 27, 46] }, styles: { fontSize: 9 },
-      columnStyles: { 1: { halign: 'right' } }
+      columnStyles: { 1: { halign: 'right' } },
+      didParseCell: alinharDireita([1])
     });
 
     doc.save(`Relatorio_Diretoria_${hoje()}.pdf`);
