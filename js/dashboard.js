@@ -11,10 +11,9 @@
 
   function fmtMoeda(n, moeda) {
     n = Number(n) || 0;
-    // Dólar no padrão "US$ 108.701,00" (com casas decimais); as demais
-    // moedas do dashboard continuam sem casas decimais, como já eram.
-    const casas = moeda === 'USD' ? 2 : 0;
-    return (CUR_SYM[moeda] || '') + n.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+    // Todas as moedas do dashboard com casas decimais (centavos), no mesmo
+    // padrão do card de Dólar — ex.: "US$ 108.701,24", "€6.624,00".
+    return (CUR_SYM[moeda] || '') + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
   function fmtBRL(n) {
     n = Number(n) || 0;
