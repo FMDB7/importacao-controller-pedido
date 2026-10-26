@@ -1,5 +1,5 @@
 /* ─── Navigation ───────────────────────────────────────────────── */
-const views   = { dashboard:'Dashboard', lancamentos:'Pedidos', faturamento:'Faturamento', embarque:'Embarque', pagamento:'Pagamento', relatorios:'Relatórios — Diretoria', fornecedores:'Fornecedores', colaboradores:'Colaboradores', cidades:'Cidades', usuarios:'Usuários' };
+const views   = { dashboard:'Dashboard', lancamentos:'Pedidos', faturamento:'Faturamento', embarque:'Embarque', pagamento:'Pagamento', relatorios:'Relatórios — Diretoria', fornecedores:'Fornecedores', colaboradores:'Colaboradores', usuarios:'Usuários' };
 const navItems = document.querySelectorAll('.nav-item[data-view]');
 const pageTitle = document.getElementById('page-title');
 

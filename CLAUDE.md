@@ -86,7 +86,6 @@ USD · EUR · GBP · CHF
 | Relatórios    | ✅     | Charts para Diretoria (mensal/anual)                   |
 | Fornecedores  | ✅     | Cadastro de fornecedores                               |
 | Colaboradores | ✅     | Cadastro de equipe (BM / COORD BM)                     |
-| Cidades       | ✅     | Cadastro de cidades logísticas                         |
 
 ---
 
@@ -672,6 +671,31 @@ arquivo de teste, 41 KB).
   usuário quiser reativar o upload no futuro, é só reverter esse commit
   (`js/storage.js` e a Edge Function `anexos-gateway` da Fase 12 continuam no
   lugar, intactos).
+
+---
+
+## Fase 18 — Remoção da tela Cidades (concluída)
+
+A tela "Cidades" (cadastro de cidade/estado/país de origem + código de porto
+ou aeroporto) era um catálogo isolado: ao ser perguntado sobre o que ela
+fazia, ficou claro que ela nunca esteve conectada a nenhum outro ponto do
+app — o campo "Cidade Destino" do modal de Embarque é um select fixo com as
+4 localizações brasileiras (Manaus/Macapá/Extrema/Guajará), e "Porto de
+Embarque" é texto livre; nenhum dos dois lê o cadastro de Cidades. A pedido
+do usuário, a tela foi removida:
+
+- `index.html`: item de menu "Cidades", a view `#view-cidades` e a menção a
+  "Cidades" na matriz de Permissões por Perfil (Fase 15).
+- `js/app.js`: `cidades` removido do mapa `views`.
+- `js/cadastros.js`: `renderCidades()`, a entrada `cidades` do catálogo de
+  cadastro rápido (usada pelo botão "+ Nova Cidade") e `CACHE.cidades`.
+- `css/styles.css`: classes exclusivas da tela (`.city-table`, `.city-row`
+  e afins).
+- A tabela `cidades` no Neon **não foi apagada** (ficou vazia, 0 registros,
+  desde antes dessa fase) — só a tela que lia/escrevia nela foi removida.
+  Se o usuário quiser reativar esse cadastro no futuro (por exemplo,
+  conectando-o de verdade ao campo "Porto de Embarque"), é só reverter este
+  commit; nada no banco precisa mudar.
 
 ---
 

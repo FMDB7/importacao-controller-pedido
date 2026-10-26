@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════
-   TopImport Pro — Login + CRUD de Fornecedores, Colaboradores, Cidades
+   TopImport Pro — Login + CRUD de Fornecedores, Colaboradores
    ══════════════════════════════════════════════════════════ */
 (function () {
 
@@ -25,7 +25,7 @@
     </div>`;
 
   // Cache dos últimos registros carregados por tabela, usado para preencher o modal de edição
-  const CACHE = { fornecedores: [], colaboradores: [], cidades: [] };
+  const CACHE = { fornecedores: [], colaboradores: [] };
 
   function friendlyError(e, acao) {
     const msg = e?.message || '';
@@ -172,40 +172,9 @@
     }
   }
 
-  /* ---------- RENDER: CIDADES ---------- */
-  async function renderCidades() {
-    const list = document.getElementById('list-cidades');
-    if (!list) return;
-    const header = list.firstElementChild; // keep header row
-    try {
-      const rows = await DB.list('cidades');
-      CACHE.cidades = rows;
-      if (!rows.length) {
-        list.innerHTML = '';
-        list.appendChild(header);
-        list.insertAdjacentHTML('beforeend', `<div style="color:var(--ink-3);padding:24px;">Nenhuma cidade cadastrada ainda.</div>`);
-        return;
-      }
-      list.innerHTML = '';
-      list.appendChild(header);
-      rows.forEach(c => {
-        list.insertAdjacentHTML('beforeend', `
-          <div class="city-row">
-            <div><div class="city-name">${escapeHtml(c.nome)}</div>${c.estado ? `<div class="city-country">${escapeHtml(c.estado)}</div>` : ''}</div>
-            <div>${flag(c.pais)} ${escapeHtml(c.pais)}</div>
-            <div style="text-align:right;font-family:var(--ff-mono);font-size:13px;">${escapeHtml(c.codigo_porto || c.codigo_aeroporto || '—')}</div>
-            <div>${rowActions('cidades', c.id)}</div>
-          </div>`);
-      });
-    } catch (e) {
-      list.insertAdjacentHTML('beforeend', `<div style="color:var(--rose);padding:24px;">${escapeHtml(e.message)}</div>`);
-    }
-  }
-
   function loadAll() {
     renderFornecedores();
     renderColaboradores();
-    renderCidades();
     if (window.renderPedidos) window.renderPedidos();
     if (window.renderDashboard) window.renderDashboard();
     if (window.renderOperacionais) window.renderOperacionais();
@@ -250,16 +219,6 @@
         ] },
         { name: 'localizacao', label: 'Localização', type: 'select', options: ['Manaus','Macapá','Extrema','Guajará'] },
         { name: 'coordenador_nome', label: 'Coordenador(a) Responsável' }
-      ]
-    },
-    cidades: {
-      title: 'Nova Cidade',
-      fields: [
-        { name: 'nome', label: 'Cidade', required: true },
-        { name: 'estado', label: 'Estado' },
-        { name: 'pais', label: 'País', required: true },
-        { name: 'codigo_porto', label: 'Código do Porto' },
-        { name: 'codigo_aeroporto', label: 'Código do Aeroporto' }
       ]
     }
   };

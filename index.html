@@ -120,10 +120,6 @@
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         <span>Colaboradores</span>
       </div>
-      <div class="nav-item" data-view="cidades">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3"/><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
-        <span>Cidades</span>
-      </div>
       <div class="nav-item" data-view="usuarios" data-requires-admin style="display:none;">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span>Usuários</span>
@@ -793,25 +789,6 @@
       </div>
 
       <!-- ══════════════════════════════════════════════════ -->
-      <!-- VIEW: CIDADES -->
-      <!-- ══════════════════════════════════════════════════ -->
-      <div class="view" id="view-cidades">
-        <div class="page-actions">
-          <div>
-            <div style="font-family:var(--ff-display);font-size:17px;font-weight:700;">Cidades</div>
-            <div class="page-desc">Cadastro de cidades de origem e rotas logísticas</div>
-          </div>
-          <button class="btn btn-primary" data-quick-add="cidades">+ Nova Cidade</button>
-        </div>
-        <div class="city-table" id="list-cidades">
-          <div class="city-row" style="background:var(--header-grad-1);border-color:var(--header-grad-1);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#fff;">
-            <div>Cidade</div><div>País</div><div>Porto / Aeroporto</div><div></div>
-          </div>
-          <div style="color:var(--ink-3);padding:24px;">Carregando...</div>
-        </div>
-      </div>
-
-      <!-- ══════════════════════════════════════════════════ -->
       <!-- VIEW: USUÁRIOS (acesso restrito a Administrador) -->
       <!-- ══════════════════════════════════════════════════ -->
       <div class="view" id="view-usuarios">
@@ -855,7 +832,7 @@
             </thead>
             <tbody>
               <tr><td>Dashboard, Pedidos, Faturamento, Embarque, Pagamento, Relatórios</td><td>✅ Acesso total</td><td>✅ Acesso total</td></tr>
-              <tr><td>Fornecedores, Colaboradores, Cidades (cadastros)</td><td>✅ Acesso total</td><td>✅ Acesso total</td></tr>
+              <tr><td>Fornecedores, Colaboradores (cadastros)</td><td>✅ Acesso total</td><td>✅ Acesso total</td></tr>
               <tr><td>Aba Usuários (esta tela)</td><td>⛔ Sem acesso</td><td>✅ Acesso total</td></tr>
               <tr><td>Alterar perfil / ativar-desativar usuários</td><td>⛔ Sem acesso</td><td>✅ Acesso total</td></tr>
               <tr><td>Ver log de acessos</td><td>⛔ Sem acesso</td><td>✅ Acesso total</td></tr>

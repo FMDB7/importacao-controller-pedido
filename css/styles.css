@@ -726,19 +726,6 @@ td.code, td.date {
 .pstat { font-size: 11px; color: var(--ink-3); }
 .pstat span { display: block; font-size: 16px; font-weight: 700; color: var(--ink-1); font-family: var(--ff-display); font-variant-numeric: tabular-nums; }
 
-.city-table { display: grid; gap: 8px; }
-.city-row {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 10px; padding: 14px 18px;
-  display: grid; grid-template-columns: 200px 140px 1fr 72px;
-  align-items: center; gap: 16px;
-  transition: border-color .15s;
-  box-shadow: 0 1px 2px rgba(15,23,42,0.04);
-}
-.city-row:hover { border-color: var(--border-md); }
-.city-name { font-weight: 600; font-size: 14px; }
-.city-country { font-size: 12px; color: var(--ink-3); }
-
 /* ─── Ações de linha (editar / excluir) ─────────────────────────── */
 .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
 .row-actions button {
@@ -837,7 +824,6 @@ html { scrollbar-width: auto; scrollbar-color: rgba(15,23,42,0.35) transparent; 
 @media (max-width: 600px) {
   .kpi-grid { grid-template-columns: 1fr; }
   .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
-  .city-row { grid-template-columns: 1fr auto; }
   .topbar-actions .btn-ghost .logout-label,
   .topbar-chip { display: none; }
 }
