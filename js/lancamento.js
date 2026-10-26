@@ -677,43 +677,51 @@
     }
   }
 
-  /* ---------- Cards de período (mês + moeda do pedido) ---------- */
-  // Um card por combinação mês/moeda (em vez de somar moedas diferentes
-  // num único R$) — mostra o valor na moeda estrangeira em destaque, o
-  // equivalente em BRL embaixo, e o % que esse grupo representa do total
-  // geral (soma de valor_brl de todos os pedidos, sem filtro de data).
-  let mesSelecionado = null; // formato "AAAA-MM|MOEDA"
+  /* ---------- Cards de período (um card por mês) ---------- */
+  // Um card por mês (consolida todas as moedas daquele mês) — mostra o
+  // total em BRL como valor principal (comparável entre meses) e, abaixo,
+  // o detalhamento por moeda estrangeira em destaque secundário — assim
+  // dá pra analisar o volume do mês num único card, sem precisar somar
+  // vários cards da mesma competência em moedas diferentes.
+  let mesSelecionado = null; // formato "AAAA-MM"
   function renderPeriodCards(rows) {
     const wrap = document.getElementById('pedidos-period-cards');
     if (!wrap) return;
-    const porGrupo = {};
+    const porMes = {};
     let totalGeralBRL = 0;
     rows.forEach(p => {
       totalGeralBRL += Number(p.valor_brl) || 0;
       if (!p.data_pedido) return;
       const mes = p.data_pedido.slice(0, 7);
       const moeda = p.moeda || '—';
-      const key = mes + '|' + moeda;
-      if (!porGrupo[key]) porGrupo[key] = { mes, moeda, count: 0, totalMoeda: 0, totalBRL: 0 };
-      porGrupo[key].count++;
-      porGrupo[key].totalMoeda += Number(p.valor_total) || 0;
-      porGrupo[key].totalBRL += Number(p.valor_brl) || 0;
+      if (!porMes[mes]) porMes[mes] = { mes, count: 0, totalBRL: 0, porMoeda: {} };
+      const grupo = porMes[mes];
+      grupo.count++;
+      grupo.totalBRL += Number(p.valor_brl) || 0;
+      if (!grupo.porMoeda[moeda]) grupo.porMoeda[moeda] = 0;
+      grupo.porMoeda[moeda] += Number(p.valor_total) || 0;
     });
-    // Ordem cronológica crescente (Jan → Dez, e dentro do mesmo mês por
-    // moeda) — a chave "AAAA-MM|MOEDA" já ordena certo como string.
-    const chaves = Object.keys(porGrupo).sort();
+    // Ordem cronológica crescente (Jan → Dez, e entre anos do mais
+    // antigo pro mais novo) — a chave "AAAA-MM" já ordena certo como string.
+    const chaves = Object.keys(porMes).sort();
     if (!chaves.length) { wrap.innerHTML = ''; return; }
     wrap.innerHTML = chaves.map(key => {
-      const info = porGrupo[key];
+      const info = porMes[key];
       const [ano, m] = info.mes.split('-');
       const label = `${MES_LABEL[parseInt(m,10)-1]}/${ano.slice(2)}`;
       const ativo = mesSelecionado === key;
       const pct = totalGeralBRL > 0 ? (info.totalBRL / totalGeralBRL * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0';
+      const moedas = Object.keys(info.porMoeda).sort();
+      const forexHtml = moedas.map(moeda => `
+        <span class="period-card-forex-row">
+          <span class="currency-tag ${CUR_CLASS[moeda]||''}" style="font-size:9.5px;padding:1px 5px;">${escapeHtml(moeda)}</span>
+          ${(CUR_SYM[moeda]||'')}${info.porMoeda[moeda].toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+        </span>`).join('');
       return `<button type="button" class="period-card ${ativo ? 'active' : ''}" data-mes="${key}">
-        <span class="period-card-label">${label} <span class="currency-tag ${CUR_CLASS[info.moeda]||''}" style="font-size:9.5px;padding:1px 5px;vertical-align:1px;">${info.moeda}</span></span>
+        <span class="period-card-label">${label}</span>
         <span class="period-card-count">${info.count} tít.</span>
-        <span class="period-card-total">${(CUR_SYM[info.moeda]||'')}${info.totalMoeda.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</span>
-        <span class="period-card-brl">${fmtBRL(info.totalBRL)}</span>
+        <span class="period-card-total">${fmtBRL(info.totalBRL)}</span>
+        <div class="period-card-forex">${forexHtml}</div>
         <span class="period-card-pct">${pct}% do total geral</span>
       </button>`;
     }).join('');
@@ -769,10 +777,7 @@
       if (forn && r.dataset.fornecedor !== forn) ok = false;
       if (status && r.dataset.status !== status) ok = false;
       if (moeda && r.dataset.moeda !== moeda) ok = false;
-      if (mesSelecionado) {
-        const [mesSel, moedaSel] = mesSelecionado.split('|');
-        if (r.dataset.mes !== mesSel || r.dataset.moeda !== moedaSel) ok = false;
-      }
+      if (mesSelecionado && r.dataset.mes !== mesSelecionado) ok = false;
       r.style.display = ok ? '' : 'none';
       if (ok) visiveis++;
     });

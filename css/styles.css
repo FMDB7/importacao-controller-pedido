@@ -756,7 +756,7 @@ html { scrollbar-width: auto; scrollbar-color: rgba(15,23,42,0.35) transparent; 
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   background: #fff; border: 1px solid var(--border); border-radius: 10px;
   padding: 10px 16px; cursor: pointer; font-family: var(--ff-body);
-  min-width: 110px; text-align: left;
+  min-width: 150px; text-align: left;
   box-shadow: 0 1px 2px rgba(15,23,42,0.04);
   transition: border-color .15s, box-shadow .15s, transform .15s;
 }
@@ -766,6 +766,11 @@ html { scrollbar-width: auto; scrollbar-color: rgba(15,23,42,0.35) transparent; 
 .period-card-count { font-size: 10.5px; color: var(--ink-3); }
 .period-card-total { font-size: 16px; font-weight: 800; color: var(--cyan); font-family: var(--ff-mono); }
 .period-card-brl { font-size: 11.5px; font-weight: 600; color: var(--ink-2); font-family: var(--ff-mono); }
+.period-card-forex { display: flex; flex-direction: column; gap: 1px; margin-top: 1px; }
+.period-card-forex-row {
+  font-size: 11px; font-weight: 600; color: var(--ink-2); font-family: var(--ff-mono);
+  display: inline-flex; align-items: center; gap: 5px;
+}
 .period-card-pct { font-size: 10px; color: var(--ink-3); }
 
 /* ─── Painel de filtros avançados ───────────────────────────────── */
