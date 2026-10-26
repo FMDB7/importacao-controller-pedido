@@ -259,7 +259,7 @@
       const busca = escapeHtml(`${f.numero_invoice||''} ${f.pedidos?.numero_pedido||''} ${f.pedidos?.numero_pi||''} ${fornRaw}`);
       return `
         <tr data-row data-mes="${escapeHtml((f.data_vencimento||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(f.status||'')}"
-            data-moeda="${escapeHtml(f.moeda||'')}" data-vencimento="${escapeHtml(f.data_vencimento||'')}" data-valor="${valorBrl}" data-busca="${busca}">
+            data-moeda="${escapeHtml(f.moeda||'')}" data-vencimento="${escapeHtml(f.data_vencimento||'')}" data-valor="${valorBrl}" data-valor-nativo="${Number(f.valor)||0}" data-busca="${busca}">
           <td>${f.pedidos?.numero_pi ? `<span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pi)}</span>` : '—'}</td>
           <td><span class="mono">${escapeHtml(f.numero_invoice)}</span>${f.arquivo_url ? `<a href="${escapeHtml(f.arquivo_url)}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}</td>
           <td>${f.pedidos ? `<span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pedido)}</span>` : '—'}</td>

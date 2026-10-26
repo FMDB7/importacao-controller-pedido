@@ -37,6 +37,46 @@
     return isNaN(n) ? null : n;
   }
 
+  const CUR_SYM = { USD: '$', EUR: '€', GBP: '£', CHF: 'CHF ' };
+  function fmtMoedaResumo(n, moeda) {
+    return (CUR_SYM[moeda] || '') + (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function fmtBRLResumo(n) {
+    return 'R$ ' + (Number(n) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  /* Resumo por moeda das linhas visíveis em tela (respeita filtro) de uma
+     tabela — usa os data-moeda/data-valor(-nativo) já gravados em cada
+     <tr> (Pedidos e Faturamento), em vez de re-parsear o texto formatado
+     das células. data-valor é sempre o equivalente em BRL (valor_brl, já
+     calculado por pedido/invoice com a taxa de câmbio de cada um); soma
+     isso é o jeito certo de chegar no total em reais — bem diferente de
+     somar os valores nativos de moedas diferentes entre si. */
+  function resumoPorMoeda(tableSelector) {
+    const table = document.querySelector(tableSelector);
+    if (!table) return null;
+    const linhas = Array.from(table.querySelectorAll('tbody tr')).filter(tr => {
+      if (tr.style.display === 'none') return false;
+      if (tr.querySelector('td[colspan]')) return false;
+      return true;
+    });
+    const porMoeda = {};
+    let totalBRL = 0;
+    linhas.forEach(tr => {
+      const moeda = tr.dataset.moeda || '—';
+      const nativo = parseFloat(tr.dataset.valorNativo) || 0;
+      const brl = parseFloat(tr.dataset.valor) || 0;
+      if (!porMoeda[moeda]) porMoeda[moeda] = { nativo: 0, brl: 0, qtd: 0 };
+      porMoeda[moeda].nativo += nativo;
+      porMoeda[moeda].brl += brl;
+      porMoeda[moeda].qtd++;
+      totalBRL += brl;
+    });
+    const moedas = Object.keys(porMoeda).sort();
+    if (!moedas.length) return null;
+    return { porMoeda, moedas, totalBRL, totalRegistros: linhas.length };
+  }
+
   /* Lê uma tabela HTML renderizada e devolve o cabeçalho, os dados (AOA) e
      o alinhamento de cada coluna (a partir das classes ta-c/ta-r já usadas
      nos <th> pra alinhar a própria tela), ignorando linhas ocultas por
@@ -81,7 +121,20 @@
     return { aoa: [headers, ...dados], alinhamentos };
   }
 
-  function exportarXLSX(tableSelector, nomeArquivo, nomeAba, excluirColunas) {
+  // Monta a aba "Resumo por Moeda" em AOA — total nativo e em BRL por moeda,
+  // já como número de verdade (alinha à direita/soma sozinho no Excel).
+  function resumoParaAOA(resumo) {
+    const aoa = [['Moeda', 'Qtde', 'Total (moeda)', 'Total (R$)', '% do total']];
+    resumo.moedas.forEach(m => {
+      const r = resumo.porMoeda[m];
+      const pct = resumo.totalBRL > 0 ? +(r.brl / resumo.totalBRL * 100).toFixed(1) : 0;
+      aoa.push([m, r.qtd, +r.nativo.toFixed(2), +r.brl.toFixed(2), pct]);
+    });
+    aoa.push(['Total geral', resumo.totalRegistros, '', +resumo.totalBRL.toFixed(2), 100]);
+    return aoa;
+  }
+
+  function exportarXLSX(tableSelector, nomeArquivo, nomeAba, excluirColunas, comResumo) {
     if (typeof XLSX === 'undefined') { avisar('Biblioteca de exportação não carregou. Verifique sua conexão e tente novamente.'); return; }
     const resultado = tabelaParaAOA(tableSelector, excluirColunas);
     if (!resultado || resultado.aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
@@ -99,13 +152,22 @@
     ws['!cols'] = aoaExcel[0].map((_, i) => ({ wch: Math.max(12, ...aoaExcel.map(r => String(r[i] ?? '').length)) + 2 }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, nomeAba);
+    if (comResumo) {
+      const resumo = resumoPorMoeda(tableSelector);
+      if (resumo) {
+        const aoaResumo = resumoParaAOA(resumo);
+        const wsResumo = XLSX.utils.aoa_to_sheet(aoaResumo);
+        wsResumo['!cols'] = aoaResumo[0].map((_, i) => ({ wch: Math.max(12, ...aoaResumo.map(r => String(r[i] ?? '').length)) + 2 }));
+        XLSX.utils.book_append_sheet(wb, wsResumo, 'Resumo por Moeda');
+      }
+    }
     XLSX.writeFile(wb, nomeArquivo);
   }
 
   document.getElementById('btn-export-pedidos')?.addEventListener('click',
-    () => exportarXLSX('#view-lancamentos table', `Pedidos_${hoje()}.xlsx`, 'Pedidos'));
+    () => exportarXLSX('#view-lancamentos table', `Pedidos_${hoje()}.xlsx`, 'Pedidos', null, true));
   document.getElementById('btn-export-faturamento')?.addEventListener('click',
-    () => exportarXLSX('#view-faturamento table', `Faturamento_${hoje()}.xlsx`, 'Faturamento', ['Status']));
+    () => exportarXLSX('#view-faturamento table', `Faturamento_${hoje()}.xlsx`, 'Faturamento', ['Status'], true));
   document.getElementById('btn-export-embarque')?.addEventListener('click',
     () => exportarXLSX('#view-embarque table', `Embarque_${hoje()}.xlsx`, 'Embarque'));
   document.getElementById('btn-export-pagamento')?.addEventListener('click',
@@ -113,7 +175,7 @@
 
   /* Exporta uma tabela operacional pra PDF (paisagem, 1 página larga) —
      mesmas linhas visíveis em tela (respeita filtros), igual ao Excel acima. */
-  function exportarPDF(tableSelector, titulo, nomeArquivo, excluirColunas) {
+  function exportarPDF(tableSelector, titulo, nomeArquivo, excluirColunas, comResumo) {
     if (typeof window.jspdf === 'undefined') { avisar('Biblioteca de exportação de PDF não carregou. Verifique sua conexão e tente novamente.'); return; }
     const resultado = tabelaParaAOA(tableSelector, excluirColunas);
     if (!resultado || resultado.aoa.length <= 1) { avisar('Não há dados para exportar nesta tela.'); return; }
@@ -163,13 +225,44 @@
       tableWidth: 'auto'
     });
 
+    if (comResumo) {
+      const resumo = resumoPorMoeda(tableSelector);
+      if (resumo) {
+        let yResumo = doc.lastAutoTable.finalY + 8;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+        doc.text('Resumo por Moeda', margemX, yResumo);
+        yResumo += 2;
+        const corpoResumo = resumo.moedas.map(m => {
+          const r = resumo.porMoeda[m];
+          const pct = resumo.totalBRL > 0 ? (r.brl / resumo.totalBRL * 100) : 0;
+          return [m, String(r.qtd), fmtMoedaResumo(r.nativo, m), fmtBRLResumo(r.brl), `${pct.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}%`];
+        });
+        corpoResumo.push(['Total geral', String(resumo.totalRegistros), '', fmtBRLResumo(resumo.totalBRL), '100%']);
+        doc.autoTable({
+          startY: yResumo,
+          margin: { left: margemX, right: margemX },
+          head: [['Moeda', 'Qtde', 'Total (moeda)', 'Total (R$)', '% do total']],
+          body: corpoResumo,
+          theme: 'grid',
+          headStyles: { fillColor: [13, 27, 46], fontSize: 7 },
+          styles: { fontSize: 7, cellPadding: 2 },
+          tableWidth: 'wrap',
+          didParseCell: (data) => {
+            // Última linha (Total geral) em negrito, pra destacar do resumo por moeda acima
+            if (data.section === 'body' && data.row.index === corpoResumo.length - 1) data.cell.styles.fontStyle = 'bold';
+            if (data.column.index > 0) data.cell.styles.halign = 'right';
+          }
+        });
+      }
+    }
+
     doc.save(nomeArquivo);
   }
 
   document.getElementById('btn-export-pedidos-pdf')?.addEventListener('click',
-    () => exportarPDF('#view-lancamentos table', 'Pedidos', `Pedidos_${hoje()}.pdf`));
+    () => exportarPDF('#view-lancamentos table', 'Pedidos', `Pedidos_${hoje()}.pdf`, null, true));
   document.getElementById('btn-export-faturamento-pdf')?.addEventListener('click',
-    () => exportarPDF('#view-faturamento table', 'Faturamento', `Faturamento_${hoje()}.pdf`, ['Status']));
+    () => exportarPDF('#view-faturamento table', 'Faturamento', `Faturamento_${hoje()}.pdf`, ['Status'], true));
 
   /* ---------- Relatório da Diretoria ---------- */
   // headStyles tem prioridade sobre columnStyles na seção do cabeçalho nesta

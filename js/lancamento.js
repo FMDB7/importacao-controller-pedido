@@ -646,7 +646,7 @@
         return `
           <tr data-grp="${escapeHtml(p.setor || '')}" data-loc="${escapeHtml(p.localizacao || 'Manaus')}" data-mes="${escapeHtml(mesRef)}"
               data-status="${escapeHtml(p.status || '')}" data-moeda="${escapeHtml(p.moeda || '')}" data-fornecedor="${forn}"
-              data-valor="${p.valor_brl || 0}" data-data="${escapeHtml(p.data_pedido || '')}"
+              data-valor="${p.valor_brl || 0}" data-valor-nativo="${Number(p.valor_total) || 0}" data-data="${escapeHtml(p.data_pedido || '')}"
               data-busca="${escapeHtml((p.numero_pedido||'') + ' ' + (p.numero_pi||'') + ' ' + (p.fornecedores ? p.fornecedores.razao_social : '') + ' ' + (descInfo.marca||''))}">
             <td><span class="mono" style="font-size:11.5px;color:var(--cyan);font-weight:700;">${escapeHtml(p.numero_pedido || '—')}</span>${p.arquivo_pi_url ? `<a href="${escapeHtml(p.arquivo_pi_url)}" target="_blank" rel="noopener" title="Ver arquivo da PI (${escapeHtml(p.numero_pi||'')})" style="margin-left:6px;">📎</a>` : ''}</td>
             <td>${colab}${coord ? `<div style="font-size:10px;color:var(--ink-3);margin-top:2px;">👤 Coord.: ${coord}</div>` : ''}</td>
