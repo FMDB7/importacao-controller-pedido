@@ -244,6 +244,9 @@
       const forn = escapeHtml(fornRaw);
       const dias = diasAte(f.data_vencimento);
       const vencCor = dias != null && dias < 0 ? 'var(--rose)' : (dias != null && dias <= 7 ? 'var(--amber)' : 'var(--ink-2)');
+      // Alerta de vencimento: só faz sentido para invoices ainda não pagas/canceladas.
+      const pendenteFat = f.status === 'Pendente' || f.status === 'Vencida';
+      const alertaFat = pendenteFat && dias != null && dias < 0 ? '🚨 ' : (pendenteFat && dias != null && dias <= 7 ? '⚠️ ' : '');
       // Prazo (dias) não tem coluna própria no banco — é sempre derivável
       // da diferença entre emissão e vencimento (mesma conta que o modal
       // de lançamento já faz para reabrir o campo "Prazo" na edição).
@@ -271,7 +274,7 @@
           <td class="num" style="font-size:11px;">${f.pedidos?.taxa_cambio ? Number(f.pedidos.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${f.pedidos?.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
           <td class="ta-c">${prazoDias != null ? prazoDias + ' dias' : '—'}</td>
-          <td class="date" style="color:${vencCor};">${toBR(f.data_vencimento)}</td>
+          <td class="date" style="color:${vencCor};">${alertaFat}${toBR(f.data_vencimento)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="faturas" data-inline-status-id="${f.id}" title="Clique para alterar o status">${STATUS_BADGE[f.status] || escapeHtml(f.status)}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${f.pedido_id}:fatura" title="Editar invoice">✏️</button><button type="button" class="danger" data-delete-rec="faturas:${f.id}" title="Excluir invoice">🗑️</button></div></td>
         </tr>`;
@@ -517,6 +520,10 @@
       else if (dias != null && dias < 0) badge = `<span class="status-badge" style="background:rgba(220,60,94,0.12);color:var(--rose);">Vencido há ${Math.abs(dias)}d</span>`;
       else if (dias != null && dias <= 7) badge = `<span class="status-badge" style="background:rgba(185,116,10,0.12);color:var(--amber);">Vence em ${dias}d</span>`;
       else badge = '<span class="status-badge" style="background:rgba(37,99,235,0.1);color:var(--cyan);">A Vencer</span>';
+      // Alerta de vencimento (ícone + cor na data), só para pagamentos ainda pendentes.
+      const pendentePag = p.status !== 'Liquidado';
+      const alertaPag = pendentePag && dias != null && dias < 0 ? '🚨 ' : (pendentePag && dias != null && dias <= 7 ? '⚠️ ' : '');
+      const vencCorPag = pendentePag && dias != null && dias < 0 ? 'var(--rose)' : (pendentePag && dias != null && dias <= 7 ? 'var(--amber)' : 'var(--ink-2)');
       const valorBrl = Number(p.valor_brl) || 0;
       const busca = escapeHtml(`${p.pedidos?.numero_pedido||''} ${fornRaw} ${p.banco||''} ${p.faturas?.numero_invoice||''}`);
       return `
@@ -530,7 +537,7 @@
           <td class="num">${fmtMoeda(p.valor, p.moeda)}</td>
           <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${p.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
-          <td class="date">${toBR(p.data_vencimento)}</td>
+          <td class="date" style="color:${vencCorPag};">${alertaPag}${toBR(p.data_vencimento)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="pagamentos" data-inline-status-id="${p.id}" title="Clique para alterar o status">${badge}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${p.pedido_id}:pagamento" title="Editar pagamento">✏️</button><button type="button" class="danger" data-delete-rec="pagamentos:${p.id}" title="Excluir pagamento">🗑️</button></div></td>
         </tr>`;

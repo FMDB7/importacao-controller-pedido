@@ -699,4 +699,25 @@ do usuário, a tela foi removida:
 
 ---
 
+## Fase 19 — Alertas de vencimento nas colunas Faturamento/Pagamento (concluída)
+
+Pedido do usuário: ícone de alerta ao lado da data de vencimento, nas abas
+Faturamento e Pagamento, no padrão de um exemplo de imagem (🚨 vermelho para
+vencido, ⚠️ âmbar para vencendo em breve).
+
+- **Faturamento** (`js/views.js`, `renderFaturamento`): a célula de
+  Vencimento agora prefixa a data com 🚨 (vencida) ou ⚠️ (vence em até 7
+  dias), reaproveitando o `dias`/`vencCor` já calculados ali. O alerta só
+  aparece para invoices com status `Pendente`/`Vencida` — uma invoice `Paga`
+  ou `Cancelada` não exibe ícone mesmo que a data já tenha passado.
+- **Pagamento** (`js/views.js`, `renderPagamento`): mesmo padrão — a célula
+  de Vencimento ganhou cor (antes só tinha cor no badge de status) e o
+  prefixo 🚨/⚠️, condicionado a `status !== 'Liquidado'`.
+- Os emojis são removidos automaticamente dos relatórios em PDF/Excel pela
+  rotina de limpeza de emoji já existente em `js/export.js`
+  (`EMOJI_RE`/`tabelaParaAOA`), então os exports continuam só com a data,
+  sem mojibake — nada precisou mudar em `export.js` para isso.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
