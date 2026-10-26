@@ -194,9 +194,60 @@
     });
   }
 
+  /* Edição inline genérica de data (clique na célula → <input type="date"> → DB.update).
+     Usada hoje só no Vencimento de Faturamento, mas escrita genérica por
+     tabela/campo pra poder ser reaproveitada depois. */
+  function wireInlineDate(table, field, onSaved) {
+    document.addEventListener('click', (e) => {
+      const cell = e.target.closest(`[data-inline-date-table="${table}"][data-inline-date-field="${field}"]`);
+      if (!cell || cell.querySelector('input')) return;
+      const id = cell.dataset.inlineDateId;
+      const atual = cell.dataset.inlineDateValue || '';
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.className = 'form-input inline-edit-date';
+      input.value = atual;
+      cell.innerHTML = '';
+      cell.appendChild(input);
+      input.focus();
+      let salvo = false;
+      const commit = async () => {
+        if (salvo) return;
+        const novo = input.value;
+        if (!novo || novo === atual) { onSaved(); return; }
+        salvo = true;
+        input.disabled = true;
+        try {
+          await DB.update(table, id, { [field]: novo });
+          if (window.showToast) window.showToast('Vencimento atualizado', `Novo vencimento: ${novo.split('-').reverse().join('/')}.`, true);
+          onSaved();
+          if (window.renderDashboard) window.renderDashboard();
+          if (window.checkNotificacoes) window.checkNotificacoes();
+        } catch (err) {
+          if (window.showToast) window.showToast('Erro ao atualizar vencimento', err.message || 'Tente novamente.', false);
+          onSaved();
+        }
+      };
+      input.addEventListener('change', commit);
+      input.addEventListener('blur', () => { if (!salvo) onSaved(); });
+    });
+  }
+
   const ferramentasFat = criarFerramentasTabela('fat');
   const ferramentasEmb = criarFerramentasTabela('emb');
   const ferramentasPag = criarFerramentasTabela('pag');
+
+  /* Status da invoice é 100% automático (não há mais seleção manual nesta
+     tela): "Liquidada" quando existe um pagamento vinculado com
+     status=Liquidado, "Vencida" quando já passou do vencimento, senão
+     "A Vencer". `Cancelada` continua sendo respeitada se já estiver gravada
+     no banco (não é mais algo que se defina por aqui). */
+  function statusAutoFat(f, dias, liquidada) {
+    if (f.status === 'Cancelada') return 'Cancelada';
+    if (liquidada) return 'Liquidada';
+    if (dias != null && dias < 0) return 'Vencida';
+    return 'A Vencer';
+  }
 
   /* ---------- FATURAMENTO ---------- */
   async function renderFaturamento() {
@@ -204,16 +255,17 @@
     if (!tbody) return;
     let rows;
     try {
-      rows = await DB.list('faturas', 'select=*,pedidos(numero_pedido,numero_pi,taxa_cambio,valor_brl,descricao,fornecedores(razao_social))&order=data_vencimento.asc.nullslast');
+      rows = await DB.list('faturas', 'select=*,pedidos(numero_pedido,numero_pi,taxa_cambio,valor_brl,descricao,fornecedores(razao_social)),pagamentos(status)&order=data_vencimento.asc.nullslast');
     } catch (e) {
       tbody.innerHTML = `<tr><td colspan="14" style="text-align:center;color:var(--rose);padding:24px;">${e.message}</td></tr>`;
       return;
     }
 
     const totalBRL = rows.reduce((s, f) => s + (f.pedidos?.valor_brl ? Number(f.pedidos.valor_brl) : 0), 0);
-    const abertas = rows.filter(f => f.status === 'Pendente').length;
-    const pagas = rows.filter(f => f.status === 'Paga').length;
-    const pendenteBRL = rows.filter(f => f.status === 'Pendente').reduce((s, f) => s + (f.pedidos?.valor_brl ? Number(f.pedidos.valor_brl) : 0), 0);
+    const statusDeCada = rows.map(f => statusAutoFat(f, diasAte(f.data_vencimento), Array.isArray(f.pagamentos) && f.pagamentos.some(p => p.status === 'Liquidado')));
+    const abertas = statusDeCada.filter(s => s === 'A Vencer' || s === 'Vencida').length;
+    const liquidadas = statusDeCada.filter(s => s === 'Liquidada').length;
+    const pendenteBRL = rows.reduce((s, f, i) => (statusDeCada[i] === 'A Vencer' || statusDeCada[i] === 'Vencida') ? s + (f.pedidos?.valor_brl ? Number(f.pedidos.valor_brl) : 0) : s, 0);
     const pct = (n, total) => total > 0 ? (n / total * 100).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) : '0';
 
     const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
@@ -221,8 +273,8 @@
     set('fat-kpi-total-sub', `${rows.length} invoice${rows.length === 1 ? '' : 's'} no total`);
     set('fat-kpi-abertas', abertas);
     set('fat-kpi-abertas-sub', `${pct(abertas, rows.length)}% das invoices`);
-    set('fat-kpi-pagas', pagas);
-    set('fat-kpi-pagas-sub', `${pct(pagas, rows.length)}% das invoices`);
+    set('fat-kpi-pagas', liquidadas);
+    set('fat-kpi-pagas-sub', `${pct(liquidadas, rows.length)}% das invoices`);
     set('fat-kpi-pendente', fmtBRL(pendenteBRL));
     set('fat-kpi-pendente-sub', `${pct(pendenteBRL, totalBRL)}% do total faturado`);
     if (!rows.length) {
@@ -234,8 +286,8 @@
       return;
     }
     const STATUS_BADGE = {
-      'Pendente': '<span class="status-badge" style="background:rgba(37,99,235,0.1);color:var(--cyan);">Pendente</span>',
-      'Paga': '<span class="status-badge s-entregue">Paga</span>',
+      'A Vencer': '<span class="status-badge" style="background:rgba(37,99,235,0.1);color:var(--cyan);">A Vencer</span>',
+      'Liquidada': '<span class="status-badge s-entregue">Liquidada</span>',
       'Vencida': '<span class="status-badge" style="background:rgba(220,60,94,0.12);color:var(--rose);">Vencida</span>',
       'Cancelada': '<span class="status-badge s-aguardando">Cancelada</span>'
     };
@@ -243,9 +295,11 @@
       const fornRaw = f.pedidos?.fornecedores?.razao_social || '—';
       const forn = escapeHtml(fornRaw);
       const dias = diasAte(f.data_vencimento);
+      const liquidada = Array.isArray(f.pagamentos) && f.pagamentos.some(p => p.status === 'Liquidado');
+      const statusKey = statusAutoFat(f, dias, liquidada);
       const vencCor = dias != null && dias < 0 ? 'var(--rose)' : (dias != null && dias <= 7 ? 'var(--amber)' : 'var(--ink-2)');
-      // Alerta de vencimento: só faz sentido para invoices ainda não pagas/canceladas.
-      const pendenteFat = f.status === 'Pendente' || f.status === 'Vencida';
+      // Alerta de vencimento: só faz sentido para invoices ainda em aberto.
+      const pendenteFat = statusKey === 'A Vencer' || statusKey === 'Vencida';
       const alertaFat = pendenteFat && dias != null && dias < 0 ? '🚨 ' : (pendenteFat && dias != null && dias <= 7 ? '⚠️ ' : '');
       // Prazo (dias) não tem coluna própria no banco — é sempre derivável
       // da diferença entre emissão e vencimento (mesma conta que o modal
@@ -261,7 +315,7 @@
       const marca = marcaMatch ? escapeHtml(marcaMatch[1].trim()) : '—';
       const busca = escapeHtml(`${f.numero_invoice||''} ${f.pedidos?.numero_pedido||''} ${f.pedidos?.numero_pi||''} ${fornRaw}`);
       return `
-        <tr data-row data-mes="${escapeHtml((f.data_vencimento||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(f.status||'')}"
+        <tr data-row data-mes="${escapeHtml((f.data_vencimento||'').slice(0,7))}" data-fornecedor="${forn}" data-status="${escapeHtml(statusKey)}"
             data-moeda="${escapeHtml(f.moeda||'')}" data-vencimento="${escapeHtml(f.data_vencimento||'')}" data-valor="${valorBrl}" data-valor-nativo="${Number(f.valor)||0}" data-busca="${busca}">
           <td>${f.pedidos?.numero_pi ? `<span class="mono" style="font-size:11.5px;">${escapeHtml(f.pedidos.numero_pi)}</span>` : '—'}</td>
           <td><span class="mono">${escapeHtml(f.numero_invoice)}</span>${f.arquivo_url ? `<a href="${escapeHtml(f.arquivo_url)}" target="_blank" rel="noopener" title="Ver arquivo da invoice/NF" style="margin-left:6px;">📎</a>` : ''}</td>
@@ -274,8 +328,8 @@
           <td class="num" style="font-size:11px;">${f.pedidos?.taxa_cambio ? Number(f.pedidos.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${f.pedidos?.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
           <td class="ta-c">${prazoDias != null ? prazoDias + ' dias' : '—'}</td>
-          <td class="date" style="color:${vencCor};">${alertaFat}${toBR(f.data_vencimento)}</td>
-          <td class="ta-c cell-editable" data-inline-status-table="faturas" data-inline-status-id="${f.id}" title="Clique para alterar o status">${STATUS_BADGE[f.status] || escapeHtml(f.status)}</td>
+          <td class="date cell-editable" style="color:${vencCor};" data-inline-date-table="faturas" data-inline-date-id="${f.id}" data-inline-date-field="data_vencimento" data-inline-date-value="${escapeHtml(f.data_vencimento||'')}" title="Clique para ajustar o vencimento">${alertaFat}${toBR(f.data_vencimento)}</td>
+          <td class="ta-c" title="Calculado automaticamente a partir do vencimento e do pagamento">${STATUS_BADGE[statusKey] || escapeHtml(statusKey)}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${f.pedido_id}:fatura" title="Editar invoice">✏️</button><button type="button" class="danger" data-delete-rec="faturas:${f.id}" title="Excluir invoice">🗑️</button></div></td>
         </tr>`;
     }).join('');
@@ -563,10 +617,13 @@
     renderPagamento();
   }
 
-  // Edição inline de Status — um único listener por tabela (não por render)
-  wireInlineStatus('faturas', ['Pendente', 'Paga', 'Vencida', 'Cancelada'], renderFaturamento);
+  // Edição inline de Status — um único listener por tabela (não por render).
+  // Faturamento não entra mais aqui: o status passou a ser 100% automático
+  // (ver statusAutoFat), então não há mais select manual nessa coluna.
   wireInlineStatus('embarques', ['Aguardando', 'Embarcado', 'Em Trânsito', 'No Porto', 'Desembaraçando', 'Entregue'], renderEmbarque);
   wireInlineStatus('pagamentos', ['Pendente', 'Liquidado', 'Vencido', 'Cancelado'], renderPagamento);
+  // Vencimento de Faturamento agora é editável manualmente direto na tabela.
+  wireInlineDate('faturas', 'data_vencimento', renderFaturamento);
 
   // Excluir invoice / embarque / pagamento individualmente (não afeta o pedido-pai)
   document.addEventListener('click', async (e) => {

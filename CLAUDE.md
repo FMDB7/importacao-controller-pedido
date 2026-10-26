@@ -748,4 +748,51 @@ testes"*.
 
 ---
 
+## Fase 21 — Vencimento editável e Status automático em Faturamento (concluída)
+
+Pedido do usuário: *"na aba faturamento, vencimento, permita que o vencimento seja
+ajustado manualmente, e na coluna status, identifique de forma automática se a
+invoice está vencida, a vencer ou liquidada"*.
+
+### Vencimento editável
+- A célula de Vencimento (`js/views.js`, `renderFaturamento`) agora é
+  `cell-editable`: clicar nela abre um `<input type="date">` (mesmo padrão visual
+  dos `<select>` de status já usados em Embarque/Pagamento) e grava direto em
+  `faturas.data_vencimento` ao confirmar.
+- Nova função genérica `wireInlineDate(table, field, onSaved)` em `js/views.js`,
+  espelhando a `wireInlineStatus` já existente, mas para campos de data — escrita
+  genérica por tabela/campo para poder ser reaproveitada em outras telas no
+  futuro, se precisar.
+- Como o alerta 🚨/⚠️ (Fase 19) e o Prazo já eram derivados de
+  `data_vencimento`, eles recalculam sozinhos assim que o vencimento é ajustado e
+  a tela recarrega — nada precisou mudar nessa parte.
+
+### Status 100% automático (saiu de manual)
+- Antes, o Status de uma invoice (Pendente/Paga/Vencida/Cancelada) era escolhido
+  manualmente clicando na célula (mesmo mecanismo de Embarque/Pagamento). Isso foi
+  **removido** para Faturamento — a célula deixou de ser clicável e passou a
+  mostrar um dos 3 estados pedidos, calculados a cada render por
+  `statusAutoFat(f, dias, liquidada)`:
+  - **Liquidada** — existe um registro em `pagamentos` vinculado a essa fatura
+    (`pagamentos.fatura_id`) com `status = 'Liquidado'`. A query de `faturas`
+    ganhou o embed `pagamentos(status)` (PostgREST, via a FK
+    `pagamentos.fatura_id → faturas.id`) para isso.
+  - **Vencida** — `data_vencimento` já passou e não está liquidada.
+  - **A Vencer** — ainda não venceu e não está liquidada.
+  - **Cancelada** — preservada apenas como estado legado: se a fatura já tiver
+    `status = 'Cancelada'` gravado no banco (de antes dessa fase), continua
+    aparecendo assim em vez de Vencida/A Vencer; não é mais algo que se defina
+    por esta tela (não há mais UI para cancelar uma invoice aqui).
+- `wireInlineStatus('faturas', ...)` foi removido do wiring final (só
+  `embarques`/`pagamentos` continuam com status editável manualmente).
+- Filtro de Status (`#fat-flt-status`, `index.html`) e KPIs ("Invoices Abertas" =
+  A Vencer + Vencida, "Invoices Liquidadas" — renomeado de "Invoices Pagas",
+  "Valor Pendente" = soma de A Vencer + Vencida) atualizados para a nova
+  terminologia.
+- Export em PDF/Excel não muda: a coluna Status já era excluída dos relatórios de
+  Faturamento desde a Fase 8/19 (`comResumo`/exclusão por nome de coluna em
+  `js/export.js`), então o novo texto do badge nunca aparecia ali mesmo.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
