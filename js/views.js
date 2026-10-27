@@ -195,9 +195,9 @@
   }
 
   /* Edição inline genérica de data (clique na célula → <input type="date"> → DB.update).
-     Usada hoje só no Vencimento de Faturamento, mas escrita genérica por
-     tabela/campo pra poder ser reaproveitada depois. */
-  function wireInlineDate(table, field, onSaved) {
+     `sincronizar(cell, id, novo)` (opcional) propaga a nova data para o registro
+     espelho (invoice ↔ pagamento) antes de recarregar as telas. */
+  function wireInlineDate(table, field, onSaved, sincronizar) {
     document.addEventListener('click', (e) => {
       const cell = e.target.closest(`[data-inline-date-table="${table}"][data-inline-date-field="${field}"]`);
       if (!cell || cell.querySelector('input')) return;
@@ -219,6 +219,7 @@
         input.disabled = true;
         try {
           await DB.update(table, id, { [field]: novo });
+          if (sincronizar) await sincronizar(cell, id, novo);
           if (window.showToast) window.showToast('Vencimento atualizado', `Novo vencimento: ${novo.split('-').reverse().join('/')}.`, true);
           onSaved();
           if (window.renderDashboard) window.renderDashboard();
@@ -591,7 +592,7 @@
           <td class="num">${fmtMoeda(p.valor, p.moeda)}</td>
           <td class="num" style="font-size:11px;">${p.taxa_cambio ? Number(p.taxa_cambio).toLocaleString('pt-BR',{minimumFractionDigits:4}) : '—'}</td>
           <td class="num">${p.valor_brl ? fmtBRL(valorBrl) : '—'}</td>
-          <td class="date" style="color:${vencCorPag};">${alertaPag}${toBR(p.data_vencimento)}</td>
+          <td class="date cell-editable" style="color:${vencCorPag};" data-inline-date-table="pagamentos" data-inline-date-id="${p.id}" data-inline-date-field="data_vencimento" data-inline-date-value="${escapeHtml(p.data_vencimento||'')}" data-inline-date-fatura-id="${escapeHtml(p.fatura_id||'')}" title="Clique para ajustar o vencimento">${alertaPag}${toBR(p.data_vencimento)}</td>
           <td class="ta-c cell-editable" data-inline-status-table="pagamentos" data-inline-status-id="${p.id}" title="Clique para alterar o status">${badge}</td>
           <td><div class="row-actions"><button type="button" data-edit-lancamento="${p.pedido_id}:pagamento" title="Editar pagamento">✏️</button><button type="button" class="danger" data-delete-rec="pagamentos:${p.id}" title="Excluir pagamento">🗑️</button></div></td>
         </tr>`;
@@ -621,9 +622,18 @@
   // Faturamento não entra mais aqui: o status passou a ser 100% automático
   // (ver statusAutoFat), então não há mais select manual nessa coluna.
   wireInlineStatus('embarques', ['Aguardando', 'Embarcado', 'Em Trânsito', 'No Porto', 'Desembaraçando', 'Entregue'], renderEmbarque);
-  wireInlineStatus('pagamentos', ['Pendente', 'Liquidado', 'Vencido', 'Cancelado'], renderPagamento);
-  // Vencimento de Faturamento agora é editável manualmente direto na tabela.
-  wireInlineDate('faturas', 'data_vencimento', renderFaturamento);
+  // Status do pagamento define "Liquidada" na invoice vinculada — recarrega as duas telas.
+  wireInlineStatus('pagamentos', ['Pendente', 'Liquidado', 'Vencido', 'Cancelado'], renderOperacionais);
+  // Vencimento é editável direto em Faturamento e em Pagamento. Invoice e
+  // pagamento vinculado (pagamentos.fatura_id) compartilham o mesmo vencimento:
+  // alterar um propaga para o outro e as duas telas são recarregadas.
+  wireInlineDate('faturas', 'data_vencimento', renderOperacionais,
+    (cell, id, novo) => DB.updateWhere('pagamentos', `fatura_id=eq.${id}`, { data_vencimento: novo }));
+  wireInlineDate('pagamentos', 'data_vencimento', renderOperacionais,
+    async (cell, id, novo) => {
+      const faturaId = cell.dataset.inlineDateFaturaId;
+      if (faturaId) await DB.update('faturas', faturaId, { data_vencimento: novo });
+    });
 
   // Excluir invoice / embarque / pagamento individualmente (não afeta o pedido-pai)
   document.addEventListener('click', async (e) => {

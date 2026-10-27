@@ -795,4 +795,29 @@ invoice está vencida, a vencer ou liquidada"*.
 
 ---
 
+## Fase 22 — Vencimento sincronizado entre Faturamento e Pagamento (concluída)
+
+Pedido do usuário: alterar o vencimento em Pagamento não atualizava Faturamento, e
+vice-versa.
+
+- **Causa**: o vencimento vive em duas colunas independentes (`faturas.data_vencimento`
+  e `pagamentos.data_vencimento`, ligadas por `pagamentos.fatura_id`) e nenhuma
+  edição propagava para a outra.
+- **Edição inline** (`js/views.js`): a célula de Vencimento de **Pagamento** agora
+  também é clicável/editável. `wireInlineDate` ganhou um callback `sincronizar`:
+  editar a invoice atualiza os pagamentos com `fatura_id` dela; editar o pagamento
+  atualiza a fatura vinculada. As duas telas recarregam (`renderOperacionais`).
+- **Status do pagamento** (`wireInlineStatus('pagamentos')`) também recarrega as duas
+  telas — marcar Liquidado agora reflete na hora como "Liquidada" em Faturamento.
+- **Modal de edição** (`js/lancamento.js`, `resolverVencimentos`): ao salvar, se
+  invoice e pagamento estão vinculados, o campo que a pessoa alterou vence e é
+  gravado nos dois (se alterou os dois, vale o do pagamento). Campo não tocado
+  mantém o valor gravado, então um ajuste feito na tabela não é sobrescrito pelo
+  vencimento recalculado do modal.
+- **Não muda**: em um *novo* lançamento invoice (emissão + prazo) e pagamento
+  (embarque + condição) continuam calculados separadamente; registros antigos que já
+  estão divergentes só convergem na próxima edição do vencimento.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*
