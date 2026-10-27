@@ -98,8 +98,36 @@
   // atualizações nos registros abaixo em vez de criar novos.
   let editingPedidoId = null, editingFaturaId = null, editingEmbarqueId = null, editingPagamentoId = null;
 
+  // Vencimentos (ISO) de invoice e pagamento no momento em que o modal de edição abriu:
+  // `*Form` = o que os campos calculados mostravam logo ao abrir, `*Db` = o que estava
+  // gravado. Servem para saber qual dos dois a pessoa mexeu e propagar para o outro.
+  const baseVenc = { ativo: false, fatForm: '', pagForm: '', fatDb: null, pagDb: null };
+
+  function lerVencPagIso() {
+    const v = document.getElementById('pay-vencimento')?.value;
+    const m = v && v.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : '';
+  }
+
+  // Invoice e pagamento vinculados têm o mesmo vencimento: quem foi alterado vence
+  // (se os dois mudaram, vale o do pagamento); quem não foi tocado mantém o valor
+  // gravado — o campo calculado do modal não sobrescreve um ajuste feito na tabela.
+  function resolverVencimentos(fatForm, pagForm, vinculados) {
+    if (!baseVenc.ativo) return { fat: fatForm || null, pag: pagForm || null };
+    const fatMudou = fatForm !== baseVenc.fatForm;
+    const pagMudou = pagForm !== baseVenc.pagForm;
+    let fat = fatMudou ? fatForm : (baseVenc.fatDb || fatForm);
+    let pag = pagMudou ? pagForm : (baseVenc.pagDb || pagForm);
+    if (vinculados) {
+      if (pagMudou) fat = pag;
+      else if (fatMudou) pag = fat;
+    }
+    return { fat: fat || null, pag: pag || null };
+  }
+
   function setModalModoCriacao() {
     editingPedidoId = editingFaturaId = editingEmbarqueId = editingPagamentoId = null;
+    baseVenc.ativo = false;
     const titulo = document.querySelector('#modal-backdrop .modal-title');
     const subtitulo = document.querySelector('#modal-backdrop .modal-subtitle');
     const confirmBtn = document.getElementById('modal-confirm');
@@ -239,6 +267,14 @@
       }
       document.getElementById('pay-data-embarque')?.dispatchEvent(new Event('change'));
       document.getElementById('pay-condicao')?.dispatchEvent(new Event('change'));
+
+      Object.assign(baseVenc, {
+        ativo: true,
+        fatForm: document.getElementById('f-fat-vencimento')?.dataset.iso || '',
+        pagForm: lerVencPagIso(),
+        fatDb: fatura ? fatura.data_vencimento : null,
+        pagDb: pagamento ? pagamento.data_vencimento : null
+      });
 
       const titulo = document.querySelector('#modal-backdrop .modal-title');
       const subtitulo = document.querySelector('#modal-backdrop .modal-subtitle');
@@ -474,8 +510,11 @@
       // 2) FATURA (se houver nº de invoice)
       let fatura = null;
       const numInvoice = val('f-invoice');
+      const vencResolvido = resolverVencimentos(
+        document.getElementById('f-fat-vencimento')?.dataset.iso || '', lerVencPagIso(),
+        !!numInvoice && taxa != null);
       if (numInvoice) {
-        const vencIso = document.getElementById('f-fat-vencimento')?.dataset.iso || null;
+        const vencIso = vencResolvido.fat;
         const dadosFatura = {
           pedido_id: pedido.id,
           numero_invoice: numInvoice,
@@ -545,12 +584,7 @@
           if (dias) prazoCustomObs = `Prazo personalizado: ${dias} dias`;
         }
 
-        const vencPagIso = (() => {
-          const v = document.getElementById('pay-vencimento')?.value;
-          if (!v) return null;
-          const m = v.match(/(\d{2})\/(\d{2})\/(\d{4})/);
-          return m ? `${m[3]}-${m[2]}-${m[1]}` : null;
-        })();
+        const vencPagIso = vencResolvido.pag;
 
         const dadosPagamento = {
           pedido_id: pedido.id,
