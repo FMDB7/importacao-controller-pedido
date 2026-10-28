@@ -862,4 +862,34 @@ dos meses, organize desta forma jan/26, Fev/26, março/26"*.
 
 ---
 
+## Fase 24 — Cards de mês em ordem cronológica crescente em todas as telas
+
+Pedido do usuário: *"em todos os cards que tem meses, organize desta forma jan/26,
+Fev/26, março/26 neste formato."* — estender pra todo o app o padrão já aplicado em
+Pagamento na Fase 23.
+
+- Levantamento das telas com cards de período (um card por mês): **Pedidos**
+  (`js/lancamento.js`, `renderPeriodCards`), **Faturamento**, **Embarque** e
+  **Pagamento** (as 3 últimas compartilham `criarFerramentasTabela` em
+  `js/views.js`).
+- **Pedidos** já estava correto — o comentário no código já documentava "ordem
+  cronológica crescente" e a implementação nunca invertia a lista (`chaves` não
+  tem `.reverse()`); nenhuma mudança necessária ali.
+- **Faturamento e Embarque** ainda mostravam o mês mais recente primeiro. Em
+  `js/views.js`, as instanciações passaram a receber o mesmo
+  `{ ordemAscendente: true }` que Pagamento já usava desde a Fase 23:
+  ```js
+  const ferramentasFat = criarFerramentasTabela('fat', { ordemAscendente: true });
+  const ferramentasEmb = criarFerramentasTabela('emb', { ordemAscendente: true });
+  const ferramentasPag = criarFerramentasTabela('pag', { ordemAscendente: true });
+  ```
+- Dashboard e Relatórios não têm cards de mês individuais (os gráficos ali são
+  Chart.js/sparklines, não cards clicáveis), então não havia nada a ajustar
+  nessas duas telas.
+- **Resultado**: as 4 telas com cards de período (Pedidos, Faturamento,
+  Embarque, Pagamento) agora mostram sempre **Jan/26 → Fev/26 → Mar/26 → ...**
+  (mais antigo primeiro), de forma consistente em todo o app.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*

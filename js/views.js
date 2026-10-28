@@ -239,8 +239,8 @@
     });
   }
 
-  const ferramentasFat = criarFerramentasTabela('fat');
-  const ferramentasEmb = criarFerramentasTabela('emb');
+  const ferramentasFat = criarFerramentasTabela('fat', { ordemAscendente: true });
+  const ferramentasEmb = criarFerramentasTabela('emb', { ordemAscendente: true });
   const ferramentasPag = criarFerramentasTabela('pag', { ordemAscendente: true });
 
   /* Status da invoice é 100% automático (não há mais seleção manual nesta
