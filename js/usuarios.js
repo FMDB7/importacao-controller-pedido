@@ -12,6 +12,12 @@
    ══════════════════════════════════════════════════════════ */
 (function () {
   const SESSION_TOKEN_KEY = 'topimport_session_token';
+  // Duração máxima de uma sessão, contada a partir de `sessoes_ativas.iniciado_em`
+  // (quando a pessoa fez login), independente de atividade. Passado isso, o
+  // próprio navegador encerra a sessão sozinho (ver iniciarHeartbeat abaixo) —
+  // é uma segunda camada além do "forçar logout" que um Administrador já podia
+  // fazer apagando a linha da pessoa em Sessões Ativas (Fase 15).
+  const SESSAO_MAX_MS = 8 * 60 * 60 * 1000; // 8 horas
   let meCache = null;
   let heartbeatTimer = null;
 
@@ -97,25 +103,39 @@
     iniciarHeartbeat();
   }
 
+  function encerrarPorExpiracao(msg) {
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    alert(msg);
+    window.Auth.signOut();
+  }
+
   function iniciarHeartbeat() {
     if (heartbeatTimer) return;
-    heartbeatTimer = setInterval(async () => {
+    const checar = async () => {
       const token = sessionStorage.getItem(SESSION_TOKEN_KEY);
       if (!token) return;
       try {
         const rows = await DB.list('sessoes_ativas', `session_token=eq.${encodeURIComponent(token)}&order=iniciado_em.desc`);
         const row = rows && rows[0];
         if (!row || row.revogado) {
-          clearInterval(heartbeatTimer);
-          heartbeatTimer = null;
-          sessionStorage.removeItem(SESSION_TOKEN_KEY);
-          alert('Sua sessão foi encerrada (por um administrador ou por expiração). Faça login novamente.');
-          window.Auth.signOut();
+          encerrarPorExpiracao('Sua sessão foi encerrada (por um administrador ou por expiração). Faça login novamente.');
+          return;
+        }
+        // Limite rígido de 8h de sessão, contado do login (iniciado_em) — não
+        // importa se a pessoa está ativa ou não, passado isso o acesso encerra.
+        if (row.iniciado_em && (Date.now() - new Date(row.iniciado_em).getTime()) >= SESSAO_MAX_MS) {
+          try { await DB.update('sessoes_ativas', row.id, { revogado: true }); } catch (e) { /* best-effort */ }
+          encerrarPorExpiracao('Sua sessão expirou após 8 horas. Faça login novamente.');
           return;
         }
         await DB.update('sessoes_ativas', row.id, { ultimo_ping: new Date().toISOString() });
       } catch (e) { /* best-effort: nunca derruba o usuário por falha de rede no heartbeat */ }
-    }, 60000);
+    };
+    checar(); // checagem imediata — não espera o primeiro tick de 60s pra
+              // pegar uma sessão que já passou das 8h (ex.: aba que ficou
+              // aberta de um dia pro outro e só agora voltou a ser usada).
+    heartbeatTimer = setInterval(checar, 60000);
   }
 
   async function encerrarSessaoPropria() {

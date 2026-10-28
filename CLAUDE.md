@@ -820,4 +820,46 @@ vice-versa.
 
 ---
 
+## Fase 23 — Limite de 8h de sessão + ordem cronológica dos cards de Pagamento
+
+Pedido do usuário: *"garanta que uma sessão esteja ativa por 8hs, caso passe deste
+período, o sistema encerra de forma automática"* e *"na aba pagamento, nos cards
+dos meses, organize desta forma jan/26, Fev/26, março/26"*.
+
+### Limite de 8h de sessão (`js/usuarios.js`)
+- Nova constante `SESSAO_MAX_MS = 8 * 60 * 60 * 1000`. O heartbeat de sessão
+  (Fase 15, roda a cada 60s enquanto a aba está logada) agora também compara
+  `Date.now() - sessoes_ativas.iniciado_em` contra esse limite, além de checar
+  `revogado` como já fazia.
+- Passadas as 8h desde o login (`iniciado_em`, default `now()` no banco),
+  independente de a pessoa estar ativa ou não: a linha em `sessoes_ativas` é
+  marcada `revogado = true` (pra refletir corretamente em "Sessões Ativas" pra
+  um Administrador) e a sessão é encerrada no navegador (`Auth.signOut()`) com
+  um aviso claro — mesmo padrão já usado quando um admin força logout de outra
+  pessoa.
+- A checagem roda **imediatamente** ao entrar/recarregar a página (não só no
+  primeiro tick de 60s) — cobre o caso de alguém voltar numa aba que ficou
+  aberta de um dia pro outro, já passada a janela de 8h.
+- **Escopo**: é um limite do lado do cliente (JS + a linha em `sessoes_ativas`),
+  não uma expiração do JWT em si — o token do Stack Auth continua tendo sua
+  própria validade/renovação silenciosa (ver comentário de
+  `pareceJwtExpirado`/`refreshAccessToken` em `js/api.js`/`js/auth.js`), que é
+  mais curta e não governada por aqui. As 8h valem por aba/sessão de navegador
+  (`sessionStorage`), não por conta — a mesma pessoa logada em duas abas tem
+  duas contagens de 8h independentes.
+
+### Cards de mês em Pagamento — ordem cronológica crescente (`js/views.js`)
+- `criarFerramentasTabela(prefixo, opcoes)` ganhou um 2º parâmetro opcional
+  `{ ordemAscendente }`. Antes, os cards de período (Faturamento/Embarque/
+  Pagamento, todos compartilham essa função) sempre mostravam o mês mais
+  recente primeiro. Pagamento agora passa `{ ordemAscendente: true }` e passou
+  a mostrar **Jan/26 → Fev/26 → Mar/26 → ...** (mais antigo primeiro);
+  Faturamento e Embarque continuam como estavam (mais recente primeiro) — não
+  foi pedido mudar essas duas.
+- O formato do rótulo em si (`Mmm/AA`, ex. "Jan/26") já era esse antes da
+  mudança — o pedido do usuário batia com o formato existente, só a ordem
+  mudou.
+
+---
+
 *Projeto: Grupo Top Internacional Ltda — Marques Ferreira — Manaus, AM*

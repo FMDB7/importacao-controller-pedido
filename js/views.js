@@ -63,8 +63,12 @@
   /* ══════════ Ferramentas genéricas: cards de período + filtros avançados + edição inline ══════════
      Reaproveitadas por Faturamento / Embarque / Pagamento (mesmo padrão já usado em Pedidos,
      ver js/lancamento.js). Cada tabela tem seu próprio estado de mês selecionado. */
-  function criarFerramentasTabela(prefixo) {
+  function criarFerramentasTabela(prefixo, opcoes) {
     let mesSelecionado = null;
+    // Pagamento pediu os cards em ordem cronológica crescente (Jan/26, Fev/26,
+    // Mar/26, ...) — Faturamento/Embarque continuam com o mais recente primeiro
+    // (padrão original). O rótulo "Mmm/AA" em si já era o mesmo nos três.
+    const ordemAscendente = !!(opcoes && opcoes.ordemAscendente);
 
     function renderPeriodCards(rows, campoData, campoValor) {
       const wrap = document.getElementById(`${prefixo}-period-cards`);
@@ -78,7 +82,8 @@
         porMes[mes].count++;
         if (campoValor) porMes[mes].total += Number(campoValor(r)) || 0;
       });
-      const meses = Object.keys(porMes).sort().reverse();
+      const meses = Object.keys(porMes).sort();
+      if (!ordemAscendente) meses.reverse();
       if (!meses.length) { wrap.innerHTML = ''; return; }
       wrap.innerHTML = meses.map(mes => {
         const [ano, m] = mes.split('-');
@@ -236,7 +241,7 @@
 
   const ferramentasFat = criarFerramentasTabela('fat');
   const ferramentasEmb = criarFerramentasTabela('emb');
-  const ferramentasPag = criarFerramentasTabela('pag');
+  const ferramentasPag = criarFerramentasTabela('pag', { ordemAscendente: true });
 
   /* Status da invoice é 100% automático (não há mais seleção manual nesta
      tela): "Liquidada" quando existe um pagamento vinculado com
